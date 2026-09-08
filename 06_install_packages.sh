@@ -120,6 +120,7 @@ ENV_TYPES=(
   "custom_uv"
   "custom_pip"
   "inclusionai-ling3-vllm"
+  "gemma3n-vllm"
 )
 
 declare -A ENV_DESCRIPTIONS=(
@@ -221,6 +222,8 @@ declare -A ENV_DESCRIPTIONS=(
   ["zyphra-vllm"]="Zyphra (vLLM)"
   ["custom_uv"]="Custom (uv)"
   ["custom_pip"]="Custom (pip)"
+  ["inclusionai-ling3-vllm"]="InclusionAI Ling 3 (vLLM)"
+  ["gemma3n-vllm"]="Gemma 3n (vLLM 0.10)"
 )
 
 resolve_env_type() {
@@ -520,6 +523,9 @@ resolve_env_type() {
             ;;
         98|inclusionai_ling3_vllm|inclusionai-ling3-vllm)
             echo "inclusionai-ling3-vllm"
+            ;;
+        99|gemma3n_vllm|gemma3n-vllm)
+            echo "gemma3n-vllm"
             ;;
         *)
             return 1
@@ -1647,6 +1653,17 @@ install_redhatai_vllm() {
     run_uv_install timm || return 1
 }
 
+install_gemma3n_vllm() {
+    print_info "Installing the model-card validated vLLM stack for Gemma 3n..."
+    ensure_active_environment_matches gemma3n-vllm || return 1
+    run_uv_install --upgrade --reinstall \
+        "vllm==0.10.0" \
+        "transformers==4.53.2" \
+        "numpy==2.2.6" \
+        "timm" \
+        --torch-backend=auto || return 1
+}
+
 install_stepfun_sglang() {
     print_info "Installing the pinned SGLang main commit for StepFun..."
     run_uv_install -U --reinstall --prerelease=allow \
@@ -2081,6 +2098,9 @@ perform_environment_action() {
             ;;
         redhatai-vllm)
             install_redhatai_vllm || return 1
+            ;;
+        gemma3n-vllm)
+            install_gemma3n_vllm || return 1
             ;;
         stepfun-sglang)
             install_stepfun_sglang || return 1

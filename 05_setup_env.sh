@@ -2,7 +2,7 @@
 
 # Script: 05_setup_env.sh
 # Purpose: Create ML virtual environment and set up environment variables
-# Usage: source 05_setup_env.sh [--auto] [ENV_NAME|1-97]
+# Usage: source 05_setup_env.sh [--auto] [ENV_NAME|1-99]
 
 # Source bashrc to ensure environment is properly loaded
 if [ -f "$HOME/.bashrc" ]; then
@@ -389,6 +389,9 @@ resolve_env_type() {
         98|inclusionai_ling3_vllm|inclusionai-ling3-vllm)
             echo "inclusionai-ling3-vllm"
             ;;
+        99|gemma3n_vllm|gemma3n-vllm)
+            echo "gemma3n-vllm"
+            ;;
         *)
             return 1
             ;;
@@ -719,13 +722,14 @@ if [ -z "$ENV_TYPE" ] && [ "$AUTO_MODE" = false ]; then
     echo "96) Custom (uv)"
     echo "97) Custom (pip)"
     echo "98) InclusionAI Ling 3 (vLLM)"
+    echo "99) Gemma 3n (vLLM 0.10)"
     echo ""
     while true; do
-        read -r -p "Enter your choice (1-98): " choice
+        read -r -p "Enter your choice (1-99): " choice
         if ENV_TYPE=$(resolve_env_type "$choice"); then
             break
         else
-            print_error "Invalid choice. Please enter a number between 1 and 98."
+            print_error "Invalid choice. Please enter a number between 1 and 99."
         fi
     done
 elif [ -z "$ENV_TYPE" ]; then
@@ -736,7 +740,7 @@ fi
 # Normalize and validate the selected managed environment.
 if [ -n "$ENV_TYPE" ]; then
     if ! ENV_TYPE_MAPPED=$(resolve_env_type "$ENV_TYPE"); then
-        fail_script "Invalid environment selection: $ENV_TYPE. Choose a listed environment name or a number from 1 to 98."
+        fail_script "Invalid environment selection: $ENV_TYPE. Choose a listed environment name or a number from 1 to 99."
         if [ "$BEING_SOURCED" = true ]; then
             return 1
         fi
