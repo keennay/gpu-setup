@@ -1,5 +1,5 @@
 ---
-name: "SGLang & vLLM Recipe Creation and Update"
+name: llm-vlm-cookbook-recipe-creation-and-update
 description: "Creates or updates and behaviorally validates portable SGLang and vLLM LLM/VLM recipes at each model's maximum non-YaRN context before promotion."
 alwaysApply: false
 ---

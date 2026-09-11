@@ -5,6 +5,7 @@
 # Usage: ./06_install_packages.sh [ENV_NAME]
 
 if [ -f "$HOME/.bashrc" ]; then
+    # shellcheck source=/dev/null
     source "$HOME/.bashrc"
 fi
 
@@ -29,27 +30,37 @@ ENV_TYPES=(
   "arcee-sglang"
   "arcee-transformers"
   "arcee-vllm"
+  "arcee-vllm-pr-54479"
+  "arcee-vllm-pr-54479-fp8-block"
+  "arcee-vllm-pr-54479-thinking-fp8-block"
   "cohere-sglang"
   "cohere-transformers"
   "cohere-vllm"
+  "cohere-vllm-pr-54479"
   "datalab-sglang"
   "datalab-vllm"
   "deepseek-ktransformers"
   "deepseek-lmdeploy"
   "deepseek-sglang"
+  "deepseek-vision-sglang-pr-37253"
+  "deepseek-vision-vllm-pr-54566"
   "deepseek-vllm"
   "diffusiongemma-sglang"
   "gemma-sglang"
   "gemma-vllm"
+  "gemma3n-vllm"
   "glm-ktransformers"
   "glm-sglang"
   "glm-transformers"
   "glm-vllm"
+  "glm53flash-dflash2-sglang-pr-37818"
+  "glm53flash-dflash2-vllm-pr-55423"
   "gpt-oss-sglang"
   "gpt-oss-transformers"
   "gpt-oss-vllm"
   "ibm-sglang"
   "ibm-vllm"
+  "inclusionai-ling3-vllm"
   "inclusionai-sglang"
   "inclusionai-transformers"
   "inclusionai-vllm"
@@ -101,8 +112,8 @@ ENV_TYPES=(
   "qwen-vllm"
   "radixark-qwen-sglang"
   "radixark-sglang"
-  "redhatai-sglang"
   "redhat-sglang-pr-35809"
+  "redhatai-sglang"
   "redhatai-vllm"
   "stepfun-sglang"
   "stepfun-transformers"
@@ -119,8 +130,6 @@ ENV_TYPES=(
   "zyphra-vllm"
   "custom_uv"
   "custom_pip"
-  "inclusionai-ling3-vllm"
-  "gemma3n-vllm"
 )
 
 declare -A ENV_DESCRIPTIONS=(
@@ -131,31 +140,40 @@ declare -A ENV_DESCRIPTIONS=(
   ["arcee-sglang"]="Arcee (SGLang)"
   ["arcee-transformers"]="Arcee (Transformers)"
   ["arcee-vllm"]="Arcee (vLLM)"
+  ["arcee-vllm-pr-54479"]="Arcee (vLLM) PR 54479"
+  ["arcee-vllm-pr-54479-fp8-block"]="Arcee FP8 Block (vLLM) PR 54479"
+  ["arcee-vllm-pr-54479-thinking-fp8-block"]="Arcee Thinking FP8 Block (vLLM) PR 54479"
   ["cohere-sglang"]="Cohere (SGLang)"
   ["cohere-transformers"]="Cohere (Transformers)"
   ["cohere-vllm"]="Cohere (vLLM)"
+  ["cohere-vllm-pr-54479"]="Cohere (vLLM) PR 54479"
   ["datalab-sglang"]="DataLab (SGLang)"
   ["datalab-vllm"]="DataLab (vLLM)"
   ["deepseek-ktransformers"]="DeepSeek (KTransformers)"
   ["deepseek-lmdeploy"]="DeepSeek (LMDeploy)"
   ["deepseek-sglang"]="DeepSeek (SGLang)"
+  ["deepseek-vision-sglang-pr-37253"]="DeepSeek V4 Flash Vision Exp (SGLang) PR 37253"
+  ["deepseek-vision-vllm-pr-54566"]="DeepSeek V4 Flash Vision Exp (vLLM) PR 54566"
   ["deepseek-vllm"]="DeepSeek (vLLM)"
   ["diffusiongemma-sglang"]="DiffusionGemma (SGLang)"
   ["gemma-sglang"]="Gemma (SGLang)"
   ["gemma-vllm"]="Gemma (vLLM)"
+  ["gemma3n-vllm"]="Gemma 3n (vLLM 0.10)"
   ["glm-ktransformers"]="GLM (KTransformers)"
   ["glm-sglang"]="GLM (SGLang)"
   ["glm-transformers"]="GLM (Transformers)"
   ["glm-vllm"]="GLM (vLLM)"
+  ["glm53flash-dflash2-sglang-pr-37818"]="GLM 5.3 Flash DFlash2 (SGLang) PR 37818"
+  ["glm53flash-dflash2-vllm-pr-55423"]="GLM 5.3 Flash DFlash2 (vLLM) PR 55423"
   ["gpt-oss-sglang"]="GPT-OSS (SGLang)"
   ["gpt-oss-transformers"]="gpt-oss (Transformers)"
   ["gpt-oss-vllm"]="gpt-oss (vLLM)"
   ["ibm-sglang"]="IBM (SGLang)"
   ["ibm-vllm"]="IBM (vLLM)"
+  ["inclusionai-ling3-vllm"]="InclusionAI Ling 3 (vLLM)"
   ["inclusionai-sglang"]="InclusionAI (SGLang)"
   ["inclusionai-transformers"]="InclusionAI (Transformers)"
   ["inclusionai-vllm"]="InclusionAI (vLLM)"
-  ["inclusionai-ling3-vllm"]="InclusionAI Ling 3 (vLLM)"
   ["incoai-sglang"]="IncoAI (SGLang)"
   ["incoai-vllm"]="IncoAI (vLLM)"
   ["intel-sglang"]="Intel (SGLang)"
@@ -204,8 +222,8 @@ declare -A ENV_DESCRIPTIONS=(
   ["qwen-vllm"]="Qwen (vLLM)"
   ["radixark-qwen-sglang"]="RadixArk Qwen Flash Next (SGLang)"
   ["radixark-sglang"]="RadixArk (SGLang)"
-  ["redhatai-sglang"]="RedHatAI (SGLang)"
   ["redhat-sglang-pr-35809"]="RedHat (SGLang) PR 35809"
+  ["redhatai-sglang"]="RedHatAI (SGLang)"
   ["redhatai-vllm"]="RedHatAI (vLLM)"
   ["stepfun-sglang"]="StepFun (SGLang)"
   ["stepfun-transformers"]="StepFun (Transformers)"
@@ -222,8 +240,6 @@ declare -A ENV_DESCRIPTIONS=(
   ["zyphra-vllm"]="Zyphra (vLLM)"
   ["custom_uv"]="Custom (uv)"
   ["custom_pip"]="Custom (pip)"
-  ["inclusionai-ling3-vllm"]="InclusionAI Ling 3 (vLLM)"
-  ["gemma3n-vllm"]="Gemma 3n (vLLM 0.10)"
 )
 
 resolve_env_type() {
@@ -251,281 +267,305 @@ resolve_env_type() {
         7|arcee_vllm|arcee-vllm)
             echo "arcee-vllm"
             ;;
-        8|cohere_sglang|cohere-sglang)
+        8|arcee_vllm_pr_54479|arcee-vllm-pr-54479)
+            echo "arcee-vllm-pr-54479"
+            ;;
+        9|arcee_vllm_pr_54479_fp8_block|arcee-vllm-pr-54479-fp8-block)
+            echo "arcee-vllm-pr-54479-fp8-block"
+            ;;
+        10|arcee_vllm_pr_54479_thinking_fp8_block|arcee-vllm-pr-54479-thinking-fp8-block)
+            echo "arcee-vllm-pr-54479-thinking-fp8-block"
+            ;;
+        11|cohere_sglang|cohere-sglang)
             echo "cohere-sglang"
             ;;
-        9|cohere_transformers|cohere-transformers)
+        12|cohere_transformers|cohere-transformers)
             echo "cohere-transformers"
             ;;
-        10|cohere_vllm|cohere-vllm)
+        13|cohere_vllm|cohere-vllm)
             echo "cohere-vllm"
             ;;
-        11|datalab_sglang|datalab-sglang)
+        14|cohere_vllm_pr_54479|cohere-vllm-pr-54479)
+            echo "cohere-vllm-pr-54479"
+            ;;
+        15|datalab_sglang|datalab-sglang)
             echo "datalab-sglang"
             ;;
-        12|datalab_vllm|datalab-vllm)
+        16|datalab_vllm|datalab-vllm)
             echo "datalab-vllm"
             ;;
-        13|deepseek_ktransformers|deepseek-ktransformers)
+        17|deepseek_ktransformers|deepseek-ktransformers)
             echo "deepseek-ktransformers"
             ;;
-        14|deepseek_lmdeploy|deepseek-lmdeploy)
+        18|deepseek_lmdeploy|deepseek-lmdeploy)
             echo "deepseek-lmdeploy"
             ;;
-        15|deepseek_sglang|deepseek-sglang)
+        19|deepseek_sglang|deepseek-sglang)
             echo "deepseek-sglang"
             ;;
-        16|deepseek_vllm|deepseek-vllm)
+        20|deepseek_vision_sglang_pr_37253|deepseek-vision-sglang-pr-37253)
+            echo "deepseek-vision-sglang-pr-37253"
+            ;;
+        21|deepseek_vision_vllm_pr_54566|deepseek-vision-vllm-pr-54566)
+            echo "deepseek-vision-vllm-pr-54566"
+            ;;
+        22|deepseek_vllm|deepseek-vllm)
             echo "deepseek-vllm"
             ;;
-        17|diffusiongemma_sglang|diffusiongemma-sglang)
+        23|diffusiongemma_sglang|diffusiongemma-sglang)
             echo "diffusiongemma-sglang"
             ;;
-        18|gemma_sglang|gemma-sglang)
+        24|gemma_sglang|gemma-sglang)
             echo "gemma-sglang"
             ;;
-        19|gemma_vllm|gemma-vllm|gemma4_vllm|gemma4-vllm|gemma_4_vllm|gemma-4-vllm)
+        25|gemma_vllm|gemma-vllm|gemma4_vllm|gemma4-vllm|gemma_4_vllm|gemma-4-vllm)
             echo "gemma-vllm"
             ;;
-        20|glm_ktransformers|glm-ktransformers)
+        26|gemma3n_vllm|gemma3n-vllm)
+            echo "gemma3n-vllm"
+            ;;
+        27|glm_ktransformers|glm-ktransformers)
             echo "glm-ktransformers"
             ;;
-        21|glm_sglang|glm-sglang)
+        28|glm_sglang|glm-sglang)
             echo "glm-sglang"
             ;;
-        22|glm_transformers|glm-transformers)
+        29|glm_transformers|glm-transformers)
             echo "glm-transformers"
             ;;
-        23|glm_vllm|glm-vllm)
+        30|glm_vllm|glm-vllm)
             echo "glm-vllm"
             ;;
-        24|gptoss_sglang|gpt-oss_sglang|gptoss-sglang|gpt-oss-sglang)
+        31|glm53flash_dflash2_sglang_pr_37818|glm53flash-dflash2-sglang-pr-37818)
+            echo "glm53flash-dflash2-sglang-pr-37818"
+            ;;
+        32|glm53flash_dflash2_vllm_pr_55423|glm53flash-dflash2-vllm-pr-55423)
+            echo "glm53flash-dflash2-vllm-pr-55423"
+            ;;
+        33|gptoss_sglang|gpt-oss_sglang|gptoss-sglang|gpt-oss-sglang)
             echo "gpt-oss-sglang"
             ;;
-        25|gptoss_transformers|gpt-oss_transformers|gptoss-transformers|gpt-oss-transformers)
+        34|gptoss_transformers|gpt-oss_transformers|gptoss-transformers|gpt-oss-transformers)
             echo "gpt-oss-transformers"
             ;;
-        26|gptoss_vllm|gpt-oss_vllm|vllm_gptoss|gptoss-vllm|gpt-oss-vllm)
+        35|gptoss_vllm|gpt-oss_vllm|vllm_gptoss|gptoss-vllm|gpt-oss-vllm)
             echo "gpt-oss-vllm"
             ;;
-        27|ibm_sglang|ibm-sglang)
+        36|ibm_sglang|ibm-sglang)
             echo "ibm-sglang"
             ;;
-        28|ibm_vllm|ibm-vllm)
+        37|ibm_vllm|ibm-vllm)
             echo "ibm-vllm"
             ;;
-        29|inclusionai_sglang|inclusionai-sglang)
-            echo "inclusionai-sglang"
-            ;;
-        30|inclusionai_transformers|inclusionai-transformers)
-            echo "inclusionai-transformers"
-            ;;
-        31|inclusionai_vllm|inclusionai-vllm)
-            echo "inclusionai-vllm"
-            ;;
-        32|incoai_sglang|incoai-sglang)
-            echo "incoai-sglang"
-            ;;
-        33|incoai_vllm|incoai-vllm)
-            echo "incoai-vllm"
-            ;;
-        34|intel_sglang|intel-sglang)
-            echo "intel-sglang"
-            ;;
-        35|intel_vllm|intel-vllm)
-            echo "intel-vllm"
-            ;;
-        36|kimi_ktransformers|kimi-ktransformers)
-            echo "kimi-ktransformers"
-            ;;
-        37|kimi_sglang|kimi-sglang)
-            echo "kimi-sglang"
-            ;;
-        38|kimi_vllm|kimi-vllm)
-            echo "kimi-vllm"
-            ;;
-        39|liquidai_sglang|liquidai-sglang)
-            echo "liquidai-sglang"
-            ;;
-        40|liquidai_sglang_pr_31041|liquidai-sglang-pr-31041)
-            echo "liquidai-sglang-pr-31041"
-            ;;
-        41|liquidai_transformers|liquidai-transformers)
-            echo "liquidai-transformers"
-            ;;
-        42|liquidai_vllm|liquidai-vllm)
-            echo "liquidai-vllm"
-            ;;
-        43|meta_sglang|meta-sglang)
-            echo "meta-sglang"
-            ;;
-        44|meta_vllm|meta-vllm)
-            echo "meta-vllm"
-            ;;
-        45|microsoft_sglang|microsoft-sglang)
-            echo "microsoft-sglang"
-            ;;
-        46|microsoft_vllm|microsoft-vllm)
-            echo "microsoft-vllm"
-            ;;
-        47|minimax_ktransformers|minimax-ktransformers)
-            echo "minimax-ktransformers"
-            ;;
-        48|minimax_sglang|minimax-sglang)
-            echo "minimax-sglang"
-            ;;
-        49|minimax_transformers|minimax-transformers)
-            echo "minimax-transformers"
-            ;;
-        50|minimax_vllm|minimax-vllm)
-            echo "minimax-vllm"
-            ;;
-        51|mistralai_sglang|mistralai-sglang)
-            echo "mistralai-sglang"
-            ;;
-        52|mistralai_transformers|mistralai-transformers)
-            echo "mistralai-transformers"
-            ;;
-        53|mistralai_vllm|mistralai-vllm)
-            echo "mistralai-vllm"
-            ;;
-        54|nanbeige_sglang|nanbeige-sglang)
-            echo "nanbeige-sglang"
-            ;;
-        55|nanbeige_transformers|nanbeige-transformers)
-            echo "nanbeige-transformers"
-            ;;
-        56|nanbeige_vllm|nanbeige-vllm)
-            echo "nanbeige-vllm"
-            ;;
-        57|nemotron_trtllm|nemotron-trtllm|nemotron_trt_llm|nemotron-trt-llm)
-            echo "nemotron-trtllm"
-            ;;
-        58|nvidia_deepseek_sglang|nvidia-deepseek-sglang)
-            echo "nvidia-deepseek-sglang"
-            ;;
-        59|nvidia_nemotron|nvidia-nemotron)
-            echo "nvidia-nemotron"
-            ;;
-        60|nvidia_sglang|nvidia-sglang)
-            echo "nvidia-sglang"
-            ;;
-        61|nvidia_sglang_pr_33554|nvidia-sglang-pr-33554)
-            echo "nvidia-sglang-pr-33554"
-            ;;
-        62|nvidia_sglang_pr_34966|nvidia-sglang-pr-34966)
-            echo "nvidia-sglang-pr-34966"
-            ;;
-        63|nvidia_vllm|nvidia-vllm)
-            echo "nvidia-vllm"
-            ;;
-        64|poolside_laguna_xs_vllm|poolside-laguna-xs-vllm)
-            echo "poolside-laguna-xs-vllm"
-            ;;
-        65|poolside_sglang|poolside-sglang)
-            echo "poolside-sglang"
-            ;;
-        66|poolside_sglang_pr_22513|poolside-sglang-pr-22513)
-            echo "poolside-sglang-pr-22513"
-            ;;
-        67|poolside_transformers|poolside-transformers)
-            echo "poolside-transformers"
-            ;;
-        68|poolside_vllm|poolside-vllm)
-            echo "poolside-vllm"
-            ;;
-        69|primeintellect_sglang|primeintellect-sglang)
-            echo "primeintellect-sglang"
-            ;;
-        70|primeintellect_vllm|primeintellect-vllm)
-            echo "primeintellect-vllm"
-            ;;
-        71|qwen_flash_next_sglang|qwen-flash-next-sglang)
-            echo "qwen-flash-next-sglang"
-            ;;
-        72|qwen_flash_next_vllm|qwen-flash-next-vllm)
-            echo "qwen-flash-next-vllm"
-            ;;
-        73|qwen_ktransformers|qwen-ktransformers)
-            echo "qwen-ktransformers"
-            ;;
-        74|qwen_sglang|qwen-sglang)
-            echo "qwen-sglang"
-            ;;
-        75|qwen_sglang_pr_22121|qwen-sglang-pr-22121)
-            echo "qwen-sglang-pr-22121"
-            ;;
-        76|qwen_transformers|qwen-transformers)
-            echo "qwen-transformers"
-            ;;
-        77|qwen_vllm|qwen-vllm)
-            echo "qwen-vllm"
-            ;;
-        78|radixark_qwen_sglang|radixark-qwen-sglang)
-            echo "radixark-qwen-sglang"
-            ;;
-        79|radixark_sglang|radixark-sglang)
-            echo "radixark-sglang"
-            ;;
-        80|redhatai_sglang|redhatai-sglang)
-            echo "redhatai-sglang"
-            ;;
-        81|redhat_sglang_pr_35809|redhat-sglang-pr-35809)
-            echo "redhat-sglang-pr-35809"
-            ;;
-        82|redhatai_vllm|redhatai-vllm)
-            echo "redhatai-vllm"
-            ;;
-        83|stepfun_sglang|stepfun-sglang)
-            echo "stepfun-sglang"
-            ;;
-        84|stepfun_transformers|stepfun-transformers)
-            echo "stepfun-transformers"
-            ;;
-        85|stepfun_vllm|stepfun-vllm)
-            echo "stepfun-vllm"
-            ;;
-        86|z_lab_sglang|z-lab-sglang)
-            echo "z-lab-sglang"
-            ;;
-        87|z_lab_sglang_pr_35209|z-lab-sglang-pr-35209)
-            echo "z-lab-sglang-pr-35209"
-            ;;
-        88|z_lab_vllm|z-lab-vllm)
-            echo "z-lab-vllm"
-            ;;
-        89|zyphra_legacy_sglang|zyphra-legacy-sglang)
-            echo "zyphra-legacy-sglang"
-            ;;
-        90|zyphra_legacy_transformers|zyphra-legacy-transformers)
-            echo "zyphra-legacy-transformers"
-            ;;
-        91|zyphra_legacy_vllm|zyphra-legacy-vllm)
-            echo "zyphra-legacy-vllm"
-            ;;
-        92|zyphra_sglang|zyphra-sglang)
-            echo "zyphra-sglang"
-            ;;
-        93|zyphra_sglang_pr_32517|zyphra-sglang-pr-32517)
-            echo "zyphra-sglang-pr-32517"
-            ;;
-        94|zyphra_transformers|zyphra-transformers)
-            echo "zyphra-transformers"
-            ;;
-        95|zyphra_vllm|zyphra-vllm)
-            echo "zyphra-vllm"
-            ;;
-        96|custom|custom_uv|custom-uv|env_custom_uv)
-            echo "custom_uv"
-            ;;
-        97|custom_pip|custom-pip|env_custom_pip)
-            echo "custom_pip"
-            ;;
-        98|inclusionai_ling3_vllm|inclusionai-ling3-vllm)
+        38|inclusionai_ling3_vllm|inclusionai-ling3-vllm)
             echo "inclusionai-ling3-vllm"
             ;;
-        99|gemma3n_vllm|gemma3n-vllm)
-            echo "gemma3n-vllm"
+        39|inclusionai_sglang|inclusionai-sglang)
+            echo "inclusionai-sglang"
+            ;;
+        40|inclusionai_transformers|inclusionai-transformers)
+            echo "inclusionai-transformers"
+            ;;
+        41|inclusionai_vllm|inclusionai-vllm)
+            echo "inclusionai-vllm"
+            ;;
+        42|incoai_sglang|incoai-sglang)
+            echo "incoai-sglang"
+            ;;
+        43|incoai_vllm|incoai-vllm)
+            echo "incoai-vllm"
+            ;;
+        44|intel_sglang|intel-sglang)
+            echo "intel-sglang"
+            ;;
+        45|intel_vllm|intel-vllm)
+            echo "intel-vllm"
+            ;;
+        46|kimi_ktransformers|kimi-ktransformers)
+            echo "kimi-ktransformers"
+            ;;
+        47|kimi_sglang|kimi-sglang)
+            echo "kimi-sglang"
+            ;;
+        48|kimi_vllm|kimi-vllm)
+            echo "kimi-vllm"
+            ;;
+        49|liquidai_sglang|liquidai-sglang)
+            echo "liquidai-sglang"
+            ;;
+        50|liquidai_sglang_pr_31041|liquidai-sglang-pr-31041)
+            echo "liquidai-sglang-pr-31041"
+            ;;
+        51|liquidai_transformers|liquidai-transformers)
+            echo "liquidai-transformers"
+            ;;
+        52|liquidai_vllm|liquidai-vllm)
+            echo "liquidai-vllm"
+            ;;
+        53|meta_sglang|meta-sglang)
+            echo "meta-sglang"
+            ;;
+        54|meta_vllm|meta-vllm)
+            echo "meta-vllm"
+            ;;
+        55|microsoft_sglang|microsoft-sglang)
+            echo "microsoft-sglang"
+            ;;
+        56|microsoft_vllm|microsoft-vllm)
+            echo "microsoft-vllm"
+            ;;
+        57|minimax_ktransformers|minimax-ktransformers)
+            echo "minimax-ktransformers"
+            ;;
+        58|minimax_sglang|minimax-sglang)
+            echo "minimax-sglang"
+            ;;
+        59|minimax_transformers|minimax-transformers)
+            echo "minimax-transformers"
+            ;;
+        60|minimax_vllm|minimax-vllm)
+            echo "minimax-vllm"
+            ;;
+        61|mistralai_sglang|mistralai-sglang)
+            echo "mistralai-sglang"
+            ;;
+        62|mistralai_transformers|mistralai-transformers)
+            echo "mistralai-transformers"
+            ;;
+        63|mistralai_vllm|mistralai-vllm)
+            echo "mistralai-vllm"
+            ;;
+        64|nanbeige_sglang|nanbeige-sglang)
+            echo "nanbeige-sglang"
+            ;;
+        65|nanbeige_transformers|nanbeige-transformers)
+            echo "nanbeige-transformers"
+            ;;
+        66|nanbeige_vllm|nanbeige-vllm)
+            echo "nanbeige-vllm"
+            ;;
+        67|nemotron_trtllm|nemotron-trtllm|nemotron_trt_llm|nemotron-trt-llm)
+            echo "nemotron-trtllm"
+            ;;
+        68|nvidia_deepseek_sglang|nvidia-deepseek-sglang)
+            echo "nvidia-deepseek-sglang"
+            ;;
+        69|nvidia_nemotron|nvidia-nemotron)
+            echo "nvidia-nemotron"
+            ;;
+        70|nvidia_sglang|nvidia-sglang)
+            echo "nvidia-sglang"
+            ;;
+        71|nvidia_sglang_pr_33554|nvidia-sglang-pr-33554)
+            echo "nvidia-sglang-pr-33554"
+            ;;
+        72|nvidia_sglang_pr_34966|nvidia-sglang-pr-34966)
+            echo "nvidia-sglang-pr-34966"
+            ;;
+        73|nvidia_vllm|nvidia-vllm)
+            echo "nvidia-vllm"
+            ;;
+        74|poolside_laguna_xs_vllm|poolside-laguna-xs-vllm)
+            echo "poolside-laguna-xs-vllm"
+            ;;
+        75|poolside_sglang|poolside-sglang)
+            echo "poolside-sglang"
+            ;;
+        76|poolside_sglang_pr_22513|poolside-sglang-pr-22513)
+            echo "poolside-sglang-pr-22513"
+            ;;
+        77|poolside_transformers|poolside-transformers)
+            echo "poolside-transformers"
+            ;;
+        78|poolside_vllm|poolside-vllm)
+            echo "poolside-vllm"
+            ;;
+        79|primeintellect_sglang|primeintellect-sglang)
+            echo "primeintellect-sglang"
+            ;;
+        80|primeintellect_vllm|primeintellect-vllm)
+            echo "primeintellect-vllm"
+            ;;
+        81|qwen_flash_next_sglang|qwen-flash-next-sglang)
+            echo "qwen-flash-next-sglang"
+            ;;
+        82|qwen_flash_next_vllm|qwen-flash-next-vllm)
+            echo "qwen-flash-next-vllm"
+            ;;
+        83|qwen_ktransformers|qwen-ktransformers)
+            echo "qwen-ktransformers"
+            ;;
+        84|qwen_sglang|qwen-sglang)
+            echo "qwen-sglang"
+            ;;
+        85|qwen_sglang_pr_22121|qwen-sglang-pr-22121)
+            echo "qwen-sglang-pr-22121"
+            ;;
+        86|qwen_transformers|qwen-transformers)
+            echo "qwen-transformers"
+            ;;
+        87|qwen_vllm|qwen-vllm)
+            echo "qwen-vllm"
+            ;;
+        88|radixark_qwen_sglang|radixark-qwen-sglang)
+            echo "radixark-qwen-sglang"
+            ;;
+        89|radixark_sglang|radixark-sglang)
+            echo "radixark-sglang"
+            ;;
+        90|redhat_sglang_pr_35809|redhat-sglang-pr-35809)
+            echo "redhat-sglang-pr-35809"
+            ;;
+        91|redhatai_sglang|redhatai-sglang)
+            echo "redhatai-sglang"
+            ;;
+        92|redhatai_vllm|redhatai-vllm)
+            echo "redhatai-vllm"
+            ;;
+        93|stepfun_sglang|stepfun-sglang)
+            echo "stepfun-sglang"
+            ;;
+        94|stepfun_transformers|stepfun-transformers)
+            echo "stepfun-transformers"
+            ;;
+        95|stepfun_vllm|stepfun-vllm)
+            echo "stepfun-vllm"
+            ;;
+        96|z_lab_sglang|z-lab-sglang)
+            echo "z-lab-sglang"
+            ;;
+        97|z_lab_sglang_pr_35209|z-lab-sglang-pr-35209)
+            echo "z-lab-sglang-pr-35209"
+            ;;
+        98|z_lab_vllm|z-lab-vllm)
+            echo "z-lab-vllm"
+            ;;
+        99|zyphra_legacy_sglang|zyphra-legacy-sglang)
+            echo "zyphra-legacy-sglang"
+            ;;
+        100|zyphra_legacy_transformers|zyphra-legacy-transformers)
+            echo "zyphra-legacy-transformers"
+            ;;
+        101|zyphra_legacy_vllm|zyphra-legacy-vllm)
+            echo "zyphra-legacy-vllm"
+            ;;
+        102|zyphra_sglang|zyphra-sglang)
+            echo "zyphra-sglang"
+            ;;
+        103|zyphra_sglang_pr_32517|zyphra-sglang-pr-32517)
+            echo "zyphra-sglang-pr-32517"
+            ;;
+        104|zyphra_transformers|zyphra-transformers)
+            echo "zyphra-transformers"
+            ;;
+        105|zyphra_vllm|zyphra-vllm)
+            echo "zyphra-vllm"
+            ;;
+        106|custom|custom_uv|custom-uv|env_custom_uv)
+            echo "custom_uv"
+            ;;
+        107|custom_pip|custom-pip|env_custom_pip)
+            echo "custom_pip"
             ;;
         *)
             return 1
@@ -578,6 +618,7 @@ activate_environment_override() {
     fi
 
     print_info "Activating requested environment: $env_path"
+    # shellcheck source=/dev/null
     if ! source "$activate_script"; then
         print_error "Failed to activate requested environment: $env_path"
         return 1
@@ -1087,6 +1128,8 @@ install_arcee_deepgemm() {
     run_command chmod +x "$deepgemm_installer" || return 1
 
     print_info "Installing vLLM $vllm_ref's pinned DeepGEMM build for Arcee..."
+    # The child Bash expands its positional arguments.
+    # shellcheck disable=SC2016
     run_command env VIRTUAL_ENV="$VIRTUAL_ENV" PATH="$VIRTUAL_ENV/bin:$PATH" \
         bash -c 'cd "$1" && bash "$2"' _ "$VIRTUAL_ENV" "$deepgemm_installer" || return 1
 }
@@ -1095,6 +1138,20 @@ install_arcee_vllm() {
     print_info "Installing the pinned GitHub vLLM commit for Arcee..."
     install_vllm_pinned_commit_python311_compatible || return 1
     install_arcee_deepgemm "52be12cfac0c5a18ba906814b2d2bcadb40a9c4b" || return 1
+}
+
+install_vllm_pr_54479() {
+    ensure_active_environment_matches "$1" || return 1
+    # Upstream PR https://github.com/vllm-project/vllm/pull/54479 separates compilation from KV-memory profiling.
+    local source_commit="22f931fe2177912ddf33e5a033948473fe9720f2"
+    # This Python-only PR uses unmodified binaries from its exact upstream merge base.
+    local wheel_url="https://wheels.vllm.ai/144e79c8106da23141ac010394b782f730cc7fe8/vllm-0.28.1rc1.dev452%2Bg144e79c81-cp38-abi3-manylinux_2_28_x86_64.whl"
+    print_info "Installing upstream vLLM PR 54479 at ${source_commit}..."
+    VLLM_USE_PRECOMPILED=1 \
+        VLLM_PRECOMPILED_WHEEL_LOCATION="${wheel_url}" \
+        run_uv_install -U --reinstall --prerelease=allow \
+        "vllm @ git+https://github.com/vllm-project/vllm.git@${source_commit}" \
+        --torch-backend=cu130 || return 1
 }
 
 install_arcee_nvfp4_vllm() {
@@ -1108,6 +1165,12 @@ install_cohere_vllm() {
     install_vllm_pinned_commit_python311_compatible || return 1
     run_uv_install "transformers>=5,<6" || return 1
     run_uv_install "cohere_melody>=0.9.0" || return 1
+}
+
+install_cohere_vllm_pr_54479() {
+    install_vllm_pr_54479 "cohere-vllm-pr-54479" || return 1
+    run_uv_install "transformers==5.17.0" || return 1
+    run_uv_install "cohere_melody==0.13.4" || return 1
 }
 
 install_datalab_vllm() {
@@ -1276,9 +1339,69 @@ install_deepseek_sglang() {
     run_uv_install -U --prerelease=allow "sglang[all]==0.5.16" || return 1
 }
 
+install_deepseek_vision_sglang_pr_37253() {
+    ensure_active_environment_matches "deepseek-vision-sglang-pr-37253" || return 1
+    # Native Vision and bundled DSpark: https://github.com/sgl-project/sglang/pull/37253
+    local source_commit="d5a3b7725374070669f4d23c1e99e186f4dfc309"
+    print_info "Installing upstream DeepSeek Vision SGLang PR 37253 at ${source_commit}..."
+    run_uv_install -U --reinstall --prerelease=allow \
+        "sglang @ git+https://github.com/sgl-project/sglang.git@${source_commit}#subdirectory=python" \
+        --torch-backend=cu130 || return 1
+}
+
+install_deepseek_vision_vllm_pr_54566() {
+    ensure_active_environment_matches "deepseek-vision-vllm-pr-54566" || return 1
+    # Native Vision CUDA support: https://github.com/vllm-project/vllm/pull/54566
+    # Official merge: 1356635d837c4ef002ec98c1a0296e7ff60be3c1; PR head: 047c353c99a6ab5f2ad09a70c3ccc6aa67deddfc.
+    local wheel_url="https://wheels.vllm.ai/1356635d837c4ef002ec98c1a0296e7ff60be3c1/vllm-0.28.1rc1.dev317%2Bg1356635d8-cp38-abi3-manylinux_2_28_x86_64.whl"
+    print_info "Installing the official DeepSeek Vision vLLM PR 54566 merge wheel..."
+    run_uv_install -U --reinstall --prerelease=allow \
+        "vllm @ ${wheel_url}" --torch-backend=cu130 || return 1
+    # Required by the pinned CUDA manifest; this cubin release is not published on PyPI.
+    run_uv_install \
+        "flashinfer-cubin @ https://github.com/flashinfer-ai/flashinfer/releases/download/v0.6.18/flashinfer_cubin-0.6.18-py3-none-any.whl#sha256=2dd65c0fcfc6bc44c67f148530de5372979c2e3d260e47935730f94156d4d873" || return 1
+}
+
 install_deepseek_vllm() {
     print_info "Installing vLLM 0.25.0 for DeepSeek..."
     run_uv_install "vllm==0.25.0" || return 1
+}
+
+install_glm53flash_dflash2_sglang_pr_37818() {
+    ensure_active_environment_matches "glm53flash-dflash2-sglang-pr-37818" || return 1
+    # Native DFlash Mamba checkpoint tracking: https://github.com/sgl-project/sglang/pull/37818
+    # Official test merge retains GLM5Next support; PR head: df464a48213f5e40e29c7453a7db07880435f777.
+    local source_commit="787299797931749c8f9bb15453f375bd1f9bed5c"
+    print_info "Installing upstream SGLang PR 37818 test merge at ${source_commit}..."
+    run_uv_install -U --reinstall --prerelease=allow \
+        "sglang @ git+https://github.com/sgl-project/sglang.git@${source_commit}#subdirectory=python" \
+        --torch-backend=cu130 || return 1
+    # Native GLM5Next image/video processors need the newer HF stack.
+    # SGLang's declared pins lag this integration: https://github.com/sgl-project/sglang/pull/38522
+    run_uv_install --force-reinstall --no-deps \
+        "transformers==5.17.0" "tokenizers==0.23.2" || return 1
+    # Keep native BF16 vision convolutions on a matching cuDNN sublibrary set.
+    run_uv_install --no-deps "nvidia-cudnn-cu13==9.26.0.51" || return 1
+}
+
+install_glm53flash_dflash2_vllm_pr_55423() {
+    ensure_active_environment_matches "glm53flash-dflash2-vllm-pr-55423" || return 1
+    # Native DFlash2/mHC and hybrid draft-cache integration: https://github.com/vllm-project/vllm/pull/55423
+    local source_commit="374e367e2b87ee65332b03468b76dc4c40e69519"
+    # This Python-only PR uses unmodified binaries from its exact upstream parent.
+    local wheel_url="https://wheels.vllm.ai/c81ace18596f75660bbc04efc2075a5f17a76791/vllm-0.28.1rc1.dev420%2Bgc81ace185-cp38-abi3-manylinux_2_28_x86_64.whl"
+    print_info "Installing native vLLM Flash DFlash2 PR 55423 at ${source_commit}..."
+    VLLM_USE_PRECOMPILED=1 \
+        VLLM_PRECOMPILED_WHEEL_LOCATION="${wheel_url}" \
+        run_uv_install -U --reinstall --prerelease=allow \
+        "vllm @ git+https://github.com/vllm-project/vllm.git@${source_commit}" \
+        --torch-backend=cu130 || return 1
+    run_uv_install \
+        "flashinfer-cubin @ https://github.com/flashinfer-ai/flashinfer/releases/download/v0.6.18/flashinfer_cubin-0.6.18-py3-none-any.whl#sha256=2dd65c0fcfc6bc44c67f148530de5372979c2e3d260e47935730f94156d4d873" \
+        "flashinfer-jit-cache @ https://github.com/flashinfer-ai/flashinfer/releases/download/v0.6.18/flashinfer_jit_cache-0.6.18+cu130-cp39-abi3-manylinux_2_28_x86_64.whl#sha256=428a47a554ade93c30a818e142b781df58582bf056bab94611fb4c906cc366bf" || return 1
+    # Torch's 9.20 wheel loads the host's 9.26 tensor-IR sublibrary during BF16 Conv2d.
+    # Keep the native cuDNN sublibraries aligned; this overrides Torch's exact 9.20 pin.
+    run_uv_install --no-deps "nvidia-cudnn-cu13==9.26.0.51" || return 1
 }
 
 install_gptoss_sglang() {
@@ -1425,31 +1548,9 @@ install_inclusionai_vllm() {
 }
 
 install_inclusionai_ling3_vllm() {
-    local source_repo="https://github.com/inclusionAI/vllm-ling-v3.git"
-    local source_commit="92c1041123ddd8b40ae6faf7eafabac71a4c0b34"
-    local source_dir=""
-
-    if [ -z "${VIRTUAL_ENV:-}" ]; then
-        print_error "No active virtual environment detected for the InclusionAI Ling 3 vLLM checkout."
-        return 1
-    fi
-    source_dir="$VIRTUAL_ENV/vllm-ling-v3"
-
-    if [ -e "$source_dir" ] && [ ! -d "$source_dir/.git" ]; then
-        print_error "InclusionAI Ling 3 vLLM target exists but is not a git checkout: $source_dir"
-        return 1
-    fi
-    if [ ! -d "$source_dir/.git" ]; then
-        run_command git clone "$source_repo" "$source_dir" || return 1
-    fi
-
-    run_command git -C "$source_dir" fetch origin "$source_commit" || return 1
-    run_command git -C "$source_dir" checkout --force "$source_commit" || return 1
-    print_info "Installing InclusionAI Ling 3 vLLM commit $source_commit from $source_dir..."
-    VLLM_USE_PRECOMPILED=1 \
-        run_uv_install -U --reinstall --prerelease=allow \
-        -e "$source_dir" --torch-backend=auto || return 1
-    install_flashinfer_python311_compatible || return 1
+    print_info "Installing upstream vLLM 0.29.0 with native Ling 3 support..."
+    run_uv_install --upgrade --reinstall \
+        "vllm==0.29.0" --index-url https://pypi.org/simple --torch-backend=cu130 || return 1
 }
 
 install_intel_sglang() {
@@ -1892,11 +1993,23 @@ perform_environment_action() {
         arcee-vllm)
             install_arcee_vllm || return 1
             ;;
+        arcee-vllm-pr-54479)
+            install_vllm_pr_54479 "arcee-vllm-pr-54479" || return 1
+            ;;
+        arcee-vllm-pr-54479-fp8-block)
+            install_vllm_pr_54479 "arcee-vllm-pr-54479-fp8-block" || return 1
+            ;;
+        arcee-vllm-pr-54479-thinking-fp8-block)
+            install_vllm_pr_54479 "arcee-vllm-pr-54479-thinking-fp8-block" || return 1
+            ;;
         cohere-sglang)
             install_cohere_sglang || return 1
             ;;
         cohere-vllm)
             install_cohere_vllm || return 1
+            ;;
+        cohere-vllm-pr-54479)
+            install_cohere_vllm_pr_54479 || return 1
             ;;
         datalab-sglang)
             install_datalab_sglang || return 1
@@ -1912,6 +2025,12 @@ perform_environment_action() {
             ;;
         deepseek-sglang)
             install_deepseek_sglang || return 1
+            ;;
+        deepseek-vision-sglang-pr-37253)
+            install_deepseek_vision_sglang_pr_37253 || return 1
+            ;;
+        deepseek-vision-vllm-pr-54566)
+            install_deepseek_vision_vllm_pr_54566 || return 1
             ;;
         deepseek-vllm)
             install_deepseek_vllm || return 1
@@ -1933,6 +2052,12 @@ perform_environment_action() {
             ;;
         glm-vllm)
             install_glm_vllm || return 1
+            ;;
+        glm53flash-dflash2-sglang-pr-37818)
+            install_glm53flash_dflash2_sglang_pr_37818 || return 1
+            ;;
+        glm53flash-dflash2-vllm-pr-55423)
+            install_glm53flash_dflash2_vllm_pr_55423 || return 1
             ;;
         gpt-oss-sglang)
             install_gptoss_sglang || return 1

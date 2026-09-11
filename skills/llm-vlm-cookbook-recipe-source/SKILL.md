@@ -1,5 +1,5 @@
 ---
-name: "LLM and VLM Cookbook Recipe Source"
+name: llm-vlm-cookbook-recipe-source
 description: "Authoritative source policy for researching, creating, validating, reviewing, or updating LLM/VLM inference recipes, serving commands, engine flags, quantization, parallelism, and speculative decoding for SGLang and vLLM."
 alwaysApply: false
 ---

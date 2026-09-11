@@ -1,5 +1,5 @@
 ---
-name: "LLM Inference Bench Setup"
+name: llm-inference-bench-creation-and-update
 description: "Sets up llm-inference-bench and env_custom-uv, enables context sweeps beyond 128K, and benchmarks a running SGLang or vLLM instance using a supplied model context limit and launcher-derived output naming; reports completion or early failure."
 alwaysApply: false
 ---
@@ -268,15 +268,15 @@ Inspect the current checkout's output schema. Known fields include `metadata`, `
 
 Classify the run explicitly:
 
-- **SUCCESS**: normal completion; fresh, parseable JSON at the requested path matching this model and invocation; actual decode measurements cover every requested context at runnable concurrency; every requested prefill context has a valid sample, including the final endpoint; no unexplained missing work, request errors, or loop-invalid measurements. Report legitimate capacity/concurrency skips explicitly instead of calling them measured cells.
-- **FAILED EARLY**: setup/dependency/patch/readiness failure, authentication or connection failure, context rejection, crash, interruption, timeout, or exit before the requested sweep finishes. Give the failing stage, exit code when launched, exact first relevant error, last completed context/concurrency if any, and whether partial JSON/checkpoint files exist. If not launched, state that clearly.
-- **FAILED / COMPLETED WITH ERRORS**: the process finished, but required contexts/prefill endpoints are missing or only skipped, measurements are invalid, or request/loop errors remain. Distinguish this from an early exit; do not present it as an unqualified success.
+- **SUCCESS (completed sweep)**: normal completion of the requested sweep with fresh, parseable JSON at the requested path matching this model and invocation. A completed sweep remains a successful benchmark run when individual measurements are invalid or capacity-limited. Report every request error, loop-invalid measurement, context rejection, missing sample, and capacity/concurrency skip separately; do not label those cells successful.
+- **FAILED EARLY**: setup/dependency/patch/readiness failure, or an authentication error, connection failure, context rejection, crash, interruption, timeout, or other error that prevents the requested sweep from completing. Give the failing stage, exit code when launched, exact first relevant error, last completed context/concurrency if any, and whether partial JSON/checkpoint files exist. If not launched, state that clearly.
+- **MEASUREMENT ISSUES**: record invalid measurements, request/loop errors, missing or rejected prefill samples, and legitimate capacity skips independently of run completion. Leave the benchmark failure or measurement-issues field blank only when no issues were recorded. A partial sweep or unexplained missing work is not successful completion.
 
 If estimated full-limit prefill fails, report that failure rather than quietly omitting the endpoint. Keep genuine partial output for diagnosis; do not invent an empty success JSON, rewrite error measurements into successful ones, or delete a user's benchmark checkout/environment after a failed run.
 
 ## Final report
 
-Lead with **SUCCESS**, **FAILED EARLY**, or **FAILED / COMPLETED WITH ERRORS**, followed by:
+Lead with **SUCCESS (completed sweep)** or **FAILED EARLY**, explicitly listing any measurement issues separately, followed by:
 
 - Inference launch script, served model/engine, supplied context limit, host/port, and GPU label/count with its launcher source.
 - Exact decode and prefill argument lists and the fixed `--max-tokens 4096 --token-targeting estimate` settings.
