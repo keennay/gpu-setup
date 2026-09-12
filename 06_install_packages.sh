@@ -42,6 +42,7 @@ ENV_TYPES=(
   "deepseek-ktransformers"
   "deepseek-lmdeploy"
   "deepseek-sglang"
+  "deepseek-v41-vllm-e77daef89"
   "deepseek-vision-sglang-pr-37253"
   "deepseek-vision-vllm-pr-54566"
   "deepseek-vllm"
@@ -80,6 +81,9 @@ ENV_TYPES=(
   "microsoft-sglang"
   "microsoft-vllm"
   "minimax-ktransformers"
+  "minimax-m2-sglang-v0510-post1"
+  "minimax-m2-vllm-0f3ce4c74"
+  "minimax-m25-vllm-v0280"
   "minimax-sglang"
   "minimax-transformers"
   "minimax-vllm"
@@ -90,6 +94,9 @@ ENV_TYPES=(
   "nanbeige-transformers"
   "nanbeige-vllm"
   "nemotron-trtllm"
+  "nemotron-ultra-vllm-9c2d21046"
+  "nex-n2-sglang-v0519"
+  "nex-n2-vllm-v0290"
   "nvidia-deepseek-sglang"
   "nvidia-nemotron"
   "nvidia-sglang"
@@ -152,6 +159,7 @@ declare -A ENV_DESCRIPTIONS=(
   ["deepseek-ktransformers"]="DeepSeek (KTransformers)"
   ["deepseek-lmdeploy"]="DeepSeek (LMDeploy)"
   ["deepseek-sglang"]="DeepSeek (SGLang)"
+  ["deepseek-v41-vllm-e77daef89"]="DeepSeek V4.1 Flash (vLLM) e77daef89"
   ["deepseek-vision-sglang-pr-37253"]="DeepSeek V4 Flash Vision Exp (SGLang) PR 37253"
   ["deepseek-vision-vllm-pr-54566"]="DeepSeek V4 Flash Vision Exp (vLLM) PR 54566"
   ["deepseek-vllm"]="DeepSeek (vLLM)"
@@ -190,6 +198,9 @@ declare -A ENV_DESCRIPTIONS=(
   ["microsoft-sglang"]="Microsoft (SGLang)"
   ["microsoft-vllm"]="Microsoft (vLLM)"
   ["minimax-ktransformers"]="MiniMax (KTransformers)"
+  ["minimax-m2-sglang-v0510-post1"]="MiniMax M2 family (SGLang) 0.5.10.post1"
+  ["minimax-m2-vllm-0f3ce4c74"]="MiniMax M2 family (vLLM) 0f3ce4c74"
+  ["minimax-m25-vllm-v0280"]="MiniMax M2.5 (vLLM) 0.28.0"
   ["minimax-sglang"]="MiniMax (SGLang)"
   ["minimax-transformers"]="MiniMax (Transformers)"
   ["minimax-vllm"]="MiniMax (vLLM)"
@@ -200,6 +211,9 @@ declare -A ENV_DESCRIPTIONS=(
   ["nanbeige-transformers"]="Nanbeige (Transformers)"
   ["nanbeige-vllm"]="Nanbeige (vLLM)"
   ["nemotron-trtllm"]="Nemotron (TRT-LLM)"
+  ["nemotron-ultra-vllm-9c2d21046"]="NVIDIA Nemotron Ultra (vLLM) PR54788 merge"
+  ["nex-n2-sglang-v0519"]="Nex N2 (SGLang) 0.5.19"
+  ["nex-n2-vllm-v0290"]="Nex N2 (vLLM) 0.29.0"
   ["nvidia-deepseek-sglang"]="NVIDIA DeepSeek (SGLang)"
   ["nvidia-nemotron"]="NVIDIA Nemotron (vLLM)"
   ["nvidia-sglang"]="NVIDIA (SGLang)"
@@ -303,268 +317,289 @@ resolve_env_type() {
         19|deepseek_sglang|deepseek-sglang)
             echo "deepseek-sglang"
             ;;
-        20|deepseek_vision_sglang_pr_37253|deepseek-vision-sglang-pr-37253)
+        20|deepseek_v41_vllm_e77daef89|deepseek-v41-vllm-e77daef89)
+            echo "deepseek-v41-vllm-e77daef89"
+            ;;
+        21|deepseek_vision_sglang_pr_37253|deepseek-vision-sglang-pr-37253)
             echo "deepseek-vision-sglang-pr-37253"
             ;;
-        21|deepseek_vision_vllm_pr_54566|deepseek-vision-vllm-pr-54566)
+        22|deepseek_vision_vllm_pr_54566|deepseek-vision-vllm-pr-54566)
             echo "deepseek-vision-vllm-pr-54566"
             ;;
-        22|deepseek_vllm|deepseek-vllm)
+        23|deepseek_vllm|deepseek-vllm)
             echo "deepseek-vllm"
             ;;
-        23|diffusiongemma_sglang|diffusiongemma-sglang)
+        24|diffusiongemma_sglang|diffusiongemma-sglang)
             echo "diffusiongemma-sglang"
             ;;
-        24|gemma_sglang|gemma-sglang)
+        25|gemma_sglang|gemma-sglang)
             echo "gemma-sglang"
             ;;
-        25|gemma_vllm|gemma-vllm|gemma4_vllm|gemma4-vllm|gemma_4_vllm|gemma-4-vllm)
+        26|gemma_vllm|gemma-vllm|gemma4_vllm|gemma4-vllm|gemma_4_vllm|gemma-4-vllm)
             echo "gemma-vllm"
             ;;
-        26|gemma3n_vllm|gemma3n-vllm)
+        27|gemma3n_vllm|gemma3n-vllm)
             echo "gemma3n-vllm"
             ;;
-        27|glm_ktransformers|glm-ktransformers)
+        28|glm_ktransformers|glm-ktransformers)
             echo "glm-ktransformers"
             ;;
-        28|glm_sglang|glm-sglang)
+        29|glm_sglang|glm-sglang)
             echo "glm-sglang"
             ;;
-        29|glm_transformers|glm-transformers)
+        30|glm_transformers|glm-transformers)
             echo "glm-transformers"
             ;;
-        30|glm_vllm|glm-vllm)
+        31|glm_vllm|glm-vllm)
             echo "glm-vllm"
             ;;
-        31|glm53flash_dflash2_sglang_pr_37818|glm53flash-dflash2-sglang-pr-37818)
+        32|glm53flash_dflash2_sglang_pr_37818|glm53flash-dflash2-sglang-pr-37818)
             echo "glm53flash-dflash2-sglang-pr-37818"
             ;;
-        32|glm53flash_dflash2_vllm_pr_55423|glm53flash-dflash2-vllm-pr-55423)
+        33|glm53flash_dflash2_vllm_pr_55423|glm53flash-dflash2-vllm-pr-55423)
             echo "glm53flash-dflash2-vllm-pr-55423"
             ;;
-        33|gptoss_sglang|gpt-oss_sglang|gptoss-sglang|gpt-oss-sglang)
+        34|gptoss_sglang|gpt-oss_sglang|gptoss-sglang|gpt-oss-sglang)
             echo "gpt-oss-sglang"
             ;;
-        34|gptoss_transformers|gpt-oss_transformers|gptoss-transformers|gpt-oss-transformers)
+        35|gptoss_transformers|gpt-oss_transformers|gptoss-transformers|gpt-oss-transformers)
             echo "gpt-oss-transformers"
             ;;
-        35|gptoss_vllm|gpt-oss_vllm|vllm_gptoss|gptoss-vllm|gpt-oss-vllm)
+        36|gptoss_vllm|gpt-oss_vllm|vllm_gptoss|gptoss-vllm|gpt-oss-vllm)
             echo "gpt-oss-vllm"
             ;;
-        36|ibm_sglang|ibm-sglang)
+        37|ibm_sglang|ibm-sglang)
             echo "ibm-sglang"
             ;;
-        37|ibm_vllm|ibm-vllm)
+        38|ibm_vllm|ibm-vllm)
             echo "ibm-vllm"
             ;;
-        38|inclusionai_ling3_vllm|inclusionai-ling3-vllm)
+        39|inclusionai_ling3_vllm|inclusionai-ling3-vllm)
             echo "inclusionai-ling3-vllm"
             ;;
-        39|inclusionai_sglang|inclusionai-sglang)
+        40|inclusionai_sglang|inclusionai-sglang)
             echo "inclusionai-sglang"
             ;;
-        40|inclusionai_transformers|inclusionai-transformers)
+        41|inclusionai_transformers|inclusionai-transformers)
             echo "inclusionai-transformers"
             ;;
-        41|inclusionai_vllm|inclusionai-vllm)
+        42|inclusionai_vllm|inclusionai-vllm)
             echo "inclusionai-vllm"
             ;;
-        42|incoai_sglang|incoai-sglang)
+        43|incoai_sglang|incoai-sglang)
             echo "incoai-sglang"
             ;;
-        43|incoai_vllm|incoai-vllm)
+        44|incoai_vllm|incoai-vllm)
             echo "incoai-vllm"
             ;;
-        44|intel_sglang|intel-sglang)
+        45|intel_sglang|intel-sglang)
             echo "intel-sglang"
             ;;
-        45|intel_vllm|intel-vllm)
+        46|intel_vllm|intel-vllm)
             echo "intel-vllm"
             ;;
-        46|kimi_ktransformers|kimi-ktransformers)
+        47|kimi_ktransformers|kimi-ktransformers)
             echo "kimi-ktransformers"
             ;;
-        47|kimi_sglang|kimi-sglang)
+        48|kimi_sglang|kimi-sglang)
             echo "kimi-sglang"
             ;;
-        48|kimi_vllm|kimi-vllm)
+        49|kimi_vllm|kimi-vllm)
             echo "kimi-vllm"
             ;;
-        49|liquidai_sglang|liquidai-sglang)
+        50|liquidai_sglang|liquidai-sglang)
             echo "liquidai-sglang"
             ;;
-        50|liquidai_sglang_pr_31041|liquidai-sglang-pr-31041)
+        51|liquidai_sglang_pr_31041|liquidai-sglang-pr-31041)
             echo "liquidai-sglang-pr-31041"
             ;;
-        51|liquidai_transformers|liquidai-transformers)
+        52|liquidai_transformers|liquidai-transformers)
             echo "liquidai-transformers"
             ;;
-        52|liquidai_vllm|liquidai-vllm)
+        53|liquidai_vllm|liquidai-vllm)
             echo "liquidai-vllm"
             ;;
-        53|meta_sglang|meta-sglang)
+        54|meta_sglang|meta-sglang)
             echo "meta-sglang"
             ;;
-        54|meta_vllm|meta-vllm)
+        55|meta_vllm|meta-vllm)
             echo "meta-vllm"
             ;;
-        55|microsoft_sglang|microsoft-sglang)
+        56|microsoft_sglang|microsoft-sglang)
             echo "microsoft-sglang"
             ;;
-        56|microsoft_vllm|microsoft-vllm)
+        57|microsoft_vllm|microsoft-vllm)
             echo "microsoft-vllm"
             ;;
-        57|minimax_ktransformers|minimax-ktransformers)
+        58|minimax_ktransformers|minimax-ktransformers)
             echo "minimax-ktransformers"
             ;;
-        58|minimax_sglang|minimax-sglang)
+        59|minimax_m2_sglang_v0510_post1|minimax-m2-sglang-v0510-post1)
+            echo "minimax-m2-sglang-v0510-post1"
+            ;;
+        60|minimax_m2_vllm_0f3ce4c74|minimax-m2-vllm-0f3ce4c74)
+            echo "minimax-m2-vllm-0f3ce4c74"
+            ;;
+        61|minimax_m25_vllm_v0280|minimax-m25-vllm-v0280)
+            echo "minimax-m25-vllm-v0280"
+            ;;
+        62|minimax_sglang|minimax-sglang)
             echo "minimax-sglang"
             ;;
-        59|minimax_transformers|minimax-transformers)
+        63|minimax_transformers|minimax-transformers)
             echo "minimax-transformers"
             ;;
-        60|minimax_vllm|minimax-vllm)
+        64|minimax_vllm|minimax-vllm)
             echo "minimax-vllm"
             ;;
-        61|mistralai_sglang|mistralai-sglang)
+        65|mistralai_sglang|mistralai-sglang)
             echo "mistralai-sglang"
             ;;
-        62|mistralai_transformers|mistralai-transformers)
+        66|mistralai_transformers|mistralai-transformers)
             echo "mistralai-transformers"
             ;;
-        63|mistralai_vllm|mistralai-vllm)
+        67|mistralai_vllm|mistralai-vllm)
             echo "mistralai-vllm"
             ;;
-        64|nanbeige_sglang|nanbeige-sglang)
+        68|nanbeige_sglang|nanbeige-sglang)
             echo "nanbeige-sglang"
             ;;
-        65|nanbeige_transformers|nanbeige-transformers)
+        69|nanbeige_transformers|nanbeige-transformers)
             echo "nanbeige-transformers"
             ;;
-        66|nanbeige_vllm|nanbeige-vllm)
+        70|nanbeige_vllm|nanbeige-vllm)
             echo "nanbeige-vllm"
             ;;
-        67|nemotron_trtllm|nemotron-trtllm|nemotron_trt_llm|nemotron-trt-llm)
+        71|nemotron_trtllm|nemotron-trtllm|nemotron_trt_llm|nemotron-trt-llm)
             echo "nemotron-trtllm"
             ;;
-        68|nvidia_deepseek_sglang|nvidia-deepseek-sglang)
+        72|nemotron_ultra_vllm_9c2d21046|nemotron-ultra-vllm-9c2d21046)
+            echo "nemotron-ultra-vllm-9c2d21046"
+            ;;
+        73|nex_n2_sglang_v0519|nex-n2-sglang-v0519)
+            echo "nex-n2-sglang-v0519"
+            ;;
+        74|nex_n2_vllm_v0290|nex-n2-vllm-v0290)
+            echo "nex-n2-vllm-v0290"
+            ;;
+        75|nvidia_deepseek_sglang|nvidia-deepseek-sglang)
             echo "nvidia-deepseek-sglang"
             ;;
-        69|nvidia_nemotron|nvidia-nemotron)
+        76|nvidia_nemotron|nvidia-nemotron)
             echo "nvidia-nemotron"
             ;;
-        70|nvidia_sglang|nvidia-sglang)
+        77|nvidia_sglang|nvidia-sglang)
             echo "nvidia-sglang"
             ;;
-        71|nvidia_sglang_pr_33554|nvidia-sglang-pr-33554)
+        78|nvidia_sglang_pr_33554|nvidia-sglang-pr-33554)
             echo "nvidia-sglang-pr-33554"
             ;;
-        72|nvidia_sglang_pr_34966|nvidia-sglang-pr-34966)
+        79|nvidia_sglang_pr_34966|nvidia-sglang-pr-34966)
             echo "nvidia-sglang-pr-34966"
             ;;
-        73|nvidia_vllm|nvidia-vllm)
+        80|nvidia_vllm|nvidia-vllm)
             echo "nvidia-vllm"
             ;;
-        74|poolside_laguna_xs_vllm|poolside-laguna-xs-vllm)
+        81|poolside_laguna_xs_vllm|poolside-laguna-xs-vllm)
             echo "poolside-laguna-xs-vllm"
             ;;
-        75|poolside_sglang|poolside-sglang)
+        82|poolside_sglang|poolside-sglang)
             echo "poolside-sglang"
             ;;
-        76|poolside_sglang_pr_22513|poolside-sglang-pr-22513)
+        83|poolside_sglang_pr_22513|poolside-sglang-pr-22513)
             echo "poolside-sglang-pr-22513"
             ;;
-        77|poolside_transformers|poolside-transformers)
+        84|poolside_transformers|poolside-transformers)
             echo "poolside-transformers"
             ;;
-        78|poolside_vllm|poolside-vllm)
+        85|poolside_vllm|poolside-vllm)
             echo "poolside-vllm"
             ;;
-        79|primeintellect_sglang|primeintellect-sglang)
+        86|primeintellect_sglang|primeintellect-sglang)
             echo "primeintellect-sglang"
             ;;
-        80|primeintellect_vllm|primeintellect-vllm)
+        87|primeintellect_vllm|primeintellect-vllm)
             echo "primeintellect-vllm"
             ;;
-        81|qwen_flash_next_sglang|qwen-flash-next-sglang)
+        88|qwen_flash_next_sglang|qwen-flash-next-sglang)
             echo "qwen-flash-next-sglang"
             ;;
-        82|qwen_flash_next_vllm|qwen-flash-next-vllm)
+        89|qwen_flash_next_vllm|qwen-flash-next-vllm)
             echo "qwen-flash-next-vllm"
             ;;
-        83|qwen_ktransformers|qwen-ktransformers)
+        90|qwen_ktransformers|qwen-ktransformers)
             echo "qwen-ktransformers"
             ;;
-        84|qwen_sglang|qwen-sglang)
+        91|qwen_sglang|qwen-sglang)
             echo "qwen-sglang"
             ;;
-        85|qwen_sglang_pr_22121|qwen-sglang-pr-22121)
+        92|qwen_sglang_pr_22121|qwen-sglang-pr-22121)
             echo "qwen-sglang-pr-22121"
             ;;
-        86|qwen_transformers|qwen-transformers)
+        93|qwen_transformers|qwen-transformers)
             echo "qwen-transformers"
             ;;
-        87|qwen_vllm|qwen-vllm)
+        94|qwen_vllm|qwen-vllm)
             echo "qwen-vllm"
             ;;
-        88|radixark_qwen_sglang|radixark-qwen-sglang)
+        95|radixark_qwen_sglang|radixark-qwen-sglang)
             echo "radixark-qwen-sglang"
             ;;
-        89|radixark_sglang|radixark-sglang)
+        96|radixark_sglang|radixark-sglang)
             echo "radixark-sglang"
             ;;
-        90|redhat_sglang_pr_35809|redhat-sglang-pr-35809)
+        97|redhat_sglang_pr_35809|redhat-sglang-pr-35809)
             echo "redhat-sglang-pr-35809"
             ;;
-        91|redhatai_sglang|redhatai-sglang)
+        98|redhatai_sglang|redhatai-sglang)
             echo "redhatai-sglang"
             ;;
-        92|redhatai_vllm|redhatai-vllm)
+        99|redhatai_vllm|redhatai-vllm)
             echo "redhatai-vllm"
             ;;
-        93|stepfun_sglang|stepfun-sglang)
+        100|stepfun_sglang|stepfun-sglang)
             echo "stepfun-sglang"
             ;;
-        94|stepfun_transformers|stepfun-transformers)
+        101|stepfun_transformers|stepfun-transformers)
             echo "stepfun-transformers"
             ;;
-        95|stepfun_vllm|stepfun-vllm)
+        102|stepfun_vllm|stepfun-vllm)
             echo "stepfun-vllm"
             ;;
-        96|z_lab_sglang|z-lab-sglang)
+        103|z_lab_sglang|z-lab-sglang)
             echo "z-lab-sglang"
             ;;
-        97|z_lab_sglang_pr_35209|z-lab-sglang-pr-35209)
+        104|z_lab_sglang_pr_35209|z-lab-sglang-pr-35209)
             echo "z-lab-sglang-pr-35209"
             ;;
-        98|z_lab_vllm|z-lab-vllm)
+        105|z_lab_vllm|z-lab-vllm)
             echo "z-lab-vllm"
             ;;
-        99|zyphra_legacy_sglang|zyphra-legacy-sglang)
+        106|zyphra_legacy_sglang|zyphra-legacy-sglang)
             echo "zyphra-legacy-sglang"
             ;;
-        100|zyphra_legacy_transformers|zyphra-legacy-transformers)
+        107|zyphra_legacy_transformers|zyphra-legacy-transformers)
             echo "zyphra-legacy-transformers"
             ;;
-        101|zyphra_legacy_vllm|zyphra-legacy-vllm)
+        108|zyphra_legacy_vllm|zyphra-legacy-vllm)
             echo "zyphra-legacy-vllm"
             ;;
-        102|zyphra_sglang|zyphra-sglang)
+        109|zyphra_sglang|zyphra-sglang)
             echo "zyphra-sglang"
             ;;
-        103|zyphra_sglang_pr_32517|zyphra-sglang-pr-32517)
+        110|zyphra_sglang_pr_32517|zyphra-sglang-pr-32517)
             echo "zyphra-sglang-pr-32517"
             ;;
-        104|zyphra_transformers|zyphra-transformers)
+        111|zyphra_transformers|zyphra-transformers)
             echo "zyphra-transformers"
             ;;
-        105|zyphra_vllm|zyphra-vllm)
+        112|zyphra_vllm|zyphra-vllm)
             echo "zyphra-vllm"
             ;;
-        106|custom|custom_uv|custom-uv|env_custom_uv)
+        113|custom|custom_uv|custom-uv|env_custom_uv)
             echo "custom_uv"
             ;;
-        107|custom_pip|custom-pip|env_custom_pip)
+        114|custom_pip|custom-pip|env_custom_pip)
             echo "custom_pip"
             ;;
         *)
@@ -897,6 +932,53 @@ install_microsoft_sglang() {
         "Microsoft (SGLang) commit dd15fb57b5ef7d13419f92ddc9b241591b71c0b5" \
         "https://github.com/sgl-project/sglang.git" \
         "dd15fb57b5ef7d13419f92ddc9b241591b71c0b5"
+}
+
+install_nemotron_ultra_vllm_9c2d21046() {
+    ensure_active_environment_matches "nemotron-ultra-vllm-9c2d21046" || return 1
+    # Complete upstream PR54788 merge: native V2 draft MoE backend isolation.
+    # https://github.com/vllm-project/vllm/pull/54788
+    local source_commit="9c2d21046bb39f56ee93a5fab4f899714a5579ef"
+    local wheel_url="https://wheels.vllm.ai/${source_commit}/vllm-0.28.1rc1.dev562%2Bg9c2d21046-cp38-abi3-manylinux_2_28_x86_64.whl"
+    print_info "Installing native Nemotron Ultra vLLM PR54788 merge..."
+    run_uv_install -U --prerelease=allow \
+        "vllm @ ${wheel_url}" "transformers==5.12.1" "tokenizers==0.22.2" \
+        --index-url https://pypi.org/simple --torch-backend=cu130 || return 1
+    # Released CUDA requirements keep FlashInfer cubin outside PyPI install_requires.
+    run_uv_install \
+        "flashinfer-cubin @ https://github.com/flashinfer-ai/flashinfer/releases/download/v0.6.18/flashinfer_cubin-0.6.18-py3-none-any.whl#sha256=2dd65c0fcfc6bc44c67f148530de5372979c2e3d260e47935730f94156d4d873" || return 1
+}
+
+install_nex_n2_sglang_v0519() {
+    ensure_active_environment_matches "nex-n2-sglang-v0519" || return 1
+    # Native Qwen3.5 MoE backend for Nex-N2: https://github.com/nex-agi/Nex-N2.
+    # SGLang v0.5.19: 0bcd822377da7b5718e674eaf9c870d349424dd1; CPython 3.11 wheels.
+    # NVIDIA publishes the required cuda-tile RC wheel outside its PyPI sdist listing.
+    print_info "Installing official SGLang 0.5.19 for Nex N2..."
+    run_uv_install -U --reinstall \
+        'sglang @ https://files.pythonhosted.org/packages/97/f3/53f3a6c074be264bb389bb7e620fb99c26950a0f452a5d1415e5c5f58af9/sglang-0.5.19-cp311-cp311-manylinux_2_34_x86_64.whl#sha256=425e87377e725d03db8262382008f3fd9561a6cf5d82f485f8b9929f02ffe12b' \
+        'cuda-tile @ https://pypi.nvidia.com/cuda-tile/cuda_tile-1.6.0rc5-cp311-cp311-manylinux2014_x86_64.whl#sha256=a14ff257522a017430e98f16aabdfd514bbcf38ecb64a0fba1d3f86cd02a21bb' \
+        'torchvision==0.28.0' \
+        --index-url https://pypi.org/simple --torch-backend=cu130 || return 1
+    # Keep native BF16 vision convolutions on the host-matched cuDNN 9.26 family.
+    # This source-backed repair overrides Torch's 9.20 pin: pytorch/pytorch#188892.
+    run_uv_install --no-deps "nvidia-cudnn-cu13==9.26.0.51" || return 1
+}
+
+install_nex_n2_vllm_v0290() {
+    ensure_active_environment_matches "nex-n2-vllm-v0290" || return 1
+    # Native Nex-N2/Qwen3.5 MoE and incremental tools: vLLM v0.29.0.
+    # Upstream commit: 98dff2a81d747d1dba01a47f939f48c3526d4206.
+    print_info "Installing official vLLM 0.29.0 for Nex N2..."
+    run_uv_install -U --reinstall \
+        "vllm==0.29.0" "transformers==5.12.1" "tokenizers==0.22.2" \
+        --index-url https://pypi.org/simple --torch-backend=cu130 || return 1
+    run_uv_install \
+        "flashinfer-cubin @ https://github.com/flashinfer-ai/flashinfer/releases/download/v0.6.18/flashinfer_cubin-0.6.18-py3-none-any.whl#sha256=2dd65c0fcfc6bc44c67f148530de5372979c2e3d260e47935730f94156d4d873" \
+        "flashinfer-jit-cache @ https://github.com/flashinfer-ai/flashinfer/releases/download/v0.6.18/flashinfer_jit_cache-0.6.18+cu130-cp39-abi3-manylinux_2_28_x86_64.whl#sha256=428a47a554ade93c30a818e142b781df58582bf056bab94611fb4c906cc366bf" || return 1
+    # Preserve native Conv3d with version-aligned cuDNN sublibraries.
+    # This source-backed repair overrides Torch's 9.20 pin: pytorch/pytorch#188892.
+    run_uv_install --no-deps "nvidia-cudnn-cu13==9.26.0.51" || return 1
 }
 
 install_nvidia_deepseek_sglang() {
@@ -1339,6 +1421,19 @@ install_deepseek_sglang() {
     run_uv_install -U --prerelease=allow "sglang[all]==0.5.16" || return 1
 }
 
+install_deepseek_v41_vllm_e77daef89() {
+    ensure_active_environment_matches "deepseek-v41-vllm-e77daef89" || return 1
+    # Native DeepSeek V4.1 support: https://github.com/vllm-project/vllm/pull/56214
+    local source_commit="e77daef89e18e08321ae7b8b24827eedd5fe8673"
+    local wheel_url="https://wheels.vllm.ai/${source_commit}/vllm-0.1.1.dev5%2Bge77daef89-cp38-abi3-manylinux_2_28_x86_64.whl"
+    print_info "Installing the official DeepSeek V4.1 vLLM e77daef89 wheel..."
+    run_uv_install -U --reinstall --prerelease=allow \
+        "vllm @ ${wheel_url}" --torch-backend=cu130 || return 1
+    # Required by the pinned CUDA manifest; this cubin release is not published on PyPI.
+    run_uv_install \
+        "flashinfer-cubin @ https://github.com/flashinfer-ai/flashinfer/releases/download/v0.6.18.post1/flashinfer_cubin-0.6.18.post1-py3-none-any.whl#sha256=bbacb5b8bbf429e43bf2740bb45551d981f41d0462842e36ee6fb3e3452763ab" || return 1
+}
+
 install_deepseek_vision_sglang_pr_37253() {
     ensure_active_environment_matches "deepseek-vision-sglang-pr-37253" || return 1
     # Native Vision and bundled DSpark: https://github.com/sgl-project/sglang/pull/37253
@@ -1585,6 +1680,58 @@ install_meta_vllm() {
 install_microsoft_vllm() {
     print_info "Installing the pinned GitHub vLLM commit for Microsoft..."
     install_vllm_pinned_commit_python311_compatible || return 1
+}
+
+install_minimax_m2_sglang_v0510_post1() {
+    ensure_active_environment_matches "minimax-m2-sglang-v0510-post1" || return 1
+    # Official v0.5.10.post1: 7c35342c10e201899e22fe2972d40e60da19ff3e.
+    # Includes the native MiniMax partial-RoPE fix for Transformers 5.
+    # This required TorchAO release is on PyPI, not the selected PyTorch CUDA index.
+    local torchao_wheel="https://files.pythonhosted.org/packages/7d/fe/a24225d30775192a4c5d9cea3ecb95e6adc69d0a8b5ed98eb8e58d362344/torchao-0.9.0-cp39-abi3-manylinux_2_17_x86_64.manylinux2014_x86_64.manylinux_2_28_x86_64.whl#sha256=bc708910301a9f98344d43f3fe2aa6d5e1fab706d772b6df47ff05087d664145"
+    print_info "Installing official SGLang 0.5.10.post1 for MiniMax M2..."
+    run_uv_install -U --reinstall --prerelease=allow \
+        "sglang==0.5.10.post1" "torchao @ ${torchao_wheel}" --torch-backend=cu128 || return 1
+}
+
+install_minimax_m2_vllm_0f3ce4c74() {
+    ensure_active_environment_matches "minimax-m2-vllm-0f3ce4c74" || return 1
+    # Accuracy-verified official MiniMax recipe commit: 0f3ce4c74b1875791d6604e006b6e905fde9f698.
+    # https://docs.vllm.ai/projects/recipes/en/latest/MiniMax/MiniMax-M2.html
+    local wheel_url="https://wheels.vllm.ai/0f3ce4c74b1875791d6604e006b6e905fde9f698/vllm-0.19.1rc1.dev203%2Bg0f3ce4c74-cp38-abi3-manylinux_2_31_x86_64.whl"
+    print_info "Installing the official MiniMax vLLM 0f3ce4c74 wheel..."
+    # CUDA bindings 13.4 removed IPC handle fields used by the native Lamport workspace.
+    # https://github.com/smg-project/smg/pull/2494 validates the compatible 13.3.1 pin.
+    run_uv_install -U --reinstall --prerelease=allow \
+        "vllm @ ${wheel_url}" wheel "cuda-python==13.3.1" "cuda-bindings==13.3.1" \
+        --torch-backend=cu130 || return 1
+    # Exact upstream ref from this vLLM commit's tools/install_deepgemm.sh.
+    # The wheel's vendored extension is CPython 3.12-only; build for the active interpreter.
+    local source_dir
+    source_dir=$(mktemp -d -t minimax-m2-deepgemm.XXXXXX) || return 1
+    (
+        trap 'rm -rf "$source_dir"' EXIT
+        run_command git clone --filter=blob:none --no-checkout \
+            https://github.com/deepseek-ai/DeepGEMM.git "$source_dir" || exit 1
+        run_command git -C "$source_dir" checkout --detach \
+            477618cd51baffca09c4b0b87e97c03fe827ef03 || exit 1
+        run_command git -C "$source_dir" submodule update --init --recursive --depth 1 || exit 1
+        run_uv_install --no-build-isolation --no-deps "$source_dir"
+    ) || return 1
+}
+
+install_minimax_m25_vllm_v0280() {
+    ensure_active_environment_matches "minimax-m25-vllm-v0280" || return 1
+    # Official H200 recipe: https://recipes.vllm.ai/MiniMaxAI/MiniMax-M2.5/hw/h200.json
+    # v0.28.0: 2cf0a6915ce544dc493a0990f2ea38d81601128a.
+    # CUDA bindings 13.4 removed IPC handle fields used by native MiniMax Lamport QK norm.
+    # https://github.com/smg-project/smg/pull/2494 validates the compatible 13.3.1 pin.
+    print_info "Installing official vLLM 0.28.0 for MiniMax M2.5..."
+    run_uv_install -U --reinstall \
+        "vllm==0.28.0" "cuda-python==13.3.1" "cuda-bindings==13.3.1" \
+        --index-url https://pypi.org/simple --torch-backend=cu130 || return 1
+    # FlashInfer 0.6.17 fixes Python 3.10/3.11 imports; vLLM's exact 0.6.16.post3 pin is affected.
+    # https://github.com/flashinfer-ai/flashinfer/pull/4354; runtime dependencies are unchanged.
+    run_uv_install --upgrade --no-deps "flashinfer-python==0.6.17" || return 1
 }
 
 install_minimax_sglang() {
@@ -2026,6 +2173,9 @@ perform_environment_action() {
         deepseek-sglang)
             install_deepseek_sglang || return 1
             ;;
+        deepseek-v41-vllm-e77daef89)
+            install_deepseek_v41_vllm_e77daef89 || return 1
+            ;;
         deepseek-vision-sglang-pr-37253)
             install_deepseek_vision_sglang_pr_37253 || return 1
             ;;
@@ -2128,6 +2278,15 @@ perform_environment_action() {
         microsoft-vllm)
             install_microsoft_vllm || return 1
             ;;
+        minimax-m2-sglang-v0510-post1)
+            install_minimax_m2_sglang_v0510_post1 || return 1
+            ;;
+        minimax-m2-vllm-0f3ce4c74)
+            install_minimax_m2_vllm_0f3ce4c74 || return 1
+            ;;
+        minimax-m25-vllm-v0280)
+            install_minimax_m25_vllm_v0280 || return 1
+            ;;
         minimax-sglang)
             install_minimax_sglang || return 1
             ;;
@@ -2151,6 +2310,15 @@ perform_environment_action() {
             ;;
         nemotron-trtllm)
             install_nemotron_trtllm || return 1
+            ;;
+        nemotron-ultra-vllm-9c2d21046)
+            install_nemotron_ultra_vllm_9c2d21046 || return 1
+            ;;
+        nex-n2-sglang-v0519)
+            install_nex_n2_sglang_v0519 || return 1
+            ;;
+        nex-n2-vllm-v0290)
+            install_nex_n2_vllm_v0290 || return 1
             ;;
         nvidia-deepseek-sglang)
             install_nvidia_deepseek_sglang || return 1
