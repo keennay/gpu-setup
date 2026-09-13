@@ -2,7 +2,7 @@
 
 # Script: 05_setup_env.sh
 # Purpose: Create ML virtual environment and set up environment variables
-# Usage: source 05_setup_env.sh [--auto] [ENV_NAME|1-114]
+# Usage: source 05_setup_env.sh [--auto] [ENV_NAME|1-116]
 
 # Source bashrc to ensure environment is properly loaded
 if [ -f "$HOME/.bashrc" ]; then
@@ -336,106 +336,112 @@ resolve_env_type() {
         80|nvidia_vllm|nvidia-vllm)
             echo "nvidia-vllm"
             ;;
-        81|poolside_laguna_xs_vllm|poolside-laguna-xs-vllm)
+        81|openai_sglang_pr_38626|openai-sglang-pr-38626)
+            echo "openai-sglang-pr-38626"
+            ;;
+        82|openai_vllm_pr_53207|openai-vllm-pr-53207)
+            echo "openai-vllm-pr-53207"
+            ;;
+        83|poolside_laguna_xs_vllm|poolside-laguna-xs-vllm)
             echo "poolside-laguna-xs-vllm"
             ;;
-        82|poolside_sglang|poolside-sglang)
+        84|poolside_sglang|poolside-sglang)
             echo "poolside-sglang"
             ;;
-        83|poolside_sglang_pr_22513|poolside-sglang-pr-22513)
+        85|poolside_sglang_pr_22513|poolside-sglang-pr-22513)
             echo "poolside-sglang-pr-22513"
             ;;
-        84|poolside_transformers|poolside-transformers)
+        86|poolside_transformers|poolside-transformers)
             echo "poolside-transformers"
             ;;
-        85|poolside_vllm|poolside-vllm)
+        87|poolside_vllm|poolside-vllm)
             echo "poolside-vllm"
             ;;
-        86|primeintellect_sglang|primeintellect-sglang)
+        88|primeintellect_sglang|primeintellect-sglang)
             echo "primeintellect-sglang"
             ;;
-        87|primeintellect_vllm|primeintellect-vllm)
+        89|primeintellect_vllm|primeintellect-vllm)
             echo "primeintellect-vllm"
             ;;
-        88|qwen_flash_next_sglang|qwen-flash-next-sglang)
+        90|qwen_flash_next_sglang|qwen-flash-next-sglang)
             echo "qwen-flash-next-sglang"
             ;;
-        89|qwen_flash_next_vllm|qwen-flash-next-vllm)
+        91|qwen_flash_next_vllm|qwen-flash-next-vllm)
             echo "qwen-flash-next-vllm"
             ;;
-        90|qwen_ktransformers|qwen-ktransformers)
+        92|qwen_ktransformers|qwen-ktransformers)
             echo "qwen-ktransformers"
             ;;
-        91|qwen_sglang|qwen-sglang)
+        93|qwen_sglang|qwen-sglang)
             echo "qwen-sglang"
             ;;
-        92|qwen_sglang_pr_22121|qwen-sglang-pr-22121)
+        94|qwen_sglang_pr_22121|qwen-sglang-pr-22121)
             echo "qwen-sglang-pr-22121"
             ;;
-        93|qwen_transformers|qwen-transformers)
+        95|qwen_transformers|qwen-transformers)
             echo "qwen-transformers"
             ;;
-        94|qwen_vllm|qwen-vllm)
+        96|qwen_vllm|qwen-vllm)
             echo "qwen-vllm"
             ;;
-        95|radixark_qwen_sglang|radixark-qwen-sglang)
+        97|radixark_qwen_sglang|radixark-qwen-sglang)
             echo "radixark-qwen-sglang"
             ;;
-        96|radixark_sglang|radixark-sglang)
+        98|radixark_sglang|radixark-sglang)
             echo "radixark-sglang"
             ;;
-        97|redhat_sglang_pr_35809|redhat-sglang-pr-35809)
+        99|redhat_sglang_pr_35809|redhat-sglang-pr-35809)
             echo "redhat-sglang-pr-35809"
             ;;
-        98|redhatai_sglang|redhatai-sglang)
+        100|redhatai_sglang|redhatai-sglang)
             echo "redhatai-sglang"
             ;;
-        99|redhatai_vllm|redhatai-vllm)
+        101|redhatai_vllm|redhatai-vllm)
             echo "redhatai-vllm"
             ;;
-        100|stepfun_sglang|stepfun-sglang)
+        102|stepfun_sglang|stepfun-sglang)
             echo "stepfun-sglang"
             ;;
-        101|stepfun_transformers|stepfun-transformers)
+        103|stepfun_transformers|stepfun-transformers)
             echo "stepfun-transformers"
             ;;
-        102|stepfun_vllm|stepfun-vllm)
+        104|stepfun_vllm|stepfun-vllm)
             echo "stepfun-vllm"
             ;;
-        103|z_lab_sglang|z-lab-sglang)
+        105|z_lab_sglang|z-lab-sglang)
             echo "z-lab-sglang"
             ;;
-        104|z_lab_sglang_pr_35209|z-lab-sglang-pr-35209)
+        106|z_lab_sglang_pr_35209|z-lab-sglang-pr-35209)
             echo "z-lab-sglang-pr-35209"
             ;;
-        105|z_lab_vllm|z-lab-vllm)
+        107|z_lab_vllm|z-lab-vllm)
             echo "z-lab-vllm"
             ;;
-        106|zyphra_legacy_sglang|zyphra-legacy-sglang)
+        108|zyphra_legacy_sglang|zyphra-legacy-sglang)
             echo "zyphra-legacy-sglang"
             ;;
-        107|zyphra_legacy_transformers|zyphra-legacy-transformers)
+        109|zyphra_legacy_transformers|zyphra-legacy-transformers)
             echo "zyphra-legacy-transformers"
             ;;
-        108|zyphra_legacy_vllm|zyphra-legacy-vllm)
+        110|zyphra_legacy_vllm|zyphra-legacy-vllm)
             echo "zyphra-legacy-vllm"
             ;;
-        109|zyphra_sglang|zyphra-sglang)
+        111|zyphra_sglang|zyphra-sglang)
             echo "zyphra-sglang"
             ;;
-        110|zyphra_sglang_pr_32517|zyphra-sglang-pr-32517)
+        112|zyphra_sglang_pr_32517|zyphra-sglang-pr-32517)
             echo "zyphra-sglang-pr-32517"
             ;;
-        111|zyphra_transformers|zyphra-transformers)
+        113|zyphra_transformers|zyphra-transformers)
             echo "zyphra-transformers"
             ;;
-        112|zyphra_vllm|zyphra-vllm)
+        114|zyphra_vllm|zyphra-vllm)
             echo "zyphra-vllm"
             ;;
-        113|custom|custom_uv|custom-uv|env_custom_uv)
+        115|custom|custom_uv|custom-uv|env_custom_uv)
             echo "custom_uv"
             ;;
-        114|custom_pip|custom-pip|env_custom_pip)
+        116|custom_pip|custom-pip|env_custom_pip)
             echo "custom_pip"
             ;;
         *)
@@ -750,47 +756,49 @@ if [ -z "$ENV_TYPE" ] && [ "$AUTO_MODE" = false ]; then
     echo "78) NVIDIA (SGLang) PR 33554"
     echo "79) NVIDIA (SGLang) PR 34966"
     echo "80) NVIDIA (vLLM)"
-    echo "81) Poolside Laguna XS (vLLM)"
-    echo "82) Poolside (SGLang)"
-    echo "83) Poolside (SGLang) PR 22513"
-    echo "84) Poolside (Transformers)"
-    echo "85) Poolside (vLLM)"
-    echo "86) PrimeIntellect (SGLang)"
-    echo "87) PrimeIntellect (vLLM)"
-    echo "88) Qwen Flash Next (SGLang)"
-    echo "89) Qwen Flash Next (vLLM)"
-    echo "90) Qwen (KTransformers)"
-    echo "91) Qwen (SGLang)"
-    echo "92) Qwen (SGLang) PR 22121"
-    echo "93) Qwen (Transformers)"
-    echo "94) Qwen (vLLM)"
-    echo "95) RadixArk Qwen Flash Next (SGLang)"
-    echo "96) RadixArk (SGLang)"
-    echo "97) RedHat (SGLang) PR 35809"
-    echo "98) RedHatAI (SGLang)"
-    echo "99) RedHatAI (vLLM)"
-    echo "100) StepFun (SGLang)"
-    echo "101) StepFun (Transformers)"
-    echo "102) StepFun (vLLM)"
-    echo "103) z-lab (SGLang)"
-    echo "104) z-lab (SGLang) PR 35209"
-    echo "105) z-lab (vLLM)"
-    echo "106) Zyphra Legacy (SGLang)"
-    echo "107) Zyphra Legacy (Transformers)"
-    echo "108) Zyphra Legacy (vLLM)"
-    echo "109) Zyphra (SGLang)"
-    echo "110) Zyphra (SGLang) PR 32517"
-    echo "111) Zyphra (Transformers)"
-    echo "112) Zyphra (vLLM)"
-    echo "113) Custom (uv)"
-    echo "114) Custom (pip)"
+    echo "81) OpenAI Whisper (SGLang) PR 38626"
+    echo "82) OpenAI Whisper (vLLM) PR 53207"
+    echo "83) Poolside Laguna XS (vLLM)"
+    echo "84) Poolside (SGLang)"
+    echo "85) Poolside (SGLang) PR 22513"
+    echo "86) Poolside (Transformers)"
+    echo "87) Poolside (vLLM)"
+    echo "88) PrimeIntellect (SGLang)"
+    echo "89) PrimeIntellect (vLLM)"
+    echo "90) Qwen Flash Next (SGLang)"
+    echo "91) Qwen Flash Next (vLLM)"
+    echo "92) Qwen (KTransformers)"
+    echo "93) Qwen (SGLang)"
+    echo "94) Qwen (SGLang) PR 22121"
+    echo "95) Qwen (Transformers)"
+    echo "96) Qwen (vLLM)"
+    echo "97) RadixArk Qwen Flash Next (SGLang)"
+    echo "98) RadixArk (SGLang)"
+    echo "99) RedHat (SGLang) PR 35809"
+    echo "100) RedHatAI (SGLang)"
+    echo "101) RedHatAI (vLLM)"
+    echo "102) StepFun (SGLang)"
+    echo "103) StepFun (Transformers)"
+    echo "104) StepFun (vLLM)"
+    echo "105) z-lab (SGLang)"
+    echo "106) z-lab (SGLang) PR 35209"
+    echo "107) z-lab (vLLM)"
+    echo "108) Zyphra Legacy (SGLang)"
+    echo "109) Zyphra Legacy (Transformers)"
+    echo "110) Zyphra Legacy (vLLM)"
+    echo "111) Zyphra (SGLang)"
+    echo "112) Zyphra (SGLang) PR 32517"
+    echo "113) Zyphra (Transformers)"
+    echo "114) Zyphra (vLLM)"
+    echo "115) Custom (uv)"
+    echo "116) Custom (pip)"
     echo ""
     while true; do
-        read -r -p "Enter your choice (1-114): " choice
+        read -r -p "Enter your choice (1-116): " choice
         if ENV_TYPE=$(resolve_env_type "$choice"); then
             break
         else
-            print_error "Invalid choice. Please enter a number between 1 and 114."
+            print_error "Invalid choice. Please enter a number between 1 and 116."
         fi
     done
 elif [ -z "$ENV_TYPE" ]; then
@@ -801,7 +809,7 @@ fi
 # Normalize and validate the selected managed environment.
 if [ -n "$ENV_TYPE" ]; then
     if ! ENV_TYPE_MAPPED=$(resolve_env_type "$ENV_TYPE"); then
-        fail_script "Invalid environment selection: $ENV_TYPE. Choose a listed environment name or a number from 1 to 114."
+        fail_script "Invalid environment selection: $ENV_TYPE. Choose a listed environment name or a number from 1 to 116."
         if [ "$BEING_SOURCED" = true ]; then
             return 1
         fi

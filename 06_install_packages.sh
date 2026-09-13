@@ -103,6 +103,8 @@ ENV_TYPES=(
   "nvidia-sglang-pr-33554"
   "nvidia-sglang-pr-34966"
   "nvidia-vllm"
+  "openai-sglang-pr-38626"
+  "openai-vllm-pr-53207"
   "poolside-laguna-xs-vllm"
   "poolside-sglang"
   "poolside-sglang-pr-22513"
@@ -220,6 +222,8 @@ declare -A ENV_DESCRIPTIONS=(
   ["nvidia-sglang-pr-33554"]="NVIDIA (SGLang) PR 33554"
   ["nvidia-sglang-pr-34966"]="NVIDIA (SGLang) PR 34966"
   ["nvidia-vllm"]="NVIDIA (vLLM)"
+  ["openai-sglang-pr-38626"]="OpenAI Whisper (SGLang) PR 38626"
+  ["openai-vllm-pr-53207"]="OpenAI Whisper (vLLM) PR 53207"
   ["poolside-laguna-xs-vllm"]="Poolside Laguna XS (vLLM)"
   ["poolside-sglang"]="Poolside (SGLang)"
   ["poolside-sglang-pr-22513"]="Poolside (SGLang) PR 22513"
@@ -500,106 +504,112 @@ resolve_env_type() {
         80|nvidia_vllm|nvidia-vllm)
             echo "nvidia-vllm"
             ;;
-        81|poolside_laguna_xs_vllm|poolside-laguna-xs-vllm)
+        81|openai_sglang_pr_38626|openai-sglang-pr-38626)
+            echo "openai-sglang-pr-38626"
+            ;;
+        82|openai_vllm_pr_53207|openai-vllm-pr-53207)
+            echo "openai-vllm-pr-53207"
+            ;;
+        83|poolside_laguna_xs_vllm|poolside-laguna-xs-vllm)
             echo "poolside-laguna-xs-vllm"
             ;;
-        82|poolside_sglang|poolside-sglang)
+        84|poolside_sglang|poolside-sglang)
             echo "poolside-sglang"
             ;;
-        83|poolside_sglang_pr_22513|poolside-sglang-pr-22513)
+        85|poolside_sglang_pr_22513|poolside-sglang-pr-22513)
             echo "poolside-sglang-pr-22513"
             ;;
-        84|poolside_transformers|poolside-transformers)
+        86|poolside_transformers|poolside-transformers)
             echo "poolside-transformers"
             ;;
-        85|poolside_vllm|poolside-vllm)
+        87|poolside_vllm|poolside-vllm)
             echo "poolside-vllm"
             ;;
-        86|primeintellect_sglang|primeintellect-sglang)
+        88|primeintellect_sglang|primeintellect-sglang)
             echo "primeintellect-sglang"
             ;;
-        87|primeintellect_vllm|primeintellect-vllm)
+        89|primeintellect_vllm|primeintellect-vllm)
             echo "primeintellect-vllm"
             ;;
-        88|qwen_flash_next_sglang|qwen-flash-next-sglang)
+        90|qwen_flash_next_sglang|qwen-flash-next-sglang)
             echo "qwen-flash-next-sglang"
             ;;
-        89|qwen_flash_next_vllm|qwen-flash-next-vllm)
+        91|qwen_flash_next_vllm|qwen-flash-next-vllm)
             echo "qwen-flash-next-vllm"
             ;;
-        90|qwen_ktransformers|qwen-ktransformers)
+        92|qwen_ktransformers|qwen-ktransformers)
             echo "qwen-ktransformers"
             ;;
-        91|qwen_sglang|qwen-sglang)
+        93|qwen_sglang|qwen-sglang)
             echo "qwen-sglang"
             ;;
-        92|qwen_sglang_pr_22121|qwen-sglang-pr-22121)
+        94|qwen_sglang_pr_22121|qwen-sglang-pr-22121)
             echo "qwen-sglang-pr-22121"
             ;;
-        93|qwen_transformers|qwen-transformers)
+        95|qwen_transformers|qwen-transformers)
             echo "qwen-transformers"
             ;;
-        94|qwen_vllm|qwen-vllm)
+        96|qwen_vllm|qwen-vllm)
             echo "qwen-vllm"
             ;;
-        95|radixark_qwen_sglang|radixark-qwen-sglang)
+        97|radixark_qwen_sglang|radixark-qwen-sglang)
             echo "radixark-qwen-sglang"
             ;;
-        96|radixark_sglang|radixark-sglang)
+        98|radixark_sglang|radixark-sglang)
             echo "radixark-sglang"
             ;;
-        97|redhat_sglang_pr_35809|redhat-sglang-pr-35809)
+        99|redhat_sglang_pr_35809|redhat-sglang-pr-35809)
             echo "redhat-sglang-pr-35809"
             ;;
-        98|redhatai_sglang|redhatai-sglang)
+        100|redhatai_sglang|redhatai-sglang)
             echo "redhatai-sglang"
             ;;
-        99|redhatai_vllm|redhatai-vllm)
+        101|redhatai_vllm|redhatai-vllm)
             echo "redhatai-vllm"
             ;;
-        100|stepfun_sglang|stepfun-sglang)
+        102|stepfun_sglang|stepfun-sglang)
             echo "stepfun-sglang"
             ;;
-        101|stepfun_transformers|stepfun-transformers)
+        103|stepfun_transformers|stepfun-transformers)
             echo "stepfun-transformers"
             ;;
-        102|stepfun_vllm|stepfun-vllm)
+        104|stepfun_vllm|stepfun-vllm)
             echo "stepfun-vllm"
             ;;
-        103|z_lab_sglang|z-lab-sglang)
+        105|z_lab_sglang|z-lab-sglang)
             echo "z-lab-sglang"
             ;;
-        104|z_lab_sglang_pr_35209|z-lab-sglang-pr-35209)
+        106|z_lab_sglang_pr_35209|z-lab-sglang-pr-35209)
             echo "z-lab-sglang-pr-35209"
             ;;
-        105|z_lab_vllm|z-lab-vllm)
+        107|z_lab_vllm|z-lab-vllm)
             echo "z-lab-vllm"
             ;;
-        106|zyphra_legacy_sglang|zyphra-legacy-sglang)
+        108|zyphra_legacy_sglang|zyphra-legacy-sglang)
             echo "zyphra-legacy-sglang"
             ;;
-        107|zyphra_legacy_transformers|zyphra-legacy-transformers)
+        109|zyphra_legacy_transformers|zyphra-legacy-transformers)
             echo "zyphra-legacy-transformers"
             ;;
-        108|zyphra_legacy_vllm|zyphra-legacy-vllm)
+        110|zyphra_legacy_vllm|zyphra-legacy-vllm)
             echo "zyphra-legacy-vllm"
             ;;
-        109|zyphra_sglang|zyphra-sglang)
+        111|zyphra_sglang|zyphra-sglang)
             echo "zyphra-sglang"
             ;;
-        110|zyphra_sglang_pr_32517|zyphra-sglang-pr-32517)
+        112|zyphra_sglang_pr_32517|zyphra-sglang-pr-32517)
             echo "zyphra-sglang-pr-32517"
             ;;
-        111|zyphra_transformers|zyphra-transformers)
+        113|zyphra_transformers|zyphra-transformers)
             echo "zyphra-transformers"
             ;;
-        112|zyphra_vllm|zyphra-vllm)
+        114|zyphra_vllm|zyphra-vllm)
             echo "zyphra-vllm"
             ;;
-        113|custom|custom_uv|custom-uv|env_custom_uv)
+        115|custom|custom_uv|custom-uv|env_custom_uv)
             echo "custom_uv"
             ;;
-        114|custom_pip|custom-pip|env_custom_pip)
+        116|custom_pip|custom-pip|env_custom_pip)
             echo "custom_pip"
             ;;
         *)
@@ -1832,6 +1842,40 @@ install_poolside_sglang() {
         "sglang[all] @ git+https://github.com/sgl-project/sglang.git@834400705f2de2378a327121340f57e324ca5a36#subdirectory=python" || return 1
 }
 
+install_openai_sglang_pr_38626() {
+    ensure_active_environment_matches "openai-sglang-pr-38626" || return 1
+    # Complete upstream encoder-decoder atomic-prefill repair, not a local overlay.
+    # https://github.com/sgl-project/sglang/pull/38626
+    local source_commit="409c5280782dacef59fb7c878f3321ffd59cca46"
+    print_info "Installing native Whisper SGLang PR38626..."
+    run_uv_install -U --prerelease=allow \
+        "sglang @ git+https://github.com/sgl-project/sglang.git@${source_commit}#subdirectory=python" \
+        "cuda-tile @ https://pypi.nvidia.com/cuda-tile/cuda_tile-1.6.0rc5-cp311-cp311-manylinux2014_x86_64.whl#sha256=a14ff257522a017430e98f16aabdfd514bbcf38ecb64a0fba1d3f86cd02a21bb" \
+        "torchvision==0.28.0" \
+        --index-url https://pypi.org/simple --torch-backend=cu130 || return 1
+    # Keep Whisper Conv1d on the host-matched cuDNN 9.26 family.
+    # Source-backed repair for the sublibrary mismatch: pytorch/pytorch#188892.
+    run_uv_install --no-deps "nvidia-cudnn-cu13==9.26.0.51" || return 1
+}
+
+install_openai_vllm_pr_53207() {
+    ensure_active_environment_matches "openai-vllm-pr-53207" || return 1
+    # Complete upstream Whisper conditioning-token repair, including native audio extras.
+    # https://github.com/vllm-project/vllm/pull/53207
+    local source_commit="070f6e70937e60379d2e85414753513425b1d6f4"
+    print_info "Installing native Whisper vLLM PR53207..."
+    run_uv_install -U --prerelease=allow \
+        "vllm[audio] @ git+https://github.com/vllm-project/vllm.git@${source_commit}" \
+        "transformers==5.12.1" "tokenizers==0.22.2" \
+        --index-url https://pypi.org/simple --torch-backend=cu130 || return 1
+    # This source requires FlashInfer 0.6.17; cubin is outside wheel install_requires.
+    run_uv_install \
+        "flashinfer-cubin @ https://github.com/flashinfer-ai/flashinfer/releases/download/v0.6.17/flashinfer_cubin-0.6.17-py3-none-any.whl#sha256=771f037a828cdf3f15db1c3784574197546d1b09735fb9058f384bdd12010afa" || return 1
+    # Whisper uses the same native Torch Conv1d path as the validated SGLang candidate.
+    # Source-backed sublibrary alignment: pytorch/pytorch#188892.
+    run_uv_install --no-deps "nvidia-cudnn-cu13==9.26.0.51" || return 1
+}
+
 install_poolside_laguna_xs_vllm() {
     print_info "Installing vLLM 0.26.0 for Poolside Laguna XS..."
     run_uv_install "vllm==0.26.0" || return 1
@@ -2337,6 +2381,12 @@ perform_environment_action() {
             ;;
         nvidia-vllm)
             install_nvidia_vllm || return 1
+            ;;
+        openai-sglang-pr-38626)
+            install_openai_sglang_pr_38626 || return 1
+            ;;
+        openai-vllm-pr-53207)
+            install_openai_vllm_pr_53207 || return 1
             ;;
         poolside-laguna-xs-vllm)
             install_poolside_laguna_xs_vllm || return 1
