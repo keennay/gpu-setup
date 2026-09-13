@@ -52,6 +52,14 @@ Verify every applicable field rather than translating flags by name alone:
 
 Never assume equivalent-looking SGLang and vLLM speculative counts have identical semantics. For block-diffusion methods, vLLM may describe the number of speculative tokens while SGLang describes the full verification block. Confirm the mapping from the official cookbook, draft model card/config, and engine source.
 
+## Checkpoint context and embedded position scaling
+
+Determine context from the exact checkpoint's official recipe, model card, and stored configuration as one contract. A `rope_scaling` object shipped in `config.json` is checkpoint state, not a recipe-added long-context override.
+
+When authoritative sources advertise the checkpoint's stored `max_position_embeddings` as trained or supported, use that full maximum. NEVER substitute `original_max_position_embeddings` merely because the config names YaRN, supplies a factor, or records an earlier training window; the original value is a scaling reference, not automatically the serving ceiling.
+
+Distinguish embedded checkpoint metadata from a launch-time `--rope-scaling`, environment override, or reconstructed configuration. Preserve embedded scaling unchanged. Add a runtime scaling mechanism only when authoritative sources for the exact checkpoint and engine explicitly require it; never invent one to exceed the checkpoint's supported maximum.
+
 ## Version and validation discipline
 
 Cookbooks generally document current upstream behavior. Compare their commands against the project's pinned engine version or commit before applying them. If current cookbook guidance needs a newer commit or PR, name that dependency.

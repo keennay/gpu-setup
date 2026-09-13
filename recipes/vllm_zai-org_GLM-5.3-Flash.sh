@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
-PYTHON_ENV="env_deepseek-v41-vllm-e77daef89"
+PYTHON_ENV="env_glm53flash-vllm-pr-53906"
 INFERENCE_PROVIDER="vLLM"
-INFERENCE_ENV=""
-MODEL_REPO="deepseek-ai/DeepSeek-V4.1-Flash"
-MODEL_NAME="deepseek_v41"
-SERVED_MODEL_NAME="deepseek"
+INFERENCE_ENV="env VLLM_USE_V2_MODEL_RUNNER=1 VLLM_ENGINE_READY_TIMEOUT_S=3600"
+MODEL_REPO="zai-org/GLM-5.3-Flash"
+MODEL_NAME="glm5next"
+SERVED_MODEL_NAME="zai-org/GLM-5.3-Flash"
 CONTEXT_LEN_VALUE=1048576
-DEFAULT_TENSOR_PARALLEL_SIZE=8
-TRUST_REMOTE_CODE="--trust-remote-code"
-REASONING_PARSER="--reasoning-parser $MODEL_NAME"
+DEFAULT_TENSOR_PARALLEL_SIZE=4
+TRUST_REMOTE_CODE=""
+REASONING_PARSER="--reasoning-parser glm45"
 ENABLE_AUTO_TOOL_CHOICE="--enable-auto-tool-choice"
-TOOL_CALL_PARSER="--tool-call-parser $MODEL_NAME"
-GPU_MEM_UTIL_VALUE=0.88
+TOOL_CALL_PARSER="--tool-call-parser glm47"
+GPU_MEM_UTIL_VALUE=0.86
 METRICS_FLAG=""
 HOST="0.0.0.0"
 DEFAULT_PORT=8000
@@ -31,7 +31,7 @@ SPECULATIVE=""
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS='--dtype bfloat16 --tokenizer-mode deepseek_v41 --mm-encoder-tp-mode data --engram-config {"cpu_offload":false}'
+EXTRA_ARGS="--dtype bfloat16 --kv-cache-dtype bfloat16 --no-enable-flashinfer-autotune"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 # shellcheck source=helpers/inference_recipe.sh

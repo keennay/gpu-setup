@@ -7,7 +7,7 @@ MODEL_REPO="deepseek-ai/DeepSeek-V4.1-Flash"
 MODEL_NAME="deepseek_v41"
 SERVED_MODEL_NAME="deepseek"
 CONTEXT_LEN_VALUE=1048576
-DEFAULT_TENSOR_PARALLEL_SIZE=8
+DEFAULT_TENSOR_PARALLEL_SIZE=4
 TRUST_REMOTE_CODE="--trust-remote-code"
 REASONING_PARSER="--reasoning-parser $MODEL_NAME"
 ENABLE_AUTO_TOOL_CHOICE="--enable-auto-tool-choice"
@@ -31,7 +31,7 @@ SPECULATIVE=""
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS='--dtype bfloat16 --tokenizer-mode deepseek_v41 --mm-encoder-tp-mode data --engram-config {"cpu_offload":false}'
+EXTRA_ARGS='--dtype bfloat16 --tokenizer-mode deepseek_v41 --mm-encoder-tp-mode data --engram-config {"cpu_offload":true}'
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 # shellcheck source=helpers/inference_recipe.sh

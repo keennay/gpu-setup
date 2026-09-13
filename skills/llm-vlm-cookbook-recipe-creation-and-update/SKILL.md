@@ -1,6 +1,6 @@
 ---
 name: llm-vlm-cookbook-recipe-creation-and-update
-description: "Creates or updates and behaviorally validates portable SGLang and vLLM LLM/VLM recipes at each model's maximum non-YaRN context before promotion."
+description: "Creates or updates and behaviorally validates portable SGLang and vLLM LLM/VLM recipes at each model's maximum officially supported checkpoint context before promotion."
 alwaysApply: false
 ---
 
@@ -51,7 +51,7 @@ Workflow:
 6. Existing model/draft revision selectors and other legacy flags are outside normal sweep scope: do not add new revision selectors, but do not remove or change an existing unrelated selector unless the user explicitly requests revision cleanup. The fallback creation workflow must still obey the full model-repository revision policy.
 7. A non-VRAM software/configuration failure in the normal sweep-only path is not permission to repair or redesign the recipe. The initial-run failure branch is the explicit exception: repair only through the allowed upstream engine, reproducible installer, and source-verified configuration process described in step 4.
 8. Do not redo cookbook, model-card, `config.json`, parser, backend, context, or engine-version research after a successful initial in-place run. If that run fails and step 4 is entered, perform the full authoritative research required by the temporary-first creation workflow before changing candidate configuration.
-9. Preserve the existing `CONTEXT_LEN_VALUE` exactly on the normal sweep-only path. In the fallback creation workflow, use the full context-length policy and keep the candidate at the highest officially supported non-YaRN context before sweeping.
+9. Preserve the existing `CONTEXT_LEN_VALUE` exactly on the normal sweep-only path. In the fallback creation workflow, use the full context-length policy and keep the candidate at the highest officially supported checkpoint context before sweeping.
 10. After selecting the smallest passing GPU count and maximum six-decimal utilization value, rerun the `/tmp` copy at those exact values, wait for final API readiness, verify the 16,384 MiB per-selected-GPU reserve, and send one coherent non-gibberish baseline prompt. Do not rerun reasoning, tool-call, modality, speculative, model-card, or parser-specific suites unless the user requests them.
 11. Only after that final temporary run passes, update the supplied original file **in place**. On the normal sweep-only path, change only `DEFAULT_TENSOR_PARALLEL_SIZE` and `GPU_MEM_UTIL_VALUE`; on the fallback creation path, also apply only the source-verified candidate changes required to establish the working setup. If a value is unchanged, do not rewrite it needlessly.
 12. Run the updated original once to final API readiness, recheck the reserve and coherent baseline response, then run Bash syntax and ShellCheck.
@@ -67,7 +67,7 @@ Use the remaining full workflow when no existing recipe is supplied, when creati
 A successful task produces or updates a repository-format recipe that:
 
 1. serves the exact requested SGLang / vLLM cookbook recipe, or the Hugging Face model repository if the former don't exist;
-2. configures the model's maximum officially supported **non-YaRN** context length;
+2. configures the model's maximum officially supported checkpoint context without inventing a recipe-level RoPE-scaling override;
 3. starts on real available GPUs without reducing protected runtime limits;
 4. selects the smallest available GPU count that can satisfy maximum context and the mandatory free-memory reserve;
 5. records the maximum passing six-decimal `GPU_MEM_UTIL_VALUE`;
@@ -89,18 +89,56 @@ MUST determine the maximum officially supported context from the exact checkpoin
 3. exact checkpoint `config.json` and related configuration;
 4. official engine source/docs for the chosen version.
 
-Set the recipe's `CONTEXT_LEN_VALUE` to the highest context length officially supported by that checkpoint without YaRN. The repository helper maps it to:
+Set the recipe's `CONTEXT_LEN_VALUE` to the highest context length officially supported by that exact checkpoint without adding a recipe-level or runtime RoPE-scaling override. The repository helper maps it to:
 
 - vLLM: `--max-model-len`
 - SGLang: `--context-length`
 
+Treat position scaling already shipped in the exact checkpoint's `config.json` as checkpoint state, not as an optional recipe-added YaRN configuration. When authoritative sources advertise the stored `max_position_embeddings` as a trained or supported context, use that full value even if the same config also contains `rope_scaling`, `rope_type: yarn`, a scaling `factor`, or `original_max_position_embeddings`.
+
+`original_max_position_embeddings` records a pre-extension or scaling reference; it is not by itself the checkpoint's serving ceiling. NEVER clamp an officially advertised maximum down to that original value solely because the checkpoint embeds YaRN or another RoPE-scaling method.
+
 If the model card advertises a supported maximum larger than the stored config and the engine requires a documented opt-in environment variable to honor it, include that environment variable in `INFERENCE_ENV`. Every such variable MUST be source-verified for the exact model and engine version; never guess one.
 
-### Forbidden context mechanisms
+### Forbidden recipe-added context mechanisms
 
-NEVER use YaRN, YaRN rope scaling, or a reconstructed YaRN configuration to reach the requested context. If the advertised maximum is available only through YaRN, use the highest officially supported non-YaRN value and state the limitation.
+NEVER add, reconstruct, or override YaRN/RoPE settings merely to exceed the exact checkpoint's officially supported maximum. Distinguish such a recipe-level override from scaling metadata already embedded in the checkpoint. Preserve embedded metadata and let the engine consume it normally.
 
 NEVER lower context length to make the model fit GPU memory. Scale GPU count instead. If the model still cannot start at maximum context, mark the attempt as failed.
+
+## Optional n-gram policy
+
+Do not add any optional n-gram configuration by default. This includes prompt n-gram speculative decoding, Engram/PLE offload, CPU or pinned-RAM lookup, and memory-mapped, NVMe, or SSD-backed lookup. Configure an optional n-gram feature only when the user explicitly requests that exact behavior.
+
+Checkpoint-native Engram/PLE tables are model state, not an optional feature. Keep them on the selected GPUs by default. If an engine's unconfigured default offloads native tables, pass its source-verified negative configuration to disable offload; that is residency enforcement, not permission to enable another optional n-gram mode.
+
+Scale GPU count before offloading. A candidate does not pass until final launch logs and runtime inspection confirm that no checkpoint weights or native n-gram tables were placed in host memory or storage. If the complete model cannot fit on the available GPUs at maximum context while preserving the required reserve and protected runtime settings, mark the attempt as failed rather than offloading, lowering context, or shrinking request/batch limits.
+
+When the user does request an n-gram configuration, source-verify its algorithm, state placement, and engine-specific flags; do not infer them from a nearby model or another engine.
+
+### N-gram artifact naming
+
+Every recipe that explicitly enables an optional n-gram mode MUST append its storage mode after all other recipe qualifiers:
+
+```text
+<recipe-base>_ngram_ram.sh
+<recipe-base>_ngram_disk.sh
+```
+
+Use `_ngram_ram` for CPU or pinned-host-RAM-resident tables. Use `_ngram_disk` for memory-mapped, NVMe, SSD, or otherwise disk-backed tables. Keep speculative-method qualifiers before the n-gram suffix; for example:
+
+```text
+<model>_speculative_dspark_ngram_ram.sh
+```
+
+The matching benchmark basename MUST preserve the same n-gram suffix immediately before the mandatory hardware suffix, so the filename still ends in `_<gpu-type>x<gpu-qty>.json`:
+
+```text
+<recipe-base>_ngram_ram_<gpu-type>x<gpu-qty>.json
+<recipe-base>_ngram_disk_<gpu-type>x<gpu-qty>.json
+```
+
+Do not publish an optional n-gram recipe or benchmark under the unsuffixed base name.
 
 ## Protected runtime settings
 
@@ -146,7 +184,7 @@ Do not lower concurrency, context, or batch limits as a substitute for CUDA-grap
 
 ### CUDA graph batch-size flags
 
-Do not invent, remove, or change CUDA graph batch-size/capture flags unless the exact model card explicitly specifies them. Protected examples include:
+NEVER invent, remove, or change `--max-num-seqs` or any CUDA graph batch-size/capture flag unless the exact model card explicitly specifies it. Protected CUDA graph examples include:
 
 ```text
 --cuda-graph-max-bs
@@ -245,7 +283,7 @@ Do not install one-off packages ad hoc and forget to record them. The installer 
 MUST perform the prerequisite cookbook/model-card/source lookup before constructing commands. Determine:
 
 - exact model repository and variant;
-- maximum non-YaRN context;
+- maximum officially supported checkpoint context and whether any position scaling is checkpoint-embedded or recipe-added;
 - model precision and loader requirements;
 - reasoning/tool parsers;
 - multimodal limits and API format;
@@ -303,6 +341,19 @@ The temporary script MUST invoke the existing helper at:
 
 Do not create a helper copy, helper symlink, plugin, patch, or shim under `/tmp`. A temporary script may use an absolute source path during validation; restore the standard repository-relative source line when promoted and rerun the final script.
 
+### Engine-stable launch logs
+
+The skill executor, not a recipe or shared helper, MUST own the stable `/tmp` log mirror for every supervised server launch. Select `/tmp/vllm.log` for vLLM or `/tmp/sglang.log` for SGLang, then run the exact candidate or final recipe through a temporary shell wrapper equivalent to:
+
+```bash
+TEMP_LOG=/tmp/vllm.log  # Use /tmp/sglang.log for SGLang.
+set -o pipefail
+: > "$TEMP_LOG"
+<exact recipe command> 2>&1 | tee -a "$TEMP_LOG"
+```
+
+The recipe's unchanged shared helper continues to write the normal timestamped file under `recipes/logs/`; the outer `tee` writes the same live output to the selected stable `/tmp` path. Preserve the recipe's exit status with `pipefail`, and supervise the complete wrapper process group. Truncate only the selected engine's stable log immediately before each launch. NEVER add either stable `/tmp` path, a second log destination, or this wrapper behavior to `inference_recipe.sh`, an individual recipe, or an environment launcher.
+
 ### 5. Static check before launch
 
 Run Bash syntax and ShellCheck using the repository convention. Fix real findings before runtime. Do not suppress findings with broad directives.
@@ -329,7 +380,7 @@ The selected value MUST leave at least **16 GiB = 16,384 MiB** free on **every s
 For each GPU count:
 
 1. Confirm all selected GPUs are clean and record `memory.total` and `memory.free` with `nvidia-smi`.
-2. Keep the model at maximum non-YaRN context and keep every protected request, batch, cache, precision, and CUDA-graph setting unchanged.
+2. Keep the model at its maximum officially supported checkpoint context and keep every protected request, batch, cache, precision, CUDA-graph, and checkpoint-embedded RoPE setting unchanged.
 3. Compute a theoretical six-decimal upper cap from each selected GPU's total memory:
 
    ```text
@@ -383,10 +434,10 @@ Only after the sweep selects the smallest passing GPU count and final six-decima
 7. When both reasoning and tool calling are available, validate both paths. The tool-call test should also confirm that any reasoning trace is parsed rather than leaked as raw markup.
 8. If the model is a VLM or multimodal model, send an actual supported image/video/audio input and verify a grounded, non-gibberish response. Text-only validation is insufficient.
 9. If the recipe is speculative, confirm from runtime configuration/logs that the requested speculative method and draft path are active, then exercise generation.
-10. Verify log creation through the shared helper.
+10. Verify the same launch output is present in both the helper's timestamped `recipes/logs/` file and the engine-specific stable mirror (`/tmp/vllm.log` or `/tmp/sglang.log`).
 11. Stop with Ctrl+C and confirm clean process/GPU teardown.
 
-Do not claim a model/engine combination works unless this complete suite passes on the selected GPU count, final six-decimal utilization value, and maximum non-YaRN context.
+Do not claim a model/engine combination works unless this complete suite passes on the selected GPU count, final six-decimal utilization value, and maximum officially supported checkpoint context.
 
 ## Failure contract
 
@@ -434,7 +485,7 @@ Do not promote a partially validated script or leave a temporary-only dependency
 Report, with evidence:
 
 - exact model repository and checkpoint variant;
-- maximum configured non-YaRN context and source;
+- maximum officially supported checkpoint context and source;
 - engine release/main/commit/PR and exact commit;
 - extra packages added to the installer;
 - hardware and GPU counts attempted in order;
