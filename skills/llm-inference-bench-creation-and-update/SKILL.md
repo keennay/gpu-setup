@@ -192,10 +192,10 @@ Match the actual port and API key. Use 8000 and `YOUR_API_KEY` only when they ma
 
 Confirm authenticated `/v1/models` readiness and the intended served model before sending benchmark traffic. Cross-check the supplied model context against the configured running limit when it is available. A smaller running limit is a configuration mismatch to report, not permission to silently shrink the supplied sweep or restart/retune the server.
 
-Create the output directory next to the **launch script**, not next to the benchmark program and not relative to the current shell directory:
+Write the benchmark output to `/tmp` first:
 
 ```text
-<launch-script-directory>/llm-inference-bench/<launch-script-stem>_<gpu-type>x<gpu-qty>.json
+/tmp/<launch-script-stem>_<gpu-type>x<gpu-qty>.json
 ```
 
 Remove only the launch script's final extension; preserve its other spelling, capitalization, punctuation, and variant suffixes. Validate `gpu_type` as a filename label without path separators (for example, `[A-Za-z0-9][A-Za-z0-9._-]*`) and GPU quantity as a positive integer.
@@ -213,18 +213,18 @@ def benchmark_output_path(launch_script: str, gpu_type: str, gpu_qty: int) -> Pa
     if type(gpu_qty) is not int or gpu_qty < 1:
         raise ValueError("GPU quantity must be a positive integer resolved from the launch script")
     script = Path(launch_script).expanduser().absolute()
-    return script.parent / "llm-inference-bench" / f"{script.stem}_{gpu_type}x{gpu_qty}.json"
+    return Path("/tmp") / f"{script.stem}_{gpu_type}x{gpu_qty}.json"
 ```
 
-Create the returned path's parent before launch. For example:
+For example:
 
 ```text
 /workspace/scripts/recipes/vllm_Qwen_Qwen3.8-27B-FP8.sh
   + gpu_type=h200, gpu_qty=1
-  -> /workspace/scripts/recipes/llm-inference-bench/vllm_Qwen_Qwen3.8-27B-FP8_h200x1.json
+  -> /tmp/vllm_Qwen_Qwen3.8-27B-FP8_h200x1.json
 ```
 
-If an output already exists, preserve it before replacing it, using a clearly identified backup. Keep the requested final filename unchanged, do not silently resume a previous benchmark, and never treat stale JSON as evidence for a new run. Record run start time and the intended output path.
+If an output already exists in `/tmp`, preserve it before replacing it, using a clearly identified backup. Keep the requested filename unchanged, do not silently resume a previous benchmark, and never treat stale JSON as evidence for a new run. Record run start time and the intended output path.
 
 ## 6. Run the real benchmark
 
@@ -255,7 +255,7 @@ Concrete 256K example, only when these launcher values match the instance:
   --contexts 8k,16k,32k,64k,128k,251k \
   --max-tokens 4096 \
   --token-targeting estimate \
-  --output /workspace/scripts/recipes/llm-inference-bench/vllm_Qwen_Qwen3.8-27B-FP8_h200x1.json
+  --output /tmp/vllm_Qwen_Qwen3.8-27B-FP8_h200x1.json
 ```
 
 Under OMP, run the interactive/long-lived benchmark through a supervised `hub start` process with its actual interpreter and argument vector. Observe logs/TUI, decline self-updates and stale-run resume prompts, retain process output, and wait for completion. Process creation is not success. Do not kill the inference server when the benchmark exits or fails. Sequentially benchmark distinct models/configurations; concurrent load tests against one instance contaminate results.
@@ -273,6 +273,8 @@ Classify the run explicitly:
 - **MEASUREMENT ISSUES**: record invalid measurements, request/loop errors, missing or rejected prefill samples, and legitimate capacity skips independently of run completion. Leave the benchmark failure or measurement-issues field blank only when no issues were recorded. A partial sweep or unexplained missing work is not successful completion.
 
 If estimated full-limit prefill fails, report that failure rather than quietly omitting the endpoint. Keep genuine partial output for diagnosis; do not invent an empty success JSON, rewrite error measurements into successful ones, or delete a user's benchmark checkout/environment after a failed run.
+
+Only after the run is classified **SUCCESS (completed sweep)**, create `<launch-script-directory>/llm-inference-bench/` and copy the completed JSON from `/tmp` to `<launch-script-directory>/llm-inference-bench/<launch-script-stem>_<gpu-type>x<gpu-qty>.json`. Never copy partial, interrupted, aborted, or resume files into that directory.
 
 ## Final report
 
