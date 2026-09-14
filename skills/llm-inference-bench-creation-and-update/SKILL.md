@@ -257,7 +257,7 @@ Concrete 256K example, only when these launcher values match the instance:
 
 Run the interactive/long-lived benchmark in a supervised interactive process or terminal session using its actual interpreter and argument vector. Observe logs/TUI, decline self-updates and stale-run resume prompts, retain process output, and wait for completion. Process creation is not success. Do not kill the inference server when the benchmark exits or fails. Sequentially benchmark distinct models/configurations; concurrent load tests against one instance contaminate results.
 
-For each benchmark, truncate `/tmp/benchmark.log` immediately before launch and tee the benchmark's combined stdout/stderr to it, preserving the benchmark exit status with `set -o pipefail`.
+For each benchmark, truncate `/tmp/benchmark.log` immediately before launch and tee the benchmark's combined stdout/stderr to it, preserving the benchmark exit status with `set -o pipefail`. External watchers streaming this log MUST use `tail -F /tmp/benchmark.log` (with capital `-F`, `--follow=name --retry`) so log monitoring continues uninterrupted across runs and file truncations. During benchmark management and cleanup, NEVER use broad substring pattern matches such as `pkill -f benchmark`, which terminate watcher processes like `tail -F /tmp/benchmark.log`. Target only the benchmark Python interpreter specifically, for example `pkill -f 'python.*llm_decode_bench\.py'`.
 
 ## 7. Decide success versus early failure
 

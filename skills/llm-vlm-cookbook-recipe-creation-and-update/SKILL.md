@@ -348,6 +348,7 @@ set -o pipefail
 ```
 
 The recipe's unchanged shared helper continues to write the normal timestamped file under `recipes/logs/`; the outer `tee` writes the same live output to the selected stable `/tmp` path. Preserve the recipe's exit status with `pipefail`, and supervise the complete wrapper process group. Truncate only the selected engine's stable log immediately before each launch. NEVER add either stable `/tmp` path, a second log destination, or this wrapper behavior to `inference_recipe.sh`, an individual recipe, or an environment launcher.
+Continuous log streaming by operators or external observers (such as `tail -F /tmp/vllm.log` or `tail -F /tmp/sglang.log`) MUST be protected across server restarts, sweeps, and cleanups. Operators should use `tail -F` (capital `-F`, `--follow=name --retry`) so log streams survive file truncations and recreations without interruption. During process management and server teardown, NEVER use broad command-substring pattern matches such as `pkill -f vllm` or `pkill -f sglang`, which terminate external watcher processes like `tail -F /tmp/vllm.log`. Always terminate the server cleanly via its specific launcher PID or process group (`kill -INT -- "-$SERVER_PID"`), or if forced process termination is required, use an exact binary regex (for example `pkill -9 -f 'vllm (serve|entrypoints)|VLLM::EngineCore'` or `pkill -9 -f 'sglang.launch_server'`) that specifically excludes monitoring tools and log watchers.
 
 ### 5. Static check before launch
 
