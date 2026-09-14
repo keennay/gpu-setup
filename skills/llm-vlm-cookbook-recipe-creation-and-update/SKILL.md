@@ -1,22 +1,13 @@
 ---
 name: llm-vlm-cookbook-recipe-creation-and-update
 description: "Creates or updates and behaviorally validates portable SGLang and vLLM LLM/VLM recipes at each model's maximum officially supported checkpoint context before promotion."
-alwaysApply: false
 ---
 
 # SGLang & vLLM Recipe Creation and Update
 
 Use this skill when creating, updating, porting, repairing, or validating an SGLang or vLLM recipe for an LLM or VLM in `/workspace/scripts/recipes`.
 
-## Mandatory prerequisite
-
-Before research, environment creation, command construction, or file changes, **MUST** read and follow:
-
-```text
-~/.omp/agent/skills/llm-vlm-cookbook-recipe-source/SKILL.md
-```
-
-The prerequisite **LLM and VLM Cookbook Recipe Source** skill controls source authority, cookbook lookup, model-card/config inspection, engine source verification, version comparison, and reporting. This skill adds repository-specific implementation and runtime constraints; it does not replace that source policy.
+The `llm-vlm-cookbook-recipe-source` skill controls source authority, cookbook lookup, model-card/config inspection, engine source verification, version comparison, and reporting. This skill adds repository-specific implementation and runtime constraints; it does not replace that source policy.
 
 ## Mode selection and precedence
 
@@ -71,9 +62,9 @@ A successful task produces or updates a repository-format recipe that:
 3. starts on real available GPUs without reducing protected runtime limits;
 4. selects the smallest available GPU count that can satisfy maximum context and the mandatory free-memory reserve;
 5. records the maximum passing six-decimal `GPU_MEM_UTIL_VALUE`;
-6. exercises the model's actual API behavior, including its modality and model-card-advertised parsers/features;
-7. For a normal existing-recipe update, first validate the supplied repository script in place; if that run fails, reconstruct and validate its exact failed copy under `/tmp` with a temporary candidate environment before promotion.
-8. is copied into `/workspace/scripts/recipes` only after behavioral validation succeeds; and
+6. exercises the model's actual API behavior, including its modality and model-card-advertised parsers/features, as required by the selected mode;
+7. follows the selected mode's workflow, including the initial in-place run and failed-baseline recovery for existing-recipe updates;
+8. is copied into `/workspace/scripts/recipes` or updated there in place only after the required behavioral validation succeeds; and
 9. has a reproducible package installer and consistently ordered environment entries.
 
 If those conditions cannot be met with the available GPUs and an upstream SGLang/vLLM version, the result is a **failure**, not a narrowed recipe.
@@ -284,7 +275,7 @@ Only after the temporary environment and `/tmp` recipe reach API readiness and p
 
 ### 1. Research (full recipe creation or broad update mode)
 
-MUST perform the prerequisite cookbook/model-card/source lookup before constructing commands. Determine:
+MUST perform the cookbook/model-card/source lookup before constructing commands. Determine:
 
 - exact model repository and variant;
 - maximum officially supported checkpoint context and whether any position scaling is checkpoint-embedded or recipe-added;
@@ -294,7 +285,7 @@ MUST perform the prerequisite cookbook/model-card/source lookup before construct
 - engine minimum version, main commit, or required PR;
 - model-card-mandated environment variables and backend flags.
 
-If either official recipe collection has no matching entry, state that explicitly and continue in the source order defined by the prerequisite skill.
+If either official recipe collection has no matching entry, state that explicitly and continue in the source order defined by the `llm-vlm-cookbook-recipe-source` skill.
 
 ### 2. Select a repository template
 
@@ -312,7 +303,7 @@ In full recipe creation or broad update mode, the recipe MUST configure every na
 
 - If reasoning/thinking is supported and the chosen engine source provides a compatible native parser, set `REASONING_PARSER` to the source-verified parser flag.
 - If structured tool calling is supported and the chosen engine source provides a compatible native parser, set `TOOL_CALL_PARSER` to the source-verified parser flag.
-- For vLLM tool calling, also set `ENABLE_AUTO_TOOL_CHOICE=\"--enable-auto-tool-choice\"` when required by the authoritative command.
+- For vLLM tool calling, also set `ENABLE_AUTO_TOOL_CHOICE="--enable-auto-tool-choice"` when required by the authoritative command.
 - If both reasoning and tool calling are available, the script MUST enable and later validate both. Enabling only one is incomplete.
 - If a capability is not advertised for the exact checkpoint, leave its parser field empty rather than copying a parser from the template.
 

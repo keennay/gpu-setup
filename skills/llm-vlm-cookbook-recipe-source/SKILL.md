@@ -1,7 +1,6 @@
 ---
 name: llm-vlm-cookbook-recipe-source
 description: "Authoritative source policy for researching, creating, validating, reviewing, or updating LLM/VLM inference recipes, serving commands, engine flags, quantization, parallelism, and speculative decoding for SGLang and vLLM."
-alwaysApply: false
 ---
 
 # LLM and VLM Cookbook Recipe Source
@@ -17,7 +16,7 @@ Before consulting model cards, issues, pull requests, third-party examples, or g
 
 This lookup is required even when the task initially names only one engine. Find the same model, closest official variant, or relevant model family in both collections. Cite the exact recipe URLs used. If a collection has no matching entry, say so explicitly rather than silently skipping it.
 
-SGLang cookbook pages may encode the selected hardware, variant, quantization, strategy, node count, and modality in URL fragments or query state. Preserve and cite that exact selected URL. When static reading does not expose an interactive cookbook's selected state, use the browser tool to inspect it.
+SGLang cookbook pages may encode the selected hardware, variant, quantization, strategy, node count, and modality in URL fragments or query state. Preserve and cite that exact selected URL. When static reading does not expose an interactive cookbook's selected state, inspect it in a browser.
 
 Example of an exact SGLang selection:
 

@@ -1,14 +1,11 @@
 ---
 name: llm-inference-bench-creation-and-update
 description: "Sets up llm-inference-bench and env_custom-uv, enables context sweeps beyond 128K, and benchmarks a running SGLang or vLLM instance using a supplied model context limit and launcher-derived output naming; reports completion or early failure."
-alwaysApply: false
 ---
 
 # LLM Inference Bench Setup
 
 Use this skill to prepare and run `llm_decode_bench.py` against an **already running** SGLang or vLLM instance, normally after an inference launch script has reached API readiness.
-
-Skill directory: `llm-inference-bench-creation-and-update`.
 
 ## Scope and required inputs
 
@@ -49,7 +46,7 @@ Reuse `$HOME/env_custom-uv` if usable. If absent, create it with `uv venv` and P
 
 The upstream benchmark documents `httpx`, `rich`, and `psutil`. Ensure these imports work in this environment, installing missing dependencies with `uv pip install --python "$HOME/env_custom-uv/bin/python" ...`. Resolve any additional demonstrated missing package against the current checkout's dependency instructions, install into this same environment, and recheck imports. Do not unnecessarily upgrade already working packages or install into an engine environment. `uv` and `git` must be available; report an unresolved setup prerequisite rather than continuing with another environment.
 
-The following setup sequence is idempotent for a valid existing checkout/environment. With OMP tools, run conditional shell blocks through Eval/subprocess rather than a complex Bash tool call.
+The following Bash setup sequence is idempotent for a valid existing checkout/environment.
 
 ```bash
 set -e
@@ -258,7 +255,7 @@ Concrete 256K example, only when these launcher values match the instance:
   --output /tmp/vllm_Qwen_Qwen3.8-27B-FP8_h200x1.json
 ```
 
-Under OMP, run the interactive/long-lived benchmark through a supervised `hub start` process with its actual interpreter and argument vector. Observe logs/TUI, decline self-updates and stale-run resume prompts, retain process output, and wait for completion. Process creation is not success. Do not kill the inference server when the benchmark exits or fails. Sequentially benchmark distinct models/configurations; concurrent load tests against one instance contaminate results.
+Run the interactive/long-lived benchmark in a supervised interactive process or terminal session using its actual interpreter and argument vector. Observe logs/TUI, decline self-updates and stale-run resume prompts, retain process output, and wait for completion. Process creation is not success. Do not kill the inference server when the benchmark exits or fails. Sequentially benchmark distinct models/configurations; concurrent load tests against one instance contaminate results.
 
 For each benchmark, truncate `/tmp/benchmark.log` immediately before launch and tee the benchmark's combined stdout/stderr to it, preserving the benchmark exit status with `set -o pipefail`.
 
