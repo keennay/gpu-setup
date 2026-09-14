@@ -140,6 +140,14 @@ The matching benchmark basename MUST preserve the same n-gram suffix immediately
 
 Do not publish an optional n-gram recipe or benchmark under the unsuffixed base name.
 
+### Model-specific flag provenance
+
+NEVER add or remove an optional model-specific launch flag without first checking the exact Hugging Face model card's launch instructions. Preserve or add an explicit `--dtype` override, including `--dtype bfloat16`, when that exact model-card command specifies it. Omit or remove the override only when the exact model-card command does not specify it. NEVER blanket-remove dtype flags or copy them from a local template, nearby model, existing recipe, checkpoint `config.json`, or engine auto-resolution.
+
+### Speculative configuration integrity
+
+Treat the exact model-card speculative configuration as immutable. NEVER add, remove, rewrite, simplify, or toggle any speculative field to make startup pass, including the method, draft model, draft-token count, draft sampling method, rejection sampling method, block size, or adaptive-verification setting. Repair or upgrade the engine while preserving the complete model-card configuration; if no allowed engine source supports it, mark the recipe failed.
+
 ## Protected runtime settings
 
 ### Prefix/radix cache
@@ -247,9 +255,9 @@ Record both the PR URL and exact tested head commit in the installer function an
 
 ### Allowed
 
-- Create a new temporary candidate environment for this task.
-- Install packages only through the candidate environment's installer definition.
-- Reinstall a different official release, commit, main, or PR into the candidate environment while evaluating engine compatibility.
+- Create a new candidate environment under `/tmp` for this task.
+- Install packages into that temporary environment with exact, recorded package-manager commands derived from repository installer conventions.
+- Reinstall a different official release, commit, main, or PR into the temporary candidate environment while evaluating engine compatibility.
 - Let the package manager populate the environment normally.
 
 ### Forbidden
@@ -268,13 +276,9 @@ NEVER create or modify a repository helper, patch file, reasoning parser plugin,
 
 ### Additional Python packages
 
-If the authoritative model card or a demonstrated import/runtime error proves an additional Python package is required, add that package to the temporary environment's installer function in:
+During `/tmp` validation, install a source-required additional package only with an exact, recorded package-manager command. Do not edit `/workspace/scripts/05_setup_env.sh`, `/workspace/scripts/06_install_packages.sh`, or `/workspace/scripts/launch_env.sh` yet.
 
-```text
-/workspace/scripts/06_install_packages.sh
-```
-
-Do not install one-off packages ad hoc and forget to record them. The installer function is the source of truth. Provisional candidate installer/catalog wiring MUST be removed on failure and promoted only after success.
+Only after the temporary environment and `/tmp` recipe reach API readiness and pass behavioral validation, promote the exact tested installation by adding its environment mapping and installer definition to those repository scripts. Then recreate or reinstall the promoted environment from that definition and revalidate it. A failed candidate MUST leave all three repository environment scripts unchanged.
 
 ## Temporary-first workflow
 
@@ -316,9 +320,9 @@ Parser availability must come from the exact engine release/main/commit/PR and a
 
 ### 3. Create the temporary environment (full recipe creation or broad update mode)
 
-Create a new candidate environment; do not experiment inside an established environment used by other recipes. The candidate name must follow repository naming conventions and be valid for the setup/install scripts.
+Create a new candidate environment under `/tmp`; do not experiment inside an established environment used by other recipes. Record every exact package-manager command and upstream source revision used.
 
-Use `/workspace/scripts/06_install_packages.sh` as the package contract. If testing multiple engine sources, update only the candidate installer. Never modify an unrelated shared environment.
+Use `/workspace/scripts/06_install_packages.sh` only as the installation-pattern reference during candidate validation. NEVER edit `05_setup_env.sh`, `06_install_packages.sh`, or `launch_env.sh` before the temporary environment and `/tmp` recipe pass API-readiness and behavioral validation.
 
 ### 4. Create the temporary recipe
 

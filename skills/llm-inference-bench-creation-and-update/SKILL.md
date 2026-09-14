@@ -260,6 +260,8 @@ Concrete 256K example, only when these launcher values match the instance:
 
 Under OMP, run the interactive/long-lived benchmark through a supervised `hub start` process with its actual interpreter and argument vector. Observe logs/TUI, decline self-updates and stale-run resume prompts, retain process output, and wait for completion. Process creation is not success. Do not kill the inference server when the benchmark exits or fails. Sequentially benchmark distinct models/configurations; concurrent load tests against one instance contaminate results.
 
+For each benchmark, truncate `/tmp/benchmark.log` immediately before launch and tee the benchmark's combined stdout/stderr to it, preserving the benchmark exit status with `set -o pipefail`.
+
 ## 7. Decide success versus early failure
 
 Always inspect **both process outcome and fresh benchmark results**. Current upstream can return exit code 0 after a connection failure with `No results collected.`, and can save partial JSON after interruption. Neither exit code 0 nor `Results saved` alone proves success.

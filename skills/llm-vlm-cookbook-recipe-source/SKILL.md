@@ -34,6 +34,10 @@ After checking both cookbooks, use this order:
 
 Prefer primary sources. Do not treat a search-result summary as proof when the underlying recipe, source file, model card, PR, or issue can be read directly.
 
+## Model-specific flag provenance
+
+NEVER add or remove an optional model-specific launch flag without first checking the exact Hugging Face model card's launch instructions. Preserve or add an explicit `--dtype` override, including `--dtype bfloat16`, when that exact model-card command specifies it. Omit or remove the override only when the exact model-card command does not specify it. NEVER blanket-remove dtype flags or copy them from a local template, nearby model, existing recipe, checkpoint `config.json`, or engine auto-resolution.
+
 ## Recipe comparison checklist
 
 Verify every applicable field rather than translating flags by name alone:
