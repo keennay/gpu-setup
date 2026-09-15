@@ -273,7 +273,7 @@ Classify the run explicitly:
 
 If estimated full-limit prefill fails, report that failure rather than quietly omitting the endpoint. Keep genuine partial output for diagnosis; do not invent an empty success JSON, rewrite error measurements into successful ones, or delete a user's benchmark checkout/environment after a failed run.
 
-Only after the run is classified **SUCCESS (completed sweep)**, create `<launch-script-directory>/llm-inference-bench/` and copy the completed JSON from `/tmp` to `<launch-script-directory>/llm-inference-bench/<launch-script-stem>_<gpu-type>x<gpu-qty>.json`. Never copy partial, interrupted, aborted, or resume files into that directory.
+Only after the run is classified **SUCCESS (completed sweep)**, ensure `<launch-script-directory>/llm-inference-bench/` and the model repository directory `/workspace/scripts/recipes/<repo>/llm-inference-bench/` exist, and copy the completed JSON from `/tmp` to both `<launch-script-directory>/llm-inference-bench/<launch-script-stem>_<gpu-type>x<gpu-qty>.json` and `/workspace/scripts/recipes/<repo>/llm-inference-bench/<launch-script-stem>_<gpu-type>x<gpu-qty>.json` (as well as `/workspace/scripts/recipes/llm-inference-bench/`). During active benchmark execution, ensure the running benchmark resume state (`.resume.json`) is also copied/synchronized to the respective `/workspace/scripts/recipes/<repo>/llm-inference-bench/` and `/workspace/scripts/recipes/llm-inference-bench/` directories. Never copy partial, interrupted, or aborted files as the final completed benchmark JSON into those directories.
 
 ## Final report
 

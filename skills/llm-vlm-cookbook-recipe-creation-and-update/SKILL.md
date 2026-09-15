@@ -5,7 +5,7 @@ description: "Creates or updates and behaviorally validates portable SGLang and 
 
 # SGLang & vLLM Recipe Creation and Update
 
-Use this skill when creating, updating, porting, repairing, or validating an SGLang or vLLM recipe for an LLM or VLM in `/workspace/scripts/recipes`.
+Use this skill when creating, updating, porting, repairing, or validating an SGLang or vLLM recipe for an LLM or VLM in `/workspace/scripts/recipes/<repo>` (where `<repo>` is the model publisher/organization directory, e.g. `/workspace/scripts/recipes/deepseek-ai/`, `/workspace/scripts/recipes/incoai/`, `/workspace/scripts/recipes/zai-org/`, etc.).
 
 The `llm-vlm-cookbook-recipe-source` skill controls source authority, cookbook lookup, model-card/config inspection, engine source verification, version comparison, and reporting. This skill adds repository-specific implementation and runtime constraints; it does not replace that source policy.
 
@@ -25,7 +25,7 @@ Workflow:
    - Allow the shared helper to auto-create the configured environment when it is missing and install the engine through the existing package catalog. This initial environment creation/install is explicitly permitted for update validation.
    - Wait for final API readiness, confirm the logs show the configured model and launch settings, send one coherent non-gibberish baseline prompt, verify a relevant non-empty response, and stop the server cleanly.
    - This run establishes whether the supplied configuration is operational; it does not replace the required final GPU sweep or final behavioral validation.
-3. If the initial in-place run reaches API readiness and passes the baseline check, copy the unchanged script to `/tmp` using the **same basename**. Keep the original repository file untouched during the sweep. Make only the mechanical temporary source-path adjustment needed to invoke `/workspace/scripts/recipes/helpers/inference_recipe.sh`; do not create a helper copy or symlink.
+3. If the initial in-place run reaches API readiness and passes the baseline check, copy the unchanged script to `/tmp` using the **same basename**. Keep the original repository file untouched during the sweep. Make only the mechanical temporary source-path adjustment needed to invoke `/workspace/scripts/tools/recipes/inference_recipe.sh`; do not create a helper copy or symlink.
 4. If the initial in-place run fails before establishing a working baseline:
    - Keep the original repository file untouched.
    - Copy the exact script that failed to `/tmp` using the **same basename before editing it**, then make only the mechanical helper source-path adjustment.
@@ -64,7 +64,7 @@ A successful task produces or updates a repository-format recipe that:
 5. records the maximum passing six-decimal `GPU_MEM_UTIL_VALUE`;
 6. exercises the model's actual API behavior, including its modality and model-card-advertised parsers/features, as required by the selected mode;
 7. follows the selected mode's workflow, including the initial in-place run and failed-baseline recovery for existing-recipe updates;
-8. is copied into `/workspace/scripts/recipes` or updated there in place only after the required behavioral validation succeeds; and
+8. is copied into its respective repository directory `/workspace/scripts/recipes/<repo>` or updated there in place only after the required behavioral validation succeeds; and
 9. has a reproducible package installer and consistently ordered environment entries.
 
 If those conditions cannot be met with the available GPUs and an upstream SGLang/vLLM version, the result is a **failure**, not a narrowed recipe.
@@ -263,7 +263,7 @@ $HOME/env_*/vllm
 
 NEVER monkey-patch imports, mutate installed Python modules, use `sed`/`perl` on site-packages, copy model code into the environment, or keep an editable local engine checkout there.
 
-NEVER create or modify a repository helper, patch file, reasoning parser plugin, tool parser plugin, or compatibility shim to make the model work. Reuse `/workspace/scripts/recipes/helpers/inference_recipe.sh` unchanged. If native support is unavailable in an official release/main/commit/PR, fail the attempt.
+NEVER create or modify a repository helper, patch file, reasoning parser plugin, tool parser plugin, or compatibility shim to make the model work. Reuse `/workspace/scripts/tools/recipes/inference_recipe.sh` unchanged. If native support is unavailable in an official release/main/commit/PR, fail the attempt.
 
 ### Additional Python packages
 
@@ -331,7 +331,7 @@ Use the exact Hugging Face publisher/model identity and repository suffix conven
 The temporary script MUST invoke the existing helper at:
 
 ```text
-/workspace/scripts/recipes/helpers/inference_recipe.sh
+/workspace/scripts/tools/recipes/inference_recipe.sh
 ```
 
 Do not create a helper copy, helper symlink, plugin, patch, or shim under `/tmp`. A temporary script may use an absolute source path during validation; restore the standard repository-relative source line when promoted and rerun the final script.
@@ -447,7 +447,7 @@ Mark the effort failed when any of these remain true after exhausting authoritat
 
 On failure:
 
-- do not copy the recipe into `/workspace/scripts/recipes`;
+- do not copy the recipe into `/workspace/scripts/recipes/<repo>`;
 - do not leave permanent environment catalog entries;
 - remove provisional installer/catalog wiring;
 - remove temporary scripts/environments created for the attempt unless the user asks to retain them;
@@ -459,7 +459,7 @@ Only after a full recipe creation or broad update candidate passes the complete 
 
 Before copying, set `DEFAULT_TENSOR_PARALLEL_SIZE` to the smallest ladder count that passed and set `GPU_MEM_UTIL_VALUE` to the proven maximum six-decimal value. Rerun the temporary recipe once with both final values and the full behavioral contract.
 
-1. copy the validated script into `/workspace/scripts/recipes` with only the source-path adjustment required for the standard relative helper line;
+1. copy the validated script into its respective repository directory `/workspace/scripts/recipes/<repo>` (where `<repo>` matches the publisher parsed from the script name) with only the source-path adjustment required for the standard helper line (`RECIPE_DIR="/workspace/scripts/recipes"`);
 2. ensure executable mode;
 3. retain the exact validated engine source and package list in `06_install_packages.sh`;
 4. add the validated environment to:
