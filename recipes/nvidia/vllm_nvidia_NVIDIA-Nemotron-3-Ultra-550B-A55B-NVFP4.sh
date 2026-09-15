@@ -34,6 +34,5 @@ REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS="--dtype bfloat16 --kv-cache-dtype fp8 --attention-backend FLASH_ATTN --max-num-seqs 16 --max-num-batched-tokens 32768 --enable-chunked-prefill --enable-prefix-caching --moe-backend emulation --mamba-backend triton --mamba-ssm-cache-dtype float32"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-# shellcheck source=/workspace/scripts/tools/recipes/inference_recipe.sh
-source "/workspace/scripts/tools/recipes/inference_recipe.sh"
+source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
 run_inference_recipe "$@"

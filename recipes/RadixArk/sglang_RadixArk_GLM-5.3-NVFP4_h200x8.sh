@@ -33,7 +33,6 @@ NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS="--moe-runner-backend marlin"
 
-RECIPE_DIR="/workspace/scripts/recipes"
-# shellcheck source=/workspace/scripts/tools/recipes/inference_recipe.sh
-source "/workspace/scripts/tools/recipes/inference_recipe.sh"
+RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
 run_inference_recipe "$@"

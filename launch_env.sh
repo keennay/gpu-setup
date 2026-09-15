@@ -6,7 +6,6 @@
 
 # Source bashrc to ensure environment is properly loaded
 if [ -f "$HOME/.bashrc" ]; then
-    # shellcheck source=/dev/null
     source "$HOME/.bashrc"
 fi
 
@@ -98,7 +97,6 @@ apply_env_cuda_selection() {
     CUDA_ENV_HOME=""
 
     if [ -f "$cuda_config" ]; then
-        # shellcheck source=/dev/null
         source "$cuda_config"
     fi
 
@@ -721,7 +719,6 @@ fi
 # Check if activate_ml script exists, use it if available
 if [ -f "$ENV_PATH/activate_ml" ]; then
     print_info "Using activate_ml script..."
-    # shellcheck source=/dev/null
     if ! source "$ENV_PATH/activate_ml"; then
         print_error "Failed to activate environment '$ENV_NAME' with $ENV_PATH/activate_ml"
         return 1
@@ -729,7 +726,6 @@ if [ -f "$ENV_PATH/activate_ml" ]; then
 elif [ -f "$ENV_PATH/bin/activate" ]; then
     # Fallback to manual activation
     print_info "Activating $ENV_NAME environment..."
-    # shellcheck source=/dev/null
     if ! source "$ENV_PATH/bin/activate"; then
         print_error "Failed to activate environment '$ENV_NAME' with $ENV_PATH/bin/activate"
         return 1

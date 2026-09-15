@@ -34,6 +34,5 @@ REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS='--dtype bfloat16 --moe-backend emulation --enable-expert-parallel --kv-cache-dtype bfloat16 --mamba-cache-dtype auto --mamba-ssm-cache-dtype float32 --enable-prefix-caching --mamba-cache-mode align --attention-config {"indexer_kv_dtype":"bf16"} --no-enable-flashinfer-autotune'
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-# shellcheck source=/workspace/scripts/tools/recipes/inference_recipe.sh
-source "/workspace/scripts/tools/recipes/inference_recipe.sh"
+source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
 run_inference_recipe "$@"

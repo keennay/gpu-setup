@@ -35,6 +35,5 @@ REASONING_PARSER_PLUGIN="${SCRIPT_DIR:+$SCRIPT_DIR/plugins/super_v3_reasoning_pa
 EXTRA_ARGS="--max-num-seqs 128 --max-num-batched-tokens 32768 --async-scheduling --moe-backend humming --mamba-backend flashinfer --mamba-ssm-cache-dtype float16 --enable-mamba-cache-stochastic-rounding --mamba-cache-philox-rounds 5 --mamba-cache-mode align"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-# shellcheck source=/workspace/scripts/tools/recipes/inference_recipe.sh
-source "/workspace/scripts/tools/recipes/inference_recipe.sh"
+source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
 run_inference_recipe "$@"

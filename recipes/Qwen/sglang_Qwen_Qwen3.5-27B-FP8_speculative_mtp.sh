@@ -35,6 +35,5 @@ REASONING_PARSER_PLUGIN="${SCRIPT_DIR:+$SCRIPT_DIR/plugins/super_v3_reasoning_pa
 EXTRA_ARGS="--enable-flashinfer-allreduce-fusion --attention-backend flashinfer --mamba-radix-cache-strategy extra_buffer --max-running-requests 128 --chunked-prefill-size 16384"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-# shellcheck source=/workspace/scripts/tools/recipes/inference_recipe.sh
-source "/workspace/scripts/tools/recipes/inference_recipe.sh"
+source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
 run_inference_recipe "$@"

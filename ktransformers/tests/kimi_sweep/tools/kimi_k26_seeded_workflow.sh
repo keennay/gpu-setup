@@ -40,11 +40,9 @@ KT_DYNAMIC_POST25_START="${KT_DYNAMIC_POST25_START:-026}"
 KT_DYNAMIC_POST25_SOURCE_LAST="${KT_DYNAMIC_POST25_SOURCE_LAST:-025}"
 
 if [[ -d "${KT_PYTHON_ENV}" ]]; then
-  # shellcheck disable=SC1091
   source "${KT_PYTHON_ENV}/bin/activate"
 fi
 
-# shellcheck source=tools/launch_config.sh
 source "${repo_root}/tools/launch_config.sh"
 load_launch_config "${KT_TEST_ENV}"
 

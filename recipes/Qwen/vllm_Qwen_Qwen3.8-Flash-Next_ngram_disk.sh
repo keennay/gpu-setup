@@ -14,6 +14,5 @@ KV_CACHE_DTYPE_VALUE="bfloat16"
 EXTRA_ARGS_VALUE="--reasoning-parser qwen3 --enable-auto-tool-choice --tool-call-parser qwen3_coder --enable-expert-parallel"
 
 RECIPE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
-# shellcheck source=/workspace/scripts/tools/recipes/inference_recipe.sh
-source "/workspace/scripts/tools/recipes/inference_recipe.sh"
+source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
 run_inference_recipe "$@"

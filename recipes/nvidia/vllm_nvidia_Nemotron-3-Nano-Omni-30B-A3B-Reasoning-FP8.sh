@@ -35,6 +35,5 @@ REASONING_PARSER_PLUGIN="${SCRIPT_DIR:+$SCRIPT_DIR/plugins/super_v3_reasoning_pa
 EXTRA_ARGS="--video-pruning-rate 0.5 --max-num-seqs 384 --allowed-local-media-path / --media-io-kwargs {\"video\":{\"fps\":2,\"num_frames\":256}} --kv-cache-dtype fp8"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-# shellcheck source=/workspace/scripts/tools/recipes/inference_recipe.sh
-source "/workspace/scripts/tools/recipes/inference_recipe.sh"
+source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
 run_inference_recipe "$@"

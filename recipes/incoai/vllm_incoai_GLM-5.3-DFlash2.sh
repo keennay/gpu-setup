@@ -33,7 +33,6 @@ NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS="--dtype bfloat16 --kv-cache-dtype bfloat16 --no-enable-flashinfer-autotune"
 
-RECIPE_DIR="/workspace/scripts/recipes"
-# shellcheck source=/workspace/scripts/tools/recipes/inference_recipe.sh
-source "/workspace/scripts/tools/recipes/inference_recipe.sh"
+RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
 run_inference_recipe "$@"

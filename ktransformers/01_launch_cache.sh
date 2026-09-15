@@ -2,7 +2,6 @@
 set -euo pipefail
 
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=tools/launch_config.sh
 source "$script_dir/tools/launch_config.sh"
 load_launch_config "$@"
 setup_sglang_launch_log "$script_dir" "$(basename "$0" .sh)"

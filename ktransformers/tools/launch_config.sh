@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 launch_tools_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-# shellcheck source=tools/sglang_launch_logging.sh
 source "$launch_tools_dir/sglang_launch_logging.sh"
 
 usage() {
@@ -58,7 +57,6 @@ load_launch_config() {
   HF_HUB_CACHE="${HF_HUB_CACHE:-$HF_HOME/hub}"
 
   set -a
-  # shellcheck source=/dev/null
   source "$config_file"
   set +a
 

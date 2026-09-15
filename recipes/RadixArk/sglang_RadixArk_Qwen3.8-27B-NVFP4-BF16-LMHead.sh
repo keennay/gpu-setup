@@ -35,6 +35,5 @@ REASONING_PARSER_PLUGIN="${SCRIPT_DIR:+$SCRIPT_DIR/plugins/super_v3_reasoning_pa
 EXTRA_ARGS="--fp4-gemm-backend marlin --page-size 64 --mamba-radix-cache-strategy extra_buffer --mamba-track-interval 64 --chunked-prefill-size 4096 --max-running-requests 36 --allow-auto-truncate"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-# shellcheck source=/workspace/scripts/tools/recipes/inference_recipe.sh
-source "/workspace/scripts/tools/recipes/inference_recipe.sh"
+source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
 run_inference_recipe "$@"

@@ -84,7 +84,6 @@ prepare_inference_runtime() {
             activation_script="$env_path/bin/activate"
         fi
         echo "Using Python environment: $env_path"
-        # shellcheck source=/dev/null
         if ! source "$activation_script"; then
             echo "Error: failed to activate Python environment '$PYTHON_ENV'." >&2
             return 1
@@ -147,11 +146,11 @@ elif [ -n "$RECIPE_DIR" ] && [ "$(basename "$(dirname "$RECIPE_DIR")")" = "recip
 fi
 
 if [ -n "$CALLING_REPO" ] && [ "$CALLING_REPO" != "recipes" ]; then
-    LOG_DIR="/workspace/scripts/recipes/$CALLING_REPO/logs"
+    LOG_DIR="$SCRIPTS_DIR/recipes/$CALLING_REPO/logs"
 elif [ -n "$RECIPE_DIR" ] && [ -d "$RECIPE_DIR" ]; then
     LOG_DIR="$RECIPE_DIR/logs"
 else
-    LOG_DIR="/workspace/scripts/recipes/logs"
+    LOG_DIR="$SCRIPTS_DIR/recipes/logs"
 fi
 LOG_TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 LAUNCH_LOG="$LOG_DIR/${LOG_TIMESTAMP}_${LOG_SUFFIX}.log"

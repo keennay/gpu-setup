@@ -34,6 +34,5 @@ REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS='--kv-cache-dtype fp8 --block-size 256 --tokenizer-mode deepseek_v4 --reasoning-config {"reasoning_parser":"deepseek_v4","reasoning_start_str":"","reasoning_end_str":""}'
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-# shellcheck source=/workspace/scripts/tools/recipes/inference_recipe.sh
-source "/workspace/scripts/tools/recipes/inference_recipe.sh"
+source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
 run_inference_recipe "$@"

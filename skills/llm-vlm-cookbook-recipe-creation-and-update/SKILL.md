@@ -459,7 +459,7 @@ Only after a full recipe creation or broad update candidate passes the complete 
 
 Before copying, set `DEFAULT_TENSOR_PARALLEL_SIZE` to the smallest ladder count that passed and set `GPU_MEM_UTIL_VALUE` to the proven maximum six-decimal value. Rerun the temporary recipe once with both final values and the full behavioral contract.
 
-1. copy the validated script into its respective repository directory `/workspace/scripts/recipes/<repo>` (where `<repo>` matches the publisher parsed from the script name) with only the source-path adjustment required for the standard helper line (`RECIPE_DIR="/workspace/scripts/recipes"`);
+1. copy the validated script into its respective repository directory `/workspace/scripts/recipes/<repo>` (where `<repo>` matches the publisher parsed from the script name) with the standard relative helper lines (`RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"` and `source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"` with `# shellcheck source=../../tools/recipes/inference_recipe.sh`);
 2. ensure executable mode;
 3. retain the exact validated engine source and package list in `06_install_packages.sh`;
 4. add the validated environment to:
