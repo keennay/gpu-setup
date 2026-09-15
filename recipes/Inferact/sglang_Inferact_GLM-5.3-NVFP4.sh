@@ -3,16 +3,16 @@
 PYTHON_ENV="env_glm53flash-dflash2-sglang-pr-37818"
 INFERENCE_PROVIDER="SGLang"
 INFERENCE_ENV=""
-MODEL_REPO="RadixArk/GLM-5.3-Flash-NVFP4"
+MODEL_REPO="Inferact/GLM-5.3-NVFP4"
 MODEL_NAME="glm5next"
 SERVED_MODEL_NAME="glm"
-CONTEXT_LEN_VALUE=1048576
-DEFAULT_TENSOR_PARALLEL_SIZE=4
+CONTEXT_LEN_VALUE=524288
+DEFAULT_TENSOR_PARALLEL_SIZE=8
 TRUST_REMOTE_CODE=""
 REASONING_PARSER="--reasoning-parser glm45"
 ENABLE_AUTO_TOOL_CHOICE=""
 TOOL_CALL_PARSER="--tool-call-parser glm47"
-GPU_MEM_UTIL_VALUE=0.70
+GPU_MEM_UTIL_VALUE=0.85
 METRICS_FLAG="--enable-metrics"
 HOST="0.0.0.0"
 DEFAULT_PORT=8000
@@ -25,13 +25,13 @@ BACKEND_MOE_RUNNER_SM120=""
 BACKEND_MOE_RUNNER_SM121=""
 
 ENABLE_CACHE_FLAG=0
-ENABLE_SPECULATIVE=1
+ENABLE_SPECULATIVE=0
 ENABLE_REASONING_PARSER=0
-SPECULATIVE="--speculative-algorithm NEXTN --speculative-num-steps 5 --speculative-eagle-topk 1 --speculative-num-draft-tokens 6 --speculative-adaptive"
-QUANTIZATION="--quantization modelopt_fp4"
+SPECULATIVE=""
+QUANTIZATION=""
 NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS="--dsa-prefill-backend tilelang --dsa-decode-backend tilelang --kv-cache-dtype bfloat16 --moe-runner-backend marlin"
+EXTRA_ARGS="--moe-runner-backend marlin"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"

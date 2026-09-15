@@ -1,37 +1,37 @@
 #!/usr/bin/env bash
 
-PYTHON_ENV="env_glm53flash-dflash2-sglang-pr-37818"
-INFERENCE_PROVIDER="SGLang"
-INFERENCE_ENV=""
-MODEL_REPO="RadixArk/GLM-5.3-Flash-NVFP4"
+PYTHON_ENV="env_glm53flash-vllm-pr-53906"
+INFERENCE_PROVIDER="vLLM"
+INFERENCE_ENV="env VLLM_USE_V2_MODEL_RUNNER=1 VLLM_ENGINE_READY_TIMEOUT_S=3600"
+MODEL_REPO="RedHatAI/GLM-5.3-Flash"
 MODEL_NAME="glm5next"
 SERVED_MODEL_NAME="glm"
 CONTEXT_LEN_VALUE=1048576
 DEFAULT_TENSOR_PARALLEL_SIZE=4
 TRUST_REMOTE_CODE=""
 REASONING_PARSER="--reasoning-parser glm45"
-ENABLE_AUTO_TOOL_CHOICE=""
+ENABLE_AUTO_TOOL_CHOICE="--enable-auto-tool-choice"
 TOOL_CALL_PARSER="--tool-call-parser glm47"
-GPU_MEM_UTIL_VALUE=0.70
-METRICS_FLAG="--enable-metrics"
+GPU_MEM_UTIL_VALUE=0.88
+METRICS_FLAG=""
 HOST="0.0.0.0"
 DEFAULT_PORT=8000
 API_KEY="--api-key YOUR_API_KEY"
 
-BACKEND_MOE_RUNNER_SM90="marlin"
+BACKEND_MOE_RUNNER_SM90=""
 BACKEND_MOE_RUNNER_SM100=""
 BACKEND_MOE_RUNNER_SM103=""
 BACKEND_MOE_RUNNER_SM120=""
 BACKEND_MOE_RUNNER_SM121=""
 
 ENABLE_CACHE_FLAG=0
-ENABLE_SPECULATIVE=1
+ENABLE_SPECULATIVE=0
 ENABLE_REASONING_PARSER=0
-SPECULATIVE="--speculative-algorithm NEXTN --speculative-num-steps 5 --speculative-eagle-topk 1 --speculative-num-draft-tokens 6 --speculative-adaptive"
-QUANTIZATION="--quantization modelopt_fp4"
+SPECULATIVE=""
+QUANTIZATION=""
 NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS="--dsa-prefill-backend tilelang --dsa-decode-backend tilelang --kv-cache-dtype bfloat16 --moe-runner-backend marlin"
+EXTRA_ARGS="--dtype bfloat16 --kv-cache-dtype bfloat16 --no-enable-flashinfer-autotune"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
