@@ -1,18 +1,18 @@
 #!/usr/bin/env bash
 
-PYTHON_ENV="env_glm53-vllm-v0290"
+PYTHON_ENV="env_glm53flash-vllm-pr-53906"
 INFERENCE_PROVIDER="vLLM"
-INFERENCE_ENV=""
-MODEL_REPO="zai-org/GLM-5.3"
+INFERENCE_ENV="env VLLM_USE_V2_MODEL_RUNNER=1 VLLM_ENGINE_READY_TIMEOUT_S=3600"
+MODEL_REPO="RedHatAI/GLM-5.3-Flash-NVFP4"
 MODEL_NAME="glm5next"
 SERVED_MODEL_NAME="glm"
-CONTEXT_LEN_VALUE=262144
-DEFAULT_TENSOR_PARALLEL_SIZE=8
+CONTEXT_LEN_VALUE=1048576
+DEFAULT_TENSOR_PARALLEL_SIZE=4
 TRUST_REMOTE_CODE=""
 REASONING_PARSER="--reasoning-parser glm45"
 ENABLE_AUTO_TOOL_CHOICE="--enable-auto-tool-choice"
 TOOL_CALL_PARSER="--tool-call-parser glm47"
-GPU_MEM_UTIL_VALUE=0.87
+GPU_MEM_UTIL_VALUE=0.88
 METRICS_FLAG=""
 HOST="0.0.0.0"
 DEFAULT_PORT=8000
@@ -25,15 +25,15 @@ BACKEND_MOE_RUNNER_SM120=""
 BACKEND_MOE_RUNNER_SM121=""
 
 ENABLE_CACHE_FLAG=0
-ENABLE_SPECULATIVE=1
+ENABLE_SPECULATIVE=0
 ENABLE_REASONING_PARSER=0
-SPECULATIVE='--speculative-config {"method":"mtp","num_speculative_tokens":5}'
+SPECULATIVE=""
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS="--dtype bfloat16 --kv-cache-dtype bfloat16 --no-enable-flashinfer-autotune"
+EXTRA_ARGS="--no-enable-flashinfer-autotune"
 
-RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-# shellcheck source=helpers/inference_recipe.sh
+RECIPE_DIR="/workspace/scripts/recipes"
+# shellcheck source=/workspace/scripts/recipes/helpers/inference_recipe.sh
 source "$RECIPE_DIR/helpers/inference_recipe.sh"
 run_inference_recipe "$@"
