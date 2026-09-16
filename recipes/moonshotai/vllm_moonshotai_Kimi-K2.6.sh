@@ -3,16 +3,16 @@
 PYTHON_ENV="env_glm53-vllm-v0290"
 INFERENCE_PROVIDER="vLLM"
 INFERENCE_ENV="env VLLM_USE_V2_MODEL_RUNNER=1 FLASH_ATTENTION_CUTE_DSL_CACHE_ENABLED=1 VLLM_ENGINE_READY_TIMEOUT_S=3600"
-MODEL_REPO="arcee-ai/Trinity-Large-Preview"
-MODEL_NAME="trinity"
-SERVED_MODEL_NAME="arcee-ai/Trinity-Large-Preview"
-CONTEXT_LEN_VALUE=524288
+MODEL_REPO="moonshotai/Kimi-K2.6"
+MODEL_NAME="kimi_k25"
+SERVED_MODEL_NAME="moonshotai/Kimi-K2.6"
+CONTEXT_LEN_VALUE=262144
 DEFAULT_TENSOR_PARALLEL_SIZE=8
 TRUST_REMOTE_CODE="--trust-remote-code"
-REASONING_PARSER=""
+REASONING_PARSER="--reasoning-parser kimi_k2"
 ENABLE_AUTO_TOOL_CHOICE="--enable-auto-tool-choice"
-TOOL_CALL_PARSER="--tool-call-parser hermes"
-GPU_MEM_UTIL_VALUE=0.885586
+TOOL_CALL_PARSER="--tool-call-parser kimi_k2"
+GPU_MEM_UTIL_VALUE=0.88
 METRICS_FLAG=""
 HOST="0.0.0.0"
 DEFAULT_PORT=8000
@@ -31,7 +31,7 @@ SPECULATIVE=""
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS='--hf-overrides {"max_position_embeddings":524288} --kernel-config.enable_flashinfer_autotune=False'
+EXTRA_ARGS="--kernel-config.enable_flashinfer_autotune=False"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 # shellcheck source=../../tools/recipes/inference_recipe.sh
