@@ -3,16 +3,16 @@
 PYTHON_ENV="env_glm53-vllm-v0290"
 INFERENCE_PROVIDER="vLLM"
 INFERENCE_ENV="env FLASH_ATTENTION_CUTE_DSL_CACHE_ENABLED=1 VLLM_ENGINE_READY_TIMEOUT_S=3600"
-MODEL_REPO="moonshotai/Kimi-K2.7-Code"
-MODEL_NAME="kimi_k25"
-SERVED_MODEL_NAME="nvidia/Kimi-K2.7-Code-DFlash"
+MODEL_REPO="stepfun-ai/Step-3.5-Flash"
+MODEL_NAME="step3p5"
+SERVED_MODEL_NAME="stepfun-ai/Step-3.5-Flash"
 CONTEXT_LEN_VALUE=262144
-DEFAULT_TENSOR_PARALLEL_SIZE=8
+DEFAULT_TENSOR_PARALLEL_SIZE=4
 TRUST_REMOTE_CODE="--trust-remote-code"
-REASONING_PARSER="--reasoning-parser kimi_k2"
+REASONING_PARSER="--reasoning-parser $MODEL_NAME"
 ENABLE_AUTO_TOOL_CHOICE="--enable-auto-tool-choice"
-TOOL_CALL_PARSER="--tool-call-parser kimi_k2"
-GPU_MEM_UTIL_VALUE=0.81
+TOOL_CALL_PARSER="--tool-call-parser $MODEL_NAME"
+GPU_MEM_UTIL_VALUE=0.85
 METRICS_FLAG=""
 HOST="0.0.0.0"
 DEFAULT_PORT=8000
@@ -25,13 +25,13 @@ BACKEND_MOE_RUNNER_SM120=""
 BACKEND_MOE_RUNNER_SM121=""
 
 ENABLE_CACHE_FLAG=0
-ENABLE_SPECULATIVE=1
+ENABLE_SPECULATIVE=0
 ENABLE_REASONING_PARSER=0
-SPECULATIVE='--speculative-config {"method":"dflash","model":"nvidia/Kimi-K2.7-Code-DFlash","num_speculative_tokens":8}'
+SPECULATIVE=''
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS="--enforce-eager --max-num-batched-tokens 16384"
+EXTRA_ARGS="--enable-expert-parallel --disable-cascade-attn"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 # shellcheck source=../../tools/recipes/inference_recipe.sh
