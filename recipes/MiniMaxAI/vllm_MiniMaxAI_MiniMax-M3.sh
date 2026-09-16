@@ -31,7 +31,7 @@ SPECULATIVE=''
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS='--enforce-eager --block-size 128 --kv-cache-dtype fp8 --limit-mm-per-prompt {"image":1,"video":0}'
+EXTRA_ARGS='--enforce-eager --block-size 128 --limit-mm-per-prompt {"image":1,"video":0}'
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 # shellcheck source=../../tools/recipes/inference_recipe.sh

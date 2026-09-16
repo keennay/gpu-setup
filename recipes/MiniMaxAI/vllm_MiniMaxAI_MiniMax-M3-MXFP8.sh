@@ -12,7 +12,7 @@ TRUST_REMOTE_CODE="--trust-remote-code"
 REASONING_PARSER="--reasoning-parser minimax_m3"
 ENABLE_AUTO_TOOL_CHOICE="--enable-auto-tool-choice"
 TOOL_CALL_PARSER="--tool-call-parser minimax_m3"
-GPU_MEM_UTIL_VALUE=0.845639
+GPU_MEM_UTIL_VALUE=0.84
 METRICS_FLAG=""
 HOST="0.0.0.0"
 DEFAULT_PORT=8000
@@ -31,7 +31,7 @@ SPECULATIVE=''
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS='--enforce-eager --block-size 128 --kv-cache-dtype fp8 --limit-mm-per-prompt {"image":1,"video":0}'
+EXTRA_ARGS='--enforce-eager --block-size 128 --limit-mm-per-prompt {"image":1,"video":0}'
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 # shellcheck source=../../tools/recipes/inference_recipe.sh
