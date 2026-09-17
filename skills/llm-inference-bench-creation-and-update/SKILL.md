@@ -94,7 +94,7 @@ decode_contexts = context_points(model_context_limit - 4096 - 1024)
 prefill_contexts = context_points(model_context_limit)
 ```
 
-The decode reserve is 4,096 generation tokens plus 1,024 safety tokens. Do not subtract it from the prefill sweep. Both formulas use the same `model_context_limit`.
+The decode reserve is 4,096 generation tokens plus 1,024 safety tokens. Do not subtract it from the prefill sweep. Both formulas use the same `model_context_limit`, but prefill MUST be calculated independently, never from the decode budget. Neither endpoint may be rounded. Generate both argument strings for every run; NEVER copy them from an old benchmark JSON or a hand-maintained model-specific list.
 
 Reference calculation, with integer token counts:
 
@@ -120,6 +120,24 @@ def benchmark_contexts(model_context_limit: int) -> tuple[str, str]:
     decode_contexts = context_points(model_context_limit - 4096 - 1024)
     prefill_contexts = context_points(model_context_limit)
     return context_csv(decode_contexts), context_csv(prefill_contexts)
+
+
+def validate_context_lists(
+    model_context_limit: int,
+    decode_contexts: list[int],
+    prefill_contexts: list[int],
+) -> None:
+    """Check integer lists parsed from the actual or saved invocation."""
+    expected_decode = context_points(model_context_limit - 4096 - 1024)
+    expected_prefill = context_points(model_context_limit)
+    if decode_contexts != expected_decode:
+        raise ValueError(
+            f"Decode contexts: expected {expected_decode}, got {decode_contexts}"
+        )
+    if prefill_contexts != expected_prefill:
+        raise ValueError(
+            f"Prefill contexts: expected {expected_prefill}, got {prefill_contexts}"
+        )
 ```
 
 If the decode budget is below 8,192 tokens, report that this sweep cannot run as specified; do not silently introduce a smaller starting point. For a non-K-aligned limit, keep the final point as an exact decimal token count.
@@ -130,8 +148,13 @@ Required examples:
 | --- | --- | --- |
 | 131072 (128K) | `8k,16k,32k,64k,123k` | `8k,16k,32k,64k,128k` |
 | 262144 (256K) | `8k,16k,32k,64k,128k,251k` | `8k,16k,32k,64k,128k,256k` |
+| 320000 (exact, non-K-aligned) | `8k,16k,32k,64k,128k,256k,314880` | `8k,16k,32k,64k,128k,256k,320000` |
 | 524288 (512K) | `8k,16k,32k,64k,128k,256k,507k` | `8k,16k,32k,64k,128k,256k,512k` |
 | 1048576 (1M / 1024K) | `8k,16k,32k,64k,128k,256k,512k,1019k` | `8k,16k,32k,64k,128k,256k,512k,1024k` |
+
+**Mandatory endpoint gate:** use the checkout's actual argument/token parser to obtain the integer lists from the invocation that will run, then execute `validate_context_lists` with the supplied model limit. Abort before the load test on a mismatch. Checking only freshly generated reference lists against themselves does not verify the executed command. Repeat this check against the saved invocation before publishing results (Step 7).
+
+For a 1M limit, the required final pair is **1019k decode / 1024k prefill**: **1,043,456 / 1,048,576 tokens**. Decode endpoints of `1000k`, `1020k`, or `1024k` are wrong; prefill endpoints of `1000k`, `1019k`, or `1020k` are also wrong. A correct prefill endpoint does not excuse an incorrect decode endpoint, or vice versa.
 
 ## 4. Enable long contexts in the benchmark checkout
 
@@ -161,9 +184,9 @@ Adapt the minimal change to the actual checkout if upstream has moved this code.
 
 Verify, before the load test:
 
-- The actual parser accepts both generated argument lists and all required flags.
-- Both decode and prefill selections retain their requested final endpoints, including a prefill point equal to the model limit.
-- There is no remaining fixed 128K truncation on the exercised path.
+- The actual parser accepts all required flags, and `validate_context_lists` passes on its integer context lists, with `max_tokens == 4096` and `token_targeting == "estimate"`.
+- After applying server metadata and the actual context-selection logic, decode and prefill planning retain every requested point, including prefill at the exact model limit. Additional integrated-prefill decode points are allowed; the decode endpoint MUST NOT replace the full-limit prefill point.
+- There is no fixed 128K ceiling, `server_context_length - 64` ceiling, rounded ceiling, or exclusive upper-bound filter silently removing the full-limit prefill point on the exercised path. Parser acceptance alone does not prove this.
 - The edited Python compiles and the benchmark's `--help` works in the custom environment.
 
 The benchmark can offer to auto-update itself before parsing arguments. **Decline the update with `n`**: accepting it can overwrite the local long-context change. Do not add an invented no-update flag. If the checkout is intentionally updated later, reinspect and revalidate the support before benchmarking.
@@ -197,6 +220,16 @@ Write the benchmark output to `/tmp` first:
 
 Remove only the launch script's final extension; preserve its other spelling, capitalization, punctuation, and variant suffixes. Validate `gpu_type` as a filename label without path separators (for example, `[A-Za-z0-9][A-Za-z0-9._-]*`) and GPU quantity as a positive integer.
 
+The **only publication destination** is the matching recipe's directory, expressed relative to the caller's checkout:
+
+```text
+recipes/<repo-match>/llm-inference-bench/<launch-script-stem>_<gpu-type>x<gpu-qty>.json
+```
+
+Resolve `<repo-match>` from the actual launcher's recipe directory, not from the served-model alias or `MODEL_REPO`. For example, a launcher under `recipes/incoai/` publishes under `recipes/incoai/llm-inference-bench/` even if its target checkpoint belongs to another organization. NEVER publish to the shared `recipes/llm-inference-bench/` directory.
+
+Resolve and retain the launcher path relative to its actual invocation directory before working in `/tmp`. Derive the checkout and destination from that resolved path; do not embed a workstation-specific checkout root or resolve `recipes/` against an unrelated current directory. The helper below covers the standard `recipes/<repo-match>/<launcher>` layout. For an external/nonstandard launcher, locate its unique corresponding recipe directory first; report an unresolved or ambiguous mapping instead of guessing a destination.
+
 Reference path construction once these inputs are resolved:
 
 ```python
@@ -211,6 +244,18 @@ def benchmark_output_path(launch_script: str, gpu_type: str, gpu_qty: int) -> Pa
         raise ValueError("GPU quantity must be a positive integer resolved from the launch script")
     script = Path(launch_script).expanduser().absolute()
     return Path("/tmp") / f"{script.stem}_{gpu_type}x{gpu_qty}.json"
+
+
+def benchmark_result_path(launch_script: str, gpu_type: str, gpu_qty: int) -> Path:
+    script = Path(launch_script).expanduser().resolve()
+    recipe_directory = script.parent
+    if (
+        recipe_directory.parent.name != "recipes"
+        or recipe_directory.name == "llm-inference-bench"
+    ):
+        raise ValueError("Resolve a unique recipes/<repo-match>/ directory before publishing")
+    filename = benchmark_output_path(launch_script, gpu_type, gpu_qty).name
+    return recipe_directory / "llm-inference-bench" / filename
 ```
 
 For example:
@@ -219,9 +264,10 @@ For example:
 recipes/Qwen/vllm_Qwen_Qwen3.8-27B-FP8.sh
   + gpu_type=h200, gpu_qty=1
   -> /tmp/vllm_Qwen_Qwen3.8-27B-FP8_h200x1.json
+  -> publish only after success: recipes/Qwen/llm-inference-bench/vllm_Qwen_Qwen3.8-27B-FP8_h200x1.json
 ```
 
-If an output already exists in `/tmp`, preserve it before replacing it, using a clearly identified backup. Keep the requested filename unchanged, do not silently resume a previous benchmark, and never treat stale JSON as evidence for a new run. Record run start time and the intended output path.
+If an output already exists in `/tmp`, preserve it before replacing it, using a clearly identified backup. Keep the requested filename unchanged, do not silently resume a previous benchmark, and never treat stale JSON as evidence for a new run. Record run start time, the scratch output path, and the resolved publisher-local destination before benchmarking.
 
 ## 6. Run the real benchmark
 
@@ -265,6 +311,12 @@ Always inspect **both process outcome and fresh benchmark results**. Current ups
 
 Inspect the current checkout's output schema. Known fields include `metadata`, `results`, `prefill`, `event_log`, and `startup_diagnostics.args`. Decode cells can contain `failure_reason`, `num_errors`, `loop_detected`, `capacity_limited`, and negative `aggregate_tps` sentinels. Some capacity-skipped cells are omitted from exported `results`, so reconcile coverage with logs/events and the expected context/concurrency matrix; do not simply demand that the number of JSON rows equals the raw matrix size.
 
+**Mandatory saved-result endpoint gate, before declaring success or copying JSON:**
+
+1. Parse the saved invocation's context lists as integer token counts and run `validate_context_lists` again using the originally supplied model limit. In the current schema these arguments are `startup_diagnostics.args.contexts` and `startup_diagnostics.args.prefill_contexts`; cross-check corresponding metadata when present. A filename, rounded TUI label, or exit code 0 is not endpoint evidence.
+2. Account for every requested prefill point, especially the exact model-limit point, using numeric context keys in `prefill` and the matching logs/events. The current full-limit entry is `prefill[str(model_context_limit)]`. Inspect its timing, actual `prompt_tokens` when available, and outcome; a label alone does not prove a successful measurement. A missing result needs evidence of an attempted request, rejection, or legitimate capacity skip. An extra integrated 1019k row cannot replace the required 1024k row. Estimated prompt counts need not equal the target; retain the full-limit caveat above.
+3. Wrong argument lists or unexplained, silently omitted prefill work mean the requested sweep did not complete, even if the process exited normally. Do not publish that output or overwrite an existing final JSON. A documented rejected request or legitimate capacity skip remains a measurement issue under the classifications below, never a successful measurement or permission to lower the requested endpoint.
+
 Classify the run explicitly:
 
 - **SUCCESS (completed sweep)**: normal completion of the requested sweep with fresh, parseable JSON at the requested path matching this model and invocation. A completed sweep remains a successful benchmark run when individual measurements are invalid or capacity-limited. Report every request error, loop-invalid measurement, context rejection, missing sample, and capacity/concurrency skip separately; do not label those cells successful.
@@ -273,18 +325,22 @@ Classify the run explicitly:
 
 If estimated full-limit prefill fails, report that failure rather than quietly omitting the endpoint. Keep genuine partial output for diagnosis; do not invent an empty success JSON, rewrite error measurements into successful ones, or delete a user's benchmark checkout/environment after a failed run.
 
-Only after the run is classified **SUCCESS (completed sweep)**, ensure `<launch-script-directory>/llm-inference-bench/` and the model repository directory `recipes/<repo>/llm-inference-bench/` exist, and copy the completed JSON from `/tmp` to both `<launch-script-directory>/llm-inference-bench/<launch-script-stem>_<gpu-type>x<gpu-qty>.json` and `recipes/<repo>/llm-inference-bench/<launch-script-stem>_<gpu-type>x<gpu-qty>.json` (as well as `recipes/llm-inference-bench/`). NEVER copy, transfer, or synchronize any `.resume.json`, checkpoint, or intermediate files during or after execution. Benchmarks MUST run exclusively in `/tmp`, and only the single final completed `.json` file is copied once the entire sweep is 100% finished. Never copy partial, interrupted, or aborted files as the final completed benchmark JSON into those directories.
+Only after the run is classified **SUCCESS (completed sweep)** and both endpoint gates pass, create the resolved `recipes/<repo-match>/llm-inference-bench/` directory if needed and copy the single final JSON from `/tmp` **only** to that directory, preserving its filename. Verify that the published copy is byte-for-byte identical to the completed source before reporting publication or replacement of an existing result.
+
+NEVER create or update a central `recipes/llm-inference-bench/` copy, fan out to multiple directories, or publish beside an unrelated external launcher. All checkout paths here are relative conventions to resolve from the actual recipe location, not fixed installation paths.
+
+Benchmarks MUST run exclusively in `/tmp`. NEVER copy, transfer, or synchronize any `.resume.json`, checkpoint, intermediate, partial, interrupted, or aborted output into a recipe results directory. Only the single final completed `.json` is copied once the entire requested sweep is 100% finished.
 
 ## Final report
 
 Lead with **SUCCESS (completed sweep)** or **FAILED EARLY**, explicitly listing any measurement issues separately, followed by:
 
 - Inference launch script, served model/engine, supplied context limit, host/port, and GPU label/count with its launcher source.
-- Exact decode and prefill argument lists and the fixed `--max-tokens 4096 --token-targeting estimate` settings.
+- Endpoint-gate verdict and exact decode/prefill argument lists, including expected versus saved endpoints as integer token counts and the fixed `--max-tokens 4096 --token-targeting estimate` settings.
 - Checkout reused/cloned, long-context edit applied/already supported, environment reused/created, and packages installed.
 - Actual command with any real API key redacted, exit status, and whether the run completed normally.
-- Absolute JSON output path and whether it is fresh, valid, complete, or partial; any preserved prior-output backup.
-- Highest requested versus successfully measured decode/prefill contexts, relevant actual prompt-token counts, and any skipped or failed cells.
+- Scratch JSON output path and checkout-relative publisher-local destination, whether the result is fresh, valid, complete, or partial, and whether the final copied bytes match; any preserved prior-output backup.
+- Highest requested versus successfully measured decode/prefill contexts. For the full-limit prefill target, report its numeric target, actual `prompt_tokens` when available, and measured/rejected/skipped outcome with evidence; include all other skipped or failed cells.
 - For failure: stage, first relevant error, progress reached, and partial-output/checkpoint location or explicit absence.
 
 Do not claim that a benchmark ran when only setup, parser checks, or command preparation were performed.
