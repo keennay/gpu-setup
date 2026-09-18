@@ -12,7 +12,7 @@
 
 ## Introduction
 
-This repo provides a quick & simple way to stage an Ubuntu / RHEL NVIDIA node for ML workloads, including building & serving inference cookbook recipes for Large Language Models & Visual-Language Models. Stage for a bare-metal server, virtual machine, or rental cloud provider setup (Verda, Massed Compute, Prime Intellect, etc).
+This repo provides a quick & simple way to stage an Ubuntu / RHEL NVIDIA node for ML workloads, including building & serving inference cookbook recipes for Large Language Models & Visual-Language Models. Setup and stage a bare-metal server, virtual machine, or rental cloud provider setup (Verda, Massed Compute, Prime Intellect, etc).
 
 AMD & additional hardware vendor support is in the works.
 
@@ -36,7 +36,7 @@ Any CUDA, Node.js 24, or Python installation through this setup replaces existin
 
 The `/workspace` is the default repo directory used in this guide, yet you're at liberty to choose any other path for the installation.
 
-#### Cloning the Repo onto a GPU Instance with a Root user:
+#### Clone the Repo onto a GPU Instance with a Root user:
 ```
 mkdir -p /workspace
 cd /workspace
@@ -44,7 +44,7 @@ git clone https://github.com/keennay/gpu-setup.git
 cd gpu-setup
 ./setup.sh
 ```
-#### Cloning the Repo onto a GPU Instance with an Ubuntu (non-Root) user:
+#### Clone the Repo onto a GPU Instance with an Ubuntu (non-Root) user:
 ```
 sudo mkdir -p /workspace
 sudo chown -R ubuntu:ubuntu /workspace
