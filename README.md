@@ -14,17 +14,17 @@
 
 ## Introduction
 
-This repo provides a quick & simple way to stage an Ubuntu / RHEL NVIDIA node for ML workloads, including building & serving inference cookbook recipes for Large Language Models & Visual-Language Models. Setup and stage a bare-metal server, virtual machine, or rental cloud provider setup (Verda, Massed Compute, Prime Intellect, etc).
+This repo provides a quick & simple way to stage an Ubuntu / RHEL NVIDIA node for ML workloads, including building & serving inference cookbook recipes for Large Language Models & Visual-Language Models. Setup and stage a bare-metal server, virtual machine, or rental cloud provider setup (Verda, Massed Compute, Prime Intellect, etc). AMD & additional hardware vendor support is in the works.
 
-AMD & additional hardware vendor support is in the works.
+An [installation guide](#installation-guide) is provided with steps to clone this repo and run `setup.sh` to display the above terminal interface. All options are selected by default with the ability to choose or omit packages / services, single or multiple CUDA versions, Python, Astral UV, & coding CLIs.
 
-An [installation guide](#installation-guide) is provided with steps to clone this repo and run `setup.sh` to display the above terminal interface. All options are selected by default with the ability to choose or omit packages / services, single or multiple CUDA versions, Python, Astral UV, & coding CLIs. You can also only install [basic Linux essentials](#basic-linux-essentials-required) & [core build dependencies](#core-build-dependencies-for-ml-and-python-packages-required) while completely bypassing the installation of additional packages / services, CUDA, Python, Astral UV, & coding CLIs. 
+You can also select the minimal installation of [basic Linux essentials](#basic-linux-essentials-required) & [core build dependencies](#core-build-dependencies-for-ml-and-python-packages-required). This option completely bypasses the installation of additional packages / services, CUDA, Python, Astral UV, & coding CLIs. 
 
 Installing CUDA, Node.js 24, or Python through this guide replaces existing defaults, using Node Version Manager (NVM) for managing Node.js 24 & Simple Python Version Management (Pyenv) for managing Python. CUDA drivers are installed and/or updated to the latest version within a CUDA installation.
 
 [Inference cookbook recipes](#inference-cookbook-recipes) are also included for a variety of the popular Large Language Model & Visual-Language model companies. These exist as bash scripts and automatically create new Python environments within the $HOME directory upon execution, while installing pinned versions of either SGLang or vLLM + any additional packages necessary for a proper inference deployment.
 
-New recipes can be created using [the provided skills](#included-skills) within this repo, added to your coding CLI of choice, and building them based off the existing recipes for NVIDIA H200 NVL / SXM, & RTX Pro 6000s.
+New recipes can be created using [the provided skills](#included-skills) within this repo, added to your coding CLI of choice, and building them based off the existing recipes.
 
 ***
 
