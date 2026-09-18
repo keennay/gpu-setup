@@ -30,7 +30,7 @@ git clone https://github.com/keennay/gpu-setup.git
 cd gpu-setup
 ./setup.sh
 ```
-##### Cloning the Repo onto a GPU Instance with anUbuntu (non-Root) user:
+##### Cloning the Repo onto a GPU Instance with an Ubuntu (non-Root) user:
 ```
 sudo mkdir -p /workspace
 sudo chown -R ubuntu:ubuntu /workspace
@@ -40,7 +40,7 @@ cd gpu-setup
 ./setup.sh
 ```
 
-The below are each package / service provided across the installers
+The below are each package / service provided across the installers.
 
 #### Basic Linux essentials (required):
 - curl, wget, zip, unzip, less, vim, nano, tmux, git, git-lfs, htop, nvtop, ripgrep, shellcheck, bubblewrap, ffmpeg
