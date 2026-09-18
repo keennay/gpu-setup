@@ -72,11 +72,14 @@ The below are each package / service provided across the installers.
 - Python 3.11.16 is selected by default. For a custom install you can type any other version of Python in full major.mino.macro format (3.**.**). Pyenv is first installed following the desired Python version. Astral UV is provided as an installation option if selected.
 
 #### Coding CLIs (optional):
-- Arcee nac, Claude Code, DeepSeek Harness, Gemini CLI, Grok Build, Kimi Code, Meta Muse Code, MiMo Code, OMP, OpenAI Codex, OpenCode, Pi, Prime Intellect Agent, Qwen Code
+- Arcee nac, Claude Code, DeepSeek Harness, Gemini CLI, Grok Build, Kimi Code, Meta Muse Code, MiMo Code, MiniMax Code, OMP, OpenAI Codex, OpenCode, Pi, Prime Intellect Agent, Qwen Code
 
 ***
 
 ## Inference Cookbook Recipes:
+
+Inference cookbook recipes are provided for the following model companies as bash scripts:
+- Allen Institute for AI, Arcee AI, Cohere, Datalab, DeepSeek, Dots Studio, Google, IBM Granite, Inclusion Ai, Inferact, Intel, Liquid AI, MiniMax, Nanbeige, Prime Intellect, Qwen, RadixArk, Red Hat AI, Xiaomi, Zyphra
 
 ***
 
