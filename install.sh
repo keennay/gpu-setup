@@ -49,7 +49,6 @@ DEPENDENCY_LABELS=(
     "Rust"
     "Zig"
     "Neovim"
-    "Neovim Configs"
     "Tmux"
 )
 DEPENDENCY_FLAGS=(
@@ -61,10 +60,9 @@ DEPENDENCY_FLAGS=(
     "--rust"
     "--zig"
     "--neovim"
-    "--neovim-configs"
     "--tmux"
 )
-DEPENDENCY_SELECTED=(1 1 1 1 1 1 1 1 1 1)
+DEPENDENCY_SELECTED=(1 1 1 1 1 1 1 1 1)
 
 CLI_LABELS=(
     "Arcee nac"
@@ -72,12 +70,15 @@ CLI_LABELS=(
     "DeepSeek Harness"
     "Gemini CLI"
     "Grok Build"
+    "Kimi Code"
     "Meta Muse Code"
-    "OMP Coding Agent"
+    "MiMo Code"
+    "OMP"
     "OpenAI Codex"
-    "OpenCode AI"
+    "OpenCode"
     "Pi"
     "Prime Intellect Agent"
+    "Qwen Code"
 )
 CLI_FLAGS=(
     "--arcee"
@@ -85,14 +86,17 @@ CLI_FLAGS=(
     "--deepseek"
     "--gemini"
     "--grok"
+    "--kimi"
     "--muse"
+    "--mimo"
     "--omp"
     "--codex"
     "--opencode"
     "--pi"
     "--prime"
+    "--qwen"
 )
-CLI_SELECTED=(1 1 1 1 1 1 1 1 1 1 1)
+CLI_SELECTED=(1 1 1 1 1 1 1 1 1 1 1 1 1 1)
 ASTRAL_UV_SELECTED=1
 
 all_dependencies_selected() {
@@ -189,7 +193,6 @@ FOCUS_CONTROLS=(
     "dependency:6"
     "dependency:7"
     "dependency:8"
-    "dependency:9"
     "cuda_default"
     "cuda_custom"
     "cuda_field"
@@ -208,6 +211,9 @@ FOCUS_CONTROLS=(
     "cli:8"
     "cli:9"
     "cli:10"
+    "cli:11"
+    "cli:12"
+    "cli:13"
 )
 HITBOX_CONTROLS=()
 HITBOX_ROWS=()
@@ -413,7 +419,7 @@ build_panel() {
     local index
     local -a cells
     local border
-    local title="YONIQ GPU Setup"
+    local title="YONIQ Compute Setup"
 
     PANEL_LINES=()
     HITBOX_CONTROLS=()
@@ -455,7 +461,7 @@ build_panel() {
 
     append_separator "Install / Update Dependencies"
     append_blank_line
-    for ((row = 0; row < 4; row++)); do
+    for ((row = 0; row < 3; row++)); do
         cells=("" "" "")
         for ((column = 0; column < 3; column++)); do
             index=$((row * 3 + column))
@@ -549,7 +555,7 @@ build_panel() {
     append_blank_line
     append_separator "Coding CLIs"
     append_blank_line
-    for ((row = 0; row < 4; row++)); do
+    for ((row = 0; row < 5; row++)); do
         cells=("" "" "")
         for ((column = 0; column < 3; column++)); do
             index=$((row * 3 + column))
@@ -558,8 +564,8 @@ build_panel() {
                 cells[column]="$CONTROL_TEXT"
             fi
         done
-        if (( row == 3 )); then
-            printf -v content '%-25.25s%-27.27s%-24.24s' "${cells[0]}" "${cells[1]}" "${cells[2]}"
+        if (( row == 4 )); then
+            printf -v content '%-27.27s%-25.25s%-24.24s' "${cells[0]}" "${cells[1]}" "${cells[2]}"
         else
             printf -v content '%-25.25s%-25.25s%-26.26s' "${cells[0]}" "${cells[1]}" "${cells[2]}"
         fi
@@ -597,7 +603,7 @@ style_panel_line() {
 
     case "$line_index" in
         0)
-            title="YONIQ GPU Setup"
+            title="YONIQ Compute Setup"
             is_border=1
             ;;
         3)
@@ -608,15 +614,15 @@ style_panel_line() {
             title="Install / Update Dependencies"
             is_border=1
             ;;
-        13)
+        12)
             title="CUDA Version"
             is_border=1
             ;;
-        21)
+        20)
             title="Python Version"
             is_border=1
             ;;
-        28)
+        27)
             title="Coding CLIs"
             is_border=1
             ;;
@@ -650,7 +656,7 @@ style_panel_line() {
         fi
     elif (( line_index == 4 )) && install_defaults_selected; then
         body="${STYLE_MUTED}${body}${STYLE_RESET}"
-    elif (( line_index == 5 || line_index == 17 || line_index == 18 || line_index == 19 || line_index == 26 )); then
+    elif (( line_index == 5 || line_index == 16 || line_index == 17 || line_index == 18 || line_index == 25 )); then
         body="${STYLE_MUTED}${body}${STYLE_RESET}"
     else
         if [ -n "$FOCUSED_TEXT" ] && [[ "$body" == *"$FOCUSED_TEXT"* ]]; then
@@ -672,9 +678,9 @@ style_panel_line() {
             body="${body//"(x)"/${STYLE_SELECTED}(x)${STYLE_RESET}}"
         fi
     fi
-    if (( line_index == 15 )) && [ "$cuda_choice" != "custom" ]; then
+    if (( line_index == 14 )) && [ "$cuda_choice" != "custom" ]; then
         disabled_field="$CUDA_FIELD_BOX"
-    elif (( line_index == 23 )) && [ "$python_choice" != "custom" ]; then
+    elif (( line_index == 22 )) && [ "$python_choice" != "custom" ]; then
         disabled_field="$PYTHON_FIELD_BOX"
     fi
     if [ -n "$disabled_field" ] && [[ "$body" == *"$disabled_field"* ]]; then
@@ -742,7 +748,7 @@ draw_screen() {
         if (( cursor_offset > FIELD_WIDTH - 1 )); then
             cursor_offset=$((FIELD_WIDTH - 1))
         fi
-        cursor_row=$((panel_top + 15))
+        cursor_row=$((panel_top + 14))
         cursor_column=$((panel_left + 30 + cursor_offset))
         printf '\033[?25h\033[%d;%dH' "$cursor_row" "$cursor_column" >&"$TTY_FD"
     elif [ "$editing" = "python" ]; then
@@ -751,7 +757,7 @@ draw_screen() {
         if (( cursor_offset > FIELD_WIDTH - 1 )); then
             cursor_offset=$((FIELD_WIDTH - 1))
         fi
-        cursor_row=$((panel_top + 23))
+        cursor_row=$((panel_top + 22))
         cursor_column=$((panel_left + 32 + cursor_offset))
         printf '\033[?25h\033[%d;%dH' "$cursor_row" "$cursor_column" >&"$TTY_FD"
     fi

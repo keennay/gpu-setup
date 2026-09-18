@@ -1,6 +1,6 @@
 # Kimi K2.6 H200x2 SGLang Flag Test Plan
 
-Goal: reduce TTFT as much as possible for Kimi K2.6 on `h200x2`, even if some candidates trade away throughput or stability. Rerun the benchmark script from the parent scripts directory, defaulting to `${repo_root}/../benchmarks/benchmark.py`, with the same fixed-seed benchmark flags:
+Goal: reduce TTFT as much as possible for Kimi K2.6 on `h200x2`, even if some candidates trade away throughput or stability. Rerun the benchmark script from the parent scripts directory, defaulting to `${repo_root}/../tools/benchmarks/benchmark.py`, with the same fixed-seed benchmark flags:
 
 ```bash
 --num-prompts 100 --concurrency 2 --timeout 3600 --seed 52
@@ -62,7 +62,7 @@ KT_EXPERTS_PATH="${KT_EXPERTS_PATH:-kimi_k26/h200x2}"
 KT_PYTHON_ENV="${KT_PYTHON_ENV:-${HOME}/env_qwen3-ktransformers}"
 KT_TEST_ENV="${KT_TEST_ENV:-${repo_root}/envs/${KT_EXPERTS_PATH}.env}"
 KT_BENCHMARK_MODEL="${KT_BENCHMARK_MODEL:-kimi_k2}"
-KT_BENCHMARK_PATH="${KT_BENCHMARK_PATH:-${repo_parent}/benchmarks/benchmark.py}"
+KT_BENCHMARK_PATH="${KT_BENCHMARK_PATH:-${repo_parent}/tools/benchmarks/benchmark.py}"
 KT_BENCHMARK_FLAGS=(--num-prompts 100 --concurrency 2 --timeout 3600 --seed 52)
 RESULTS_DIR="${RESULTS_DIR:-${repo_root}/results/${KT_EXPERTS_PATH}/tests}"
 KT_PLAN_FILE="${KT_PLAN_FILE:-${plan_dir}/plan.md}"
@@ -76,11 +76,9 @@ KT_API_KEY="${KT_API_KEY:-YOUR_API_KEY}"
 KT_READY_URL="${KT_READY_URL:-http://127.0.0.1:${KT_PORT}/v1/models}"
 
 if [[ -d "${KT_PYTHON_ENV}" ]]; then
-  # shellcheck disable=SC1091
   source "${KT_PYTHON_ENV}/bin/activate"
 fi
 
-# shellcheck source=tools/launch_config.sh
 source "${repo_root}/tools/launch_config.sh"
 load_launch_config "${KT_TEST_ENV}"
 

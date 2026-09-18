@@ -5,12 +5,20 @@ set -euo pipefail
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 
 scripts=(
+  "upgrade_arcee.sh"
   "upgrade_claude.sh"
+  "upgrade_deepseek.sh"
   "upgrade_gemini.sh"
   "upgrade_grok.sh"
+  "upgrade_kimi.sh"
+  "upgrade_muse.sh"
+  "upgrade_mimo.sh"
   "upgrade_omp.sh"
   "upgrade_codex.sh"
   "upgrade_opencode.sh"
+  "upgrade_pi.sh"
+  "upgrade_prime.sh"
+  "upgrade_qwen.sh"
 )
 
 for script in "${scripts[@]}"; do

@@ -1,3 +1,4 @@
-gemini -v
+#!/usr/bin/env bash
+set -euo pipefail
+
 npm install -g @google/gemini-cli
-gemini -v

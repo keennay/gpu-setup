@@ -101,12 +101,15 @@ SELECT_CLAUDE=false
 SELECT_DEEPSEEK=false
 SELECT_GEMINI=false
 SELECT_GROK=false
+SELECT_KIMI=false
 SELECT_MUSE=false
+SELECT_MIMO=false
 SELECT_OMP=false
 SELECT_CODEX=false
 SELECT_OPENCODE=false
 SELECT_PI=false
 SELECT_PRIME=false
+SELECT_QWEN=false
 SELECTION_MADE=false
 
 print_usage() {
@@ -118,12 +121,15 @@ print_usage() {
     echo "  --deepseek  Select DeepSeek Harness"
     echo "  --gemini    Select Gemini CLI"
     echo "  --grok      Select Grok Build"
+    echo "  --kimi      Select Kimi Code"
     echo "  --muse      Select Meta Muse Code"
-    echo "  --omp       Select OMP Coding Agent"
+    echo "  --mimo      Select MiMo Code"
+    echo "  --omp       Select OMP"
     echo "  --codex     Select OpenAI Codex"
-    echo "  --opencode  Select OpenCode AI"
+    echo "  --opencode  Select OpenCode"
     echo "  --pi        Select Pi"
     echo "  --prime     Select Prime Intellect Agent"
+    echo "  --qwen      Select Qwen Code"
     echo "  -h, --help  Show this help message"
 }
 
@@ -136,12 +142,15 @@ for arg in "$@"; do
         --deepseek) SELECT_DEEPSEEK=true; SELECTION_MADE=true ;;
         --gemini) SELECT_GEMINI=true; SELECTION_MADE=true ;;
         --grok) SELECT_GROK=true; SELECTION_MADE=true ;;
+        --kimi) SELECT_KIMI=true; SELECTION_MADE=true ;;
         --muse) SELECT_MUSE=true; SELECTION_MADE=true ;;
+        --mimo) SELECT_MIMO=true; SELECTION_MADE=true ;;
         --omp) SELECT_OMP=true; SELECTION_MADE=true ;;
         --codex) SELECT_CODEX=true; SELECTION_MADE=true ;;
         --opencode) SELECT_OPENCODE=true; SELECTION_MADE=true ;;
         --pi) SELECT_PI=true; SELECTION_MADE=true ;;
         --prime) SELECT_PRIME=true; SELECTION_MADE=true ;;
+        --qwen) SELECT_QWEN=true; SELECTION_MADE=true ;;
         -h|--help)
             print_usage
             exit 0
@@ -169,11 +178,14 @@ curl_cli_selected() {
     section_selected "$SELECT_ARCEE" ||
         section_selected "$SELECT_CLAUDE" ||
         section_selected "$SELECT_GROK" ||
+        section_selected "$SELECT_KIMI" ||
         section_selected "$SELECT_MUSE" ||
+        section_selected "$SELECT_MIMO" ||
         section_selected "$SELECT_OMP" ||
         section_selected "$SELECT_CODEX" ||
         section_selected "$SELECT_OPENCODE" ||
-        section_selected "$SELECT_PRIME"
+        section_selected "$SELECT_PRIME" ||
+        section_selected "$SELECT_QWEN"
 }
 
 print_info "Coding CLI Installer"
@@ -227,12 +239,15 @@ print_info "  2. Claude Code (@anthropic-ai/claude-code)"
 print_info "  3. DeepSeek Harness (dsh)"
 print_info "  4. Gemini CLI (@google/gemini-cli)"
 print_info "  5. Grok Build (grok)"
-print_info "  6. Meta Muse Code"
-print_info "  7. OMP Coding Agent (omp)"
-print_info "  8. OpenAI Codex (@openai/codex)"
-print_info "  9. OpenCode AI (opencode-ai)"
-print_info "  10. Pi"
-print_info "  11. Prime Intellect Agent"
+print_info "  6. Kimi Code"
+print_info "  7. Meta Muse Code"
+print_info "  8. MiMo Code"
+print_info "  9. OMP (omp)"
+print_info "  10. OpenAI Codex (@openai/codex)"
+print_info "  11. OpenCode (opencode-ai)"
+print_info "  12. Pi"
+print_info "  13. Prime Intellect Agent"
+print_info "  14. Qwen Code"
 echo ""
 
 if section_selected "$SELECT_ARCEE"; then
@@ -281,7 +296,7 @@ if section_selected "$SELECT_DEEPSEEK" &&
     # DeepSeek Harness
     prompt_yes_no INSTALL_DEEPSEEK "  Install DeepSeek Harness? (y/n): "
     if [[ "$INSTALL_DEEPSEEK" =~ ^[Yy]$ ]]; then
-        DEEPSEEK_HARNESS_DIR="$SCRIPT_DIR/deepseek-harness"
+        DEEPSEEK_HARNESS_DIR="$HOME/deepseek-harness"
         DEEPSEEK_READY=true
 
         if ! command -v git &> /dev/null; then
@@ -344,6 +359,19 @@ if section_selected "$SELECT_GROK"; then
     fi
 fi
 
+if section_selected "$SELECT_KIMI"; then
+    # Kimi Code
+    prompt_yes_no INSTALL_KIMI "  Install Kimi Code? (y/n): "
+    if [[ "$INSTALL_KIMI" =~ ^[Yy]$ ]]; then
+        print_info "Installing Kimi Code..."
+        if curl -fsSL https://code.kimi.com/kimi-code/install.sh | bash; then
+            print_info "Kimi Code installed"
+        else
+            print_warning "Failed to install Kimi Code"
+        fi
+    fi
+fi
+
 if section_selected "$SELECT_MUSE"; then
     # Meta Muse Code
     prompt_yes_no INSTALL_MUSE "  Install Meta Muse Code? (y/n): "
@@ -357,15 +385,28 @@ if section_selected "$SELECT_MUSE"; then
     fi
 fi
 
-if section_selected "$SELECT_OMP"; then
-    # OMP Coding Agent
-    prompt_yes_no INSTALL_OMP "  Install OMP Coding Agent? (y/n): "
-    if [[ "$INSTALL_OMP" =~ ^[Yy]$ ]]; then
-        print_info "Installing OMP Coding Agent..."
-        if curl -fsSL https://omp.sh/install | sh; then
-            print_info "OMP Coding Agent installed"
+if section_selected "$SELECT_MIMO"; then
+    # MiMo Code
+    prompt_yes_no INSTALL_MIMO "  Install MiMo Code? (y/n): "
+    if [[ "$INSTALL_MIMO" =~ ^[Yy]$ ]]; then
+        print_info "Installing MiMo Code..."
+        if curl -fsSL https://mimo.xiaomi.com/install | bash; then
+            print_info "MiMo Code installed"
         else
-            print_warning "Failed to install OMP Coding Agent"
+            print_warning "Failed to install MiMo Code"
+        fi
+    fi
+fi
+
+if section_selected "$SELECT_OMP"; then
+    # OMP
+    prompt_yes_no INSTALL_OMP "  Install OMP? (y/n): "
+    if [[ "$INSTALL_OMP" =~ ^[Yy]$ ]]; then
+        print_info "Installing OMP..."
+        if curl -fsSL https://omp.sh/install | sh; then
+            print_info "OMP installed"
+        else
+            print_warning "Failed to install OMP"
         fi
     fi
 fi
@@ -384,12 +425,12 @@ if section_selected "$SELECT_CODEX"; then
 fi
 
 if section_selected "$SELECT_OPENCODE"; then
-    # OpenCode AI
-    prompt_yes_no INSTALL_OPENCODE "  Install OpenCode AI? (y/n): "
+    # OpenCode
+    prompt_yes_no INSTALL_OPENCODE "  Install OpenCode? (y/n): "
     if [[ "$INSTALL_OPENCODE" =~ ^[Yy]$ ]]; then
-        print_info "Installing OpenCode AI..."
+        print_info "Installing OpenCode..."
         if curl -fsSL https://opencode.ai/install | bash; then
-            print_info "OpenCode AI installed"
+            print_info "OpenCode installed"
 
             OPENCODE_CONFIG_SOURCE="$SCRIPT_DIR/configs/opencode.json"
 
@@ -412,7 +453,7 @@ if section_selected "$SELECT_OPENCODE"; then
                 print_warning "OpenCode config not found at $OPENCODE_CONFIG_SOURCE"
             fi
         else
-            print_warning "Failed to install OpenCode AI"
+            print_warning "Failed to install OpenCode"
         fi
     fi
 fi
@@ -443,6 +484,19 @@ if section_selected "$SELECT_PRIME" &&
             print_info "Prime Intellect Agent installed"
         else
             print_warning "Failed to install Prime Intellect Agent"
+        fi
+    fi
+fi
+
+if section_selected "$SELECT_QWEN"; then
+    # Qwen Code
+    prompt_yes_no INSTALL_QWEN "  Install Qwen Code? (y/n): "
+    if [[ "$INSTALL_QWEN" =~ ^[Yy]$ ]]; then
+        print_info "Installing Qwen Code..."
+        if curl -fsSL https://qwen-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen-standalone.sh | bash; then
+            print_info "Qwen Code installed"
+        else
+            print_warning "Failed to install Qwen Code"
         fi
     fi
 fi

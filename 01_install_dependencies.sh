@@ -16,36 +16,6 @@ print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 CONFIG_OWNER_USER="${SUDO_USER:-$USER}"
 CONFIG_OWNER_GROUP="$(id -gn "$CONFIG_OWNER_USER" 2>/dev/null || echo "$CONFIG_OWNER_USER")"
 CONFIG_HOME="$(eval echo "~$CONFIG_OWNER_USER")"
-CONFIG_ROOT="$CONFIG_HOME/.config"
-
-ensure_config_ownership() {
-    local config_root="$1"
-
-    if [ -z "$config_root" ]; then
-        print_warning "Config root not set; skipping ownership check"
-        return 1
-    fi
-
-    if [ ! -d "$config_root" ]; then
-        mkdir -p "$config_root" 2>/dev/null || sudo mkdir -p "$config_root"
-    fi
-
-    local owner group
-    owner=$(stat -c '%U' "$config_root" 2>/dev/null)
-    group=$(stat -c '%G' "$config_root" 2>/dev/null)
-
-    if [ "$owner" != "$CONFIG_OWNER_USER" ] || [ "$group" != "$CONFIG_OWNER_GROUP" ]; then
-        print_warning "$config_root is owned by $owner:$group; fixing ownership for $CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP"
-        if sudo chown -R "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$config_root"; then
-            print_info "✓ Ownership updated for $config_root"
-        else
-            print_warning "Failed to update ownership for $config_root"
-            return 1
-        fi
-    fi
-
-    return 0
-}
 
 remove_legacy_docker_apt_source() {
     local legacy_source="/etc/apt/sources.list.d/docker.list"
@@ -105,7 +75,6 @@ SELECT_GO=false
 SELECT_RUST=false
 SELECT_ZIG=false
 SELECT_NEOVIM=false
-SELECT_NEOVIM_CONFIGS=false
 
 print_usage() {
     echo "Usage: $0 [-y|--auto] [--all] [section flags...]"
@@ -119,7 +88,6 @@ print_usage() {
     echo "  --rust           Enable Rustup installation/update"
     echo "  --zig            Enable Zig installation/update and xz-utils dependency"
     echo "  --neovim         Enable Neovim installation/update and aliases"
-    echo "  --neovim-configs Enable the author's Neovim configuration"
     echo "  --tmux           Enable tmux installation and configuration"
     echo "  -h, --help       Show this help message"
     echo ""
@@ -138,7 +106,6 @@ for arg in "$@"; do
         --rust) SELECT_RUST=true ;;
         --zig) SELECT_ZIG=true ;;
         --neovim) SELECT_NEOVIM=true ;;
-        --neovim-configs) SELECT_NEOVIM_CONFIGS=true ;;
         --tmux) SELECT_TMUX=true ;;
         -h|--help)
             print_usage
@@ -1410,45 +1377,6 @@ EOF
         print_info "✓ Aliases for vi and vim added to $BASHRC_PATH"
     else
         print_info "Skipped aliasing vi/vim to Neovim"
-    fi
-fi
-
-# NeoVim config install
-if section_selected "$SELECT_NEOVIM_CONFIGS" && [ "$NVIM_AVAILABLE" = true ]; then
-    if [ "$AUTO_YES" = true ]; then
-        INSTALL_NVIM_CONFIG="y"
-    else
-        read -p "Install NeoVim configs provided by the author of this script? (y/n): " INSTALL_NVIM_CONFIG
-    fi
-
-    if [[ "$INSTALL_NVIM_CONFIG" =~ ^[Yy]$ ]]; then
-    if command -v git &> /dev/null; then
-        if ! ensure_config_ownership "$CONFIG_ROOT"; then
-            print_warning "Skipping NeoVim config install due to ownership issues"
-        else
-            NVIM_CONFIG_DIR="$CONFIG_ROOT/nvim"
-            NVIM_CONFIG_PARENT="$(dirname "$NVIM_CONFIG_DIR")"
-
-            if [ -d "$NVIM_CONFIG_DIR" ] && [ -z "$(ls -A "$NVIM_CONFIG_DIR" 2>/dev/null)" ]; then
-                rmdir "$NVIM_CONFIG_DIR"
-            fi
-
-            if [ -d "$NVIM_CONFIG_DIR" ]; then
-                print_warning "NeoVim config directory already exists and is not empty: $NVIM_CONFIG_DIR"
-                print_info "Skipping NeoVim config install to avoid overwriting existing files"
-            else
-                print_info "Installing custom NeoVim configs..."
-                mkdir -p "$NVIM_CONFIG_PARENT"
-                if git clone https://github.com/keennay/neovim.git "$NVIM_CONFIG_DIR"; then
-                    print_info "✓ NeoVim configs installed to $NVIM_CONFIG_DIR"
-                else
-                    print_warning "Failed to clone NeoVim configs"
-                fi
-            fi
-        fi
-    else
-        print_warning "git not found - skipping NeoVim config install"
-    fi
     fi
 fi
 

@@ -34,6 +34,5 @@ REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS='--data-parallel-size 1 --enable-expert-parallel --enable-ep-weight-filter --model-loader-extra-config {"enable_multithread_load":true,"num_threads":128} --max-num-batched-tokens 8192 --enable-chunked-prefill --max-num-seqs 32'
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-# shellcheck source=../../tools/recipes/inference_recipe.sh
 source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
 run_inference_recipe "$@"
