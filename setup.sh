@@ -73,6 +73,7 @@ CLI_LABELS=(
     "Kimi Code"
     "Meta Muse Code"
     "MiMo Code"
+    "MiniMax Code"
     "OMP"
     "OpenAI Codex"
     "OpenCode"
@@ -89,6 +90,7 @@ CLI_FLAGS=(
     "--kimi"
     "--muse"
     "--mimo"
+    "--mcode"
     "--omp"
     "--codex"
     "--opencode"
@@ -96,7 +98,7 @@ CLI_FLAGS=(
     "--prime"
     "--qwen"
 )
-CLI_SELECTED=(1 1 1 1 1 1 1 1 1 1 1 1 1 1)
+CLI_SELECTED=(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)
 ASTRAL_UV_SELECTED=1
 
 all_dependencies_selected() {
@@ -214,6 +216,7 @@ FOCUS_CONTROLS=(
     "cli:11"
     "cli:12"
     "cli:13"
+    "cli:14"
 )
 HITBOX_CONTROLS=()
 HITBOX_ROWS=()
@@ -565,7 +568,7 @@ build_panel() {
             fi
         done
         if (( row == 4 )); then
-            printf -v content '%-27.27s%-25.25s%-24.24s' "${cells[0]}" "${cells[1]}" "${cells[2]}"
+            printf -v content '%-25.25s%-27.27s%-24.24s' "${cells[0]}" "${cells[1]}" "${cells[2]}"
         else
             printf -v content '%-25.25s%-25.25s%-26.26s' "${cells[0]}" "${cells[1]}" "${cells[2]}"
         fi

@@ -104,6 +104,7 @@ SELECT_GROK=false
 SELECT_KIMI=false
 SELECT_MUSE=false
 SELECT_MIMO=false
+SELECT_MCODE=false
 SELECT_OMP=false
 SELECT_CODEX=false
 SELECT_OPENCODE=false
@@ -124,6 +125,7 @@ print_usage() {
     echo "  --kimi      Select Kimi Code"
     echo "  --muse      Select Meta Muse Code"
     echo "  --mimo      Select MiMo Code"
+    echo "  --mcode     Select MiniMax Code"
     echo "  --omp       Select OMP"
     echo "  --codex     Select OpenAI Codex"
     echo "  --opencode  Select OpenCode"
@@ -145,6 +147,7 @@ for arg in "$@"; do
         --kimi) SELECT_KIMI=true; SELECTION_MADE=true ;;
         --muse) SELECT_MUSE=true; SELECTION_MADE=true ;;
         --mimo) SELECT_MIMO=true; SELECTION_MADE=true ;;
+        --mcode) SELECT_MCODE=true; SELECTION_MADE=true ;;
         --omp) SELECT_OMP=true; SELECTION_MADE=true ;;
         --codex) SELECT_CODEX=true; SELECTION_MADE=true ;;
         --opencode) SELECT_OPENCODE=true; SELECTION_MADE=true ;;
@@ -181,6 +184,7 @@ curl_cli_selected() {
         section_selected "$SELECT_KIMI" ||
         section_selected "$SELECT_MUSE" ||
         section_selected "$SELECT_MIMO" ||
+        section_selected "$SELECT_MCODE" ||
         section_selected "$SELECT_OMP" ||
         section_selected "$SELECT_CODEX" ||
         section_selected "$SELECT_OPENCODE" ||
@@ -242,12 +246,13 @@ print_info "  5. Grok Build (grok)"
 print_info "  6. Kimi Code"
 print_info "  7. Meta Muse Code"
 print_info "  8. MiMo Code"
-print_info "  9. OMP (omp)"
-print_info "  10. OpenAI Codex (@openai/codex)"
-print_info "  11. OpenCode (opencode-ai)"
-print_info "  12. Pi"
-print_info "  13. Prime Intellect Agent"
-print_info "  14. Qwen Code"
+print_info "  9. MiniMax Code (mcode)"
+print_info "  10. OMP (omp)"
+print_info "  11. OpenAI Codex (@openai/codex)"
+print_info "  12. OpenCode (opencode-ai)"
+print_info "  13. Pi"
+print_info "  14. Prime Intellect Agent"
+print_info "  15. Qwen Code"
 echo ""
 
 if section_selected "$SELECT_ARCEE"; then
@@ -394,6 +399,19 @@ if section_selected "$SELECT_MIMO"; then
             print_info "MiMo Code installed"
         else
             print_warning "Failed to install MiMo Code"
+        fi
+    fi
+fi
+
+if section_selected "$SELECT_MCODE"; then
+    # MiniMax Code
+    prompt_yes_no INSTALL_MCODE "  Install MiniMax Code? (y/n): "
+    if [[ "$INSTALL_MCODE" =~ ^[Yy]$ ]]; then
+        print_info "Installing MiniMax Code..."
+        if curl -fsSL https://filecdn.minimax.chat/public/install.sh | bash; then
+            print_info "MiniMax Code installed"
+        else
+            print_warning "Failed to install MiniMax Code"
         fi
     fi
 fi

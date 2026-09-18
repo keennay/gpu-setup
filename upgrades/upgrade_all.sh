@@ -13,6 +13,7 @@ scripts=(
   "upgrade_kimi.sh"
   "upgrade_muse.sh"
   "upgrade_mimo.sh"
+  "upgrade_mcode.sh"
   "upgrade_omp.sh"
   "upgrade_codex.sh"
   "upgrade_opencode.sh"
