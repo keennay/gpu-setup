@@ -59,7 +59,7 @@ cd gpu-setup
 The below are each package / service provided across the installers.
 
 #### Basic Linux essentials (required):
-- curl, wget, zip, unzip, less, vim, nano, tmux, git, git-lfs, htop, nvtop, ripgrep, shellcheck, bubblewrap, ffmpeg
+- curl, wget, zip, unzip, less, vim, nano, tmux, git, git-lfs, gh, htop, nvtop, ripgrep, shellcheck, bubblewrap, ffmpeg
 
 #### Core build dependencies for ML and Python packages (required):
 - build-essential, gcc, g++, make, cmake, pkg-config, protobuf-compiler, libclang-dev, numactl, libnuma-dev, libhwloc-dev, libssl-dev, libffi-dev, liblzma-dev, libbz2-dev, libreadline-dev, libsqlite3-dev, libncurses-dev, zlib1g-dev
