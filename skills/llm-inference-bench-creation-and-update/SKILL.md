@@ -228,6 +228,8 @@ recipes/<repo-match>/llm-inference-bench/<launch-script-stem>_<gpu-type>x<gpu-qt
 
 Resolve `<repo-match>` from the actual launcher's recipe directory, not from the served-model alias or `MODEL_REPO`. For example, a launcher under `recipes/incoai/` publishes under `recipes/incoai/llm-inference-bench/` even if its target checkpoint belongs to another organization. NEVER publish to the shared `recipes/llm-inference-bench/` directory.
 
+Publisher directories directly under `recipes/` are lowercase. Reuse the launcher's actual lowercase directory; NEVER create a mixed-case publisher directory from its filename or `MODEL_REPO`. Preserve launcher and benchmark filename capitalization and nested directory names; do not lowercase the entire path.
+
 Resolve and retain the launcher path relative to its actual invocation directory before working in `/tmp`. Derive the checkout and destination from that resolved path; do not embed a workstation-specific checkout root or resolve `recipes/` against an unrelated current directory. The helper below covers the standard `recipes/<repo-match>/<launcher>` layout. For an external/nonstandard launcher, locate its unique corresponding recipe directory first; report an unresolved or ambiguous mapping instead of guessing a destination.
 
 Reference path construction once these inputs are resolved:
@@ -261,10 +263,10 @@ def benchmark_result_path(launch_script: str, gpu_type: str, gpu_qty: int) -> Pa
 For example:
 
 ```text
-recipes/Qwen/vllm_Qwen_Qwen3.8-27B-FP8.sh
+recipes/qwen/vllm_Qwen_Qwen3.8-27B-FP8.sh
   + gpu_type=h200, gpu_qty=1
   -> /tmp/vllm_Qwen_Qwen3.8-27B-FP8_h200x1.json
-  -> publish only after success: recipes/Qwen/llm-inference-bench/vllm_Qwen_Qwen3.8-27B-FP8_h200x1.json
+  -> publish only after success: recipes/qwen/llm-inference-bench/vllm_Qwen_Qwen3.8-27B-FP8_h200x1.json
 ```
 
 If an output already exists in `/tmp`, preserve it before replacing it, using a clearly identified backup. Keep the requested filename unchanged, do not silently resume a previous benchmark, and never treat stale JSON as evidence for a new run. Record run start time, the scratch output path, and the resolved publisher-local destination before benchmarking.

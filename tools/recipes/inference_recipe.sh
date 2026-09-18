@@ -146,7 +146,7 @@ elif [ -n "$RECIPE_DIR" ] && [ "$(basename "$(dirname "$RECIPE_DIR")")" = "recip
 fi
 
 if [ -n "$CALLING_REPO" ] && [ "$CALLING_REPO" != "recipes" ]; then
-    LOG_DIR="$SCRIPTS_DIR/recipes/$CALLING_REPO/logs"
+    LOG_DIR="$SCRIPTS_DIR/recipes/${CALLING_REPO,,}/logs"
 elif [ -n "$RECIPE_DIR" ] && [ -d "$RECIPE_DIR" ]; then
     LOG_DIR="$RECIPE_DIR/logs"
 else

@@ -5,9 +5,15 @@ description: "Creates or updates and behaviorally validates portable SGLang and 
 
 # SGLang & vLLM Recipe Creation and Update
 
-Use this skill when creating, updating, porting, repairing, or validating an SGLang or vLLM recipe for an LLM or VLM in `recipes/<repo>` (where `<repo>` is the model publisher/organization directory, e.g. `recipes//deepseek-ai/`, `recipes//incoai/`, `recipes//zai-org/`, etc.).
+Use this skill when creating, updating, porting, repairing, or validating an SGLang or vLLM recipe for an LLM or VLM in `recipes/<repo>` (where `<repo>` is the lowercase publisher/organization directory, e.g. `recipes/deepseek-ai/`, `recipes/qwen/`, `recipes/redhatai/`).
 
 The `llm-vlm-cookbook-recipe-source` skill controls source authority, cookbook lookup, model-card/config inspection, engine source verification, version comparison, and reporting. This skill adds repository-specific implementation and runtime constraints; it does not replace that source policy.
+
+## Recipe directory naming
+
+Every new publisher directory directly under `recipes/` MUST be lowercase. Derive `<repo>` by lowercasing the publisher parsed from the validated recipe's filename (for example, `${publisher,,}` in Bash), not from `MODEL_REPO`, which may name a different organization. Thus `vllm_Qwen_Qwen3.8-27B-FP8.sh` belongs in `recipes/qwen/`, and a `MiniMaxAI` launcher belongs in `recipes/minimaxai/`.
+
+Reuse the existing lowercase directory when present; NEVER create a mixed-case duplicate. Create a new directory only at promotion, after the required validation succeeds. Lowercase only this one directory component, not the entire path: preserve recipe filenames, benchmark filenames, nested directory names, and exact Hugging Face model/draft repository IDs.
 
 ## Mode selection and precedence
 
@@ -459,7 +465,7 @@ Only after a full recipe creation or broad update candidate passes the complete 
 
 Before copying, set `DEFAULT_TENSOR_PARALLEL_SIZE` to the smallest ladder count that passed and set `GPU_MEM_UTIL_VALUE` to the proven maximum six-decimal value. Rerun the temporary recipe once with both final values and the full behavioral contract.
 
-1. copy the validated script into its respective repository directory `recipes/<repo>` (where `<repo>` matches the publisher parsed from the script name) with the standard relative helper lines (`RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"` and `source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"`);
+1. copy the validated script into its respective repository directory `recipes/<repo>` (where `<repo>` is the lowercased publisher parsed from the script name); reuse or create only that lowercase directory, preserve the script's basename, and use the standard relative helper lines (`RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"` and `source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"`);
 2. ensure executable mode;
 3. retain the exact validated engine source and package list in `installers/06_install_packages.sh`;
 4. add the validated environment to:
