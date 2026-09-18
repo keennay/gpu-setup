@@ -1,47 +1,68 @@
 # Compute Setup
 
-The fastest way to stage an Ubuntu 24 / RHEL based system GPU compute system.
+A quick & simple way to stage an Ubuntu / RHEL based NVIDIA GPU node for inference & ML workloads. Use for your own bare-metal / VM server or rental cloud provider (Verda, Massed Compute, Prime Intellect, etc).
+
+AMD & additional hardware vendor support is in the works.
+
+Clone this repo and run `setup.sh` to display the below terminal interface. All options are selected by default, yet you can pick and choose whichever dependencies, single or multiple CUDA versions, Python version, and coding CLIs you want to install.
+
+Any CUDA, Node.js 24, or Python installations through this setup replace existing defaults, using Node Version Manager (NVM) & Simple Python Version Management (pyenv) for managing Node.js 24 & Python respectively. CUDA drivers are installed / updated to the latest version with a CUDA installation.
 
 <img width="500" height="507" alt="yoniq_setup" src="https://github.com/user-attachments/assets/ccbe2513-8eaa-4bf0-8ba5-f4b29825a800" />
 
+***
 
-The fastest way to stage an Ubuntu 24 / RHEL Linux based GPU node
+#### Installation:
 
-This repo provides a series of bash script installers for: updating & upgrading installed linux packages, essential & core/build Linux packages (Tmux, Node.js, Bun, Go, Rust, Neovim, CUDA, Python, UV), Coding CLIs (Claude Code, Gemini CLI, Grok Build, OMP Coding Agent, OpenAI Code, & OpenCode), as well as Python environment setups for your inference engines of choice (KTransformers, SGLang, vLLM, etc). Any of the prior packages can be skipped during the installation stage. Detailed info with each installation package can be found within the installation guide below.
-
-#### Staging Files:
+`setup.sh` runs up to 4 installer files:<br><br>
 `01_install_dependencies.sh`<br>
-`02_install_coding_clis.sh`<br>
-`03_install_cuda.sh`<br>
-`04_install_python.sh`<br>
-`05_setup_env.sh`<br>
-`06_install_packages.sh`
+`02_install_cuda.sh`<br>
+`03_install_python.sh`<br>
+`04_install_coding_clis.sh`
+
+#### What This Installs:
+
+This repo provides a series of bash script installers for updating & upgrading installed Linux packages,
+
+Basic Linux essentials:
+- curl, wget, zip, unzip, less, vim, nano, tmux, git, git-lfs, htop, nvtop, ripgrep, shellcheck, bubblewrap, ffmpeg
+
+Core build dependencies for ML and Python packages:
+- build-essential, gcc, g++, make, cmake, pkg-config, protobuf-compiler, libclang-dev, numactl, libnuma-dev, libhwloc-dev, libssl-dev, libffi-dev, liblzma-dev, libbz2-dev, libreadline-dev, libsqlite3-dev, libncurses-dev, zlib1g-dev
+
+Additional installs:
+- Docker, Node.js 24 (NVM managed), pnpm, Bun, Go, Rust, Zig, Neovim, Tmux
+
+CUDA, Python (pyenv managed), and Astral UV
+
+Coding CLIs:
+- Arcee nac, Claude Code, DeepSeek Harness, Gemini CLI, Grok Build, Kimi Code, Meta Muse Code, MiMo Code, OMP, OpenAI Codex, OpenCode, Pi, Prime Intellect Agent, Qwen Code
 
 ***
 
-### Installation Guide:
+### Detailed Guide:
 #### 1. Login your GPU node.
-The default work directory for the scripts is `/workspace`. Edit as needed.
+The `/workspace` is the default repo directory used in this guide, yet you're at liberty to chose any other path for the installation.
 
-#### 2. Create the /workspace directory & clone the repo:
-##### GPU Instance with Root user (For ex: Runpod, Verda):
+#### 2. Create the work directory & clone the repo:
+##### GPU Instance with Root user:
 ```
 mkdir -p /workspace
 cd /workspace
 git clone https://github.com/keennay/gpu-setup.git
-mv gpu-cluster-setup scripts
-cd scripts
+cd gpu-setup
+./setup.sh
 ```
-##### GPU Instance with Ubuntu user (For ex: Prime Intellect):
+##### GPU Instance with Ubuntu (non-Root) user:
 ```
 sudo mkdir -p /workspace
 sudo chown -R ubuntu:ubuntu /workspace
 cd /workspace
 git clone https://github.com/keennay/gpu-setup.git
-mv gpu-cluster-setup scripts
-cd scripts
+cd gpu-setup
+./setup.sh
 ```
-#### 3: Install Linux Dependecy Packages
+#### 3: Install Linux Dependency Packages
 ```
 ./01_install_dependencies.sh
 ```
@@ -52,14 +73,13 @@ cd scripts
 3) Install ShellCheck shell script linter
 4) Install Linux core/build dependencies:
     * build-essential, gcc, g++, make, cmake, pkg-config, protobuf-compiler, numactl, libnuma-dev, libhwloc-dev, libssl-dev, libffi-dev, liblzma-dev, libbz2-dev, libreadline-dev, libsqlite3-dev, libncurses-dev, zlib1g-dev
-5) Install ibtop (InfiniBand monitoring tool)
-6) Copy Tmux config to ~/.configs/tmux.conf
-7) Install nvm (Node Version Manager)
-8) Install Node.js 24 via nvm
-9) Install Bun JavaScript runtime
-10) Install Go
-11) Install Rustup
-12) Install Neovim
+5) Copy Tmux config to ~/.configs/tmux.conf
+6) Install nvm (Node Version Manager)
+7) Install Node.js 24 via nvm
+8) Install Bun JavaScript runtime
+9) Install Go
+10) Install Rustup
+111) Install Neovim
     * Alias vi & vim to Neovim
     * Install Neovim configs
 #### 4: Install Coding CLIs
