@@ -1,4 +1,7 @@
-# GPU Cluster Setup
+# Compute Setup
+
+<img width="500" height="507" alt="yoniq_setup" src="https://github.com/user-attachments/assets/ccbe2513-8eaa-4bf0-8ba5-f4b29825a800" />
+
 
 The fastest way to stage an Ubuntu 24 / RHEL Linux based GPU node
 
