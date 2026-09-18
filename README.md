@@ -6,7 +6,7 @@ AMD & additional hardware vendor support is in the works.
 
 Clone this repo and run `setup.sh` to display the below terminal interface. All options are selected by default with the ability to choose or omit packages / services, single or multiple CUDA versions, Python, Astral UV, & coding CLIs.
 
-Any CUDA, Node.js 24, or Python installation through this setup replaces existing defaults, using Node Version Manager (NVM) & Simple Python Version Management (pyenv) for managing Node.js 24 & Python respectively. CUDA drivers are installed / updated to the latest version within a CUDA installation.
+Any CUDA, Node.js 24, or Python installation through this setup replaces existing defaults, using Node Version Manager (NVM) for managing Node.js 24 & Simple Python Version Management (Pyenv) for Python. CUDA drivers are installed / updated to the latest version within a CUDA installation.
 
 <img width="500" height="507" alt="yoniq_setup" src="https://github.com/user-attachments/assets/ccbe2513-8eaa-4bf0-8ba5-f4b29825a800" />
 
@@ -55,7 +55,7 @@ The below are each package / service provided across the installers.
 - CUDA 13.0 is selected by default. For a custom install you can type either any CUDA version number or to 10 version numbers with the 1st number in the list set as the default system-wide CUDA version
 
 #### Pyenv, Pyenv managed Python, & Astral UV (optional):
-- Pytnon 3.11.16 is selected by default. For a custom install you an type any other version of Python in full major.mino.macro format (3.**.**). If selected the latest Astral UV is installed.
+- Python 3.11.16 is selected by default. For a custom install you an type any other version of Python in full major.mino.macro format (3.**.**). Pyenv is first installed following the desired Python version. Astral UV is provided as an installation option if selected.
 
 #### Coding CLIs (optional):
 - Arcee nac, Claude Code, DeepSeek Harness, Gemini CLI, Grok Build, Kimi Code, Meta Muse Code, MiMo Code, OMP, OpenAI Codex, OpenCode, Pi, Prime Intellect Agent, Qwen Code
