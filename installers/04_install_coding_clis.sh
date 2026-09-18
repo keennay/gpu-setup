@@ -229,7 +229,7 @@ if section_selected "$SELECT_PRIME" &&
 fi
 
 if curl_cli_selected && ! command -v curl &> /dev/null; then
-    print_error "curl not found - install basic Linux essentials first by running ./01_install_dependencies.sh"
+    print_error "curl not found - install basic Linux essentials first by running ./installers/01_install_dependencies.sh"
     exit 1
 fi
 
@@ -432,7 +432,7 @@ if section_selected "$SELECT_OPENCODE"; then
         if curl -fsSL https://opencode.ai/install | bash; then
             print_info "OpenCode installed"
 
-            OPENCODE_CONFIG_SOURCE="$SCRIPT_DIR/configs/opencode.json"
+            OPENCODE_CONFIG_SOURCE="$SCRIPT_DIR/../configs/opencode.json"
 
             if [ -f "$OPENCODE_CONFIG_SOURCE" ]; then
                 print_info "Setting up OpenCode config..."

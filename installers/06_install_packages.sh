@@ -2,7 +2,7 @@
 
 # Script: 06_install_packages.sh
 # Purpose: Provide environment placeholders without installing packages.
-# Usage: ./06_install_packages.sh [ENV_NAME]
+# Usage: ./installers/06_install_packages.sh [ENV_NAME]
 
 if [ -f "$HOME/.bashrc" ]; then
     source "$HOME/.bashrc"
@@ -638,7 +638,7 @@ resolve_env_type() {
 }
 
 print_env_options() {
-    print_info "Available environments from 05_setup_env.sh:"
+    print_info "Available environments from installers/05_setup_env.sh:"
     local index=1
     for key in "${ENV_TYPES[@]}"; do
         printf "  %2d) %s (%s)\n" "$index" "${ENV_DESCRIPTIONS[$key]}" "$key"
@@ -661,13 +661,13 @@ activate_environment_override() {
 
     if [ ! -d "$env_path" ]; then
         print_error "Requested environment not found: $env_path"
-        print_info "Create it first: ./05_setup_env.sh env_${env_type} --auto"
+        print_info "Create it first: ./installers/05_setup_env.sh env_${env_type} --auto"
         return 1
     fi
 
     if [ ! -x "$env_path/bin/python" ]; then
         print_error "Requested environment has no working Python interpreter: $env_path/bin/python"
-        print_info "Rebuild it with: ./05_setup_env.sh env_${env_type} --auto"
+        print_info "Rebuild it with: ./installers/05_setup_env.sh env_${env_type} --auto"
         return 1
     fi
 
@@ -677,7 +677,7 @@ activate_environment_override() {
         activate_script="$env_path/bin/activate"
     else
         print_error "Requested environment has no activation script: $env_path"
-        print_info "Rebuild it with: ./05_setup_env.sh env_${env_type} --auto"
+        print_info "Rebuild it with: ./installers/05_setup_env.sh env_${env_type} --auto"
         return 1
     fi
 
@@ -1411,7 +1411,7 @@ install_deepseek_ktransformers() {
 
     if [ -z "$cuda_home" ] || [ ! -x "$cuda_home/bin/nvcc" ]; then
         print_error "No active CUDA toolkit with nvcc detected for FlashMLA."
-        print_info "Activate an environment configured by 05_setup_env.sh/launch_env.sh with a CUDA toolkit selected."
+        print_info "Activate an environment configured by installers/05_setup_env.sh or launch_env.sh with a CUDA toolkit selected."
         return 1
     fi
 
@@ -2618,7 +2618,7 @@ main() {
     done
 
     if [ "$show_help" = true ]; then
-        echo "Usage: ./06_install_packages.sh [ENV_NAME]"
+        echo "Usage: ./installers/06_install_packages.sh [ENV_NAME]"
         echo
         print_env_options
         return 0
@@ -2634,7 +2634,7 @@ main() {
             fi
         else
             print_warning "Environment override '$override' is not managed by this script."
-            print_info "Nothing to configure in 06_install_packages.sh."
+            print_info "Nothing to configure in installers/06_install_packages.sh."
             return 0
         fi
     else
@@ -2644,7 +2644,7 @@ main() {
             else
                 print_info "No active virtual environment detected."
             fi
-            print_info "Nothing to configure in 06_install_packages.sh."
+            print_info "Nothing to configure in installers/06_install_packages.sh."
             return 0
         fi
     fi

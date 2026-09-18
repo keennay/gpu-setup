@@ -46,7 +46,7 @@ Workflow:
 10. After selecting the smallest passing GPU count and maximum six-decimal utilization value, rerun the `/tmp` copy at those exact values, wait for final API readiness, verify the 16,384 MiB per-selected-GPU reserve, and send one coherent non-gibberish baseline prompt. Do not rerun reasoning, tool-call, modality, speculative, model-card, or parser-specific suites unless the user requests them.
 11. Only after that final temporary run passes, update the supplied original file **in place**. On the normal sweep-only path, change only `DEFAULT_TENSOR_PARALLEL_SIZE` and `GPU_MEM_UTIL_VALUE`; on the fallback creation path, also apply only the source-verified candidate changes required to establish the working setup. If a value is unchanged, do not rewrite it needlessly.
 12. Run the updated original once to final API readiness, recheck the reserve and coherent baseline response, then run Bash syntax and ShellCheck.
-13. For a normal sweep-only update, do not add a new recipe, environment, installer, or entries in `05_setup_env.sh`, `06_install_packages.sh`, or `launch_env.sh`. If the initial-run failure branch requires full creation-workflow candidate wiring, treat it as provisional, remove it on failure, and promote it only under the full promotion rules after success.
+13. For a normal sweep-only update, do not add a new recipe, environment, installer, or entries in `installers/05_setup_env.sh`, `installers/06_install_packages.sh`, or `launch_env.sh`. If the initial-run failure branch requires full creation-workflow candidate wiring, treat it as provisional, remove it on failure, and promote it only under the full promotion rules after success.
 14. If no available GPU count can satisfy maximum context plus the reserve, leave the original file byte-for-byte unchanged and mark the sweep failed.
 
 ### Full recipe creation or broad update mode
@@ -220,7 +220,7 @@ This prohibition also covers:
 
 In full recipe creation or broad update mode, strip all such revision selectors from the temporary candidate even if the template contains them. The higher-precedence existing-recipe sweep-only mode preserves unrelated existing flags but still never adds a new revision selector. If an exact model-card command itself includes a model revision during full mode, do not copy it: test the repository default. If the default cannot work without a model-revision pin, mark the recipe attempt as failed rather than adding the pin.
 
-This rule applies to model artifacts referenced by the recipe. It does **not** prohibit pinning the SGLang or vLLM engine source in the candidate environment installer. Engine release, commit, or PR pins belong only in `06_install_packages.sh` and MUST NOT be emitted as model revision flags in the serve command.
+This rule applies to model artifacts referenced by the recipe. It does **not** prohibit pinning the SGLang or vLLM engine source in the candidate environment installer. Engine release, commit, or PR pins belong only in `installers/06_install_packages.sh` and MUST NOT be emitted as model revision flags in the serve command.
 
 ## Engine-source policy
 
@@ -267,7 +267,7 @@ NEVER create or modify a repository helper, patch file, reasoning parser plugin,
 
 ### Additional Python packages
 
-During `/tmp` validation, install a source-required additional package only with an exact, recorded package-manager command. Do not edit `05_setup_env.sh`, `06_install_packages.sh`, or `launch_env.sh` yet.
+During `/tmp` validation, install a source-required additional package only with an exact, recorded package-manager command. Do not edit `installers/05_setup_env.sh`, `installers/06_install_packages.sh`, or `launch_env.sh` yet.
 
 Only after the temporary environment and `/tmp` recipe reach API readiness and pass behavioral validation, promote the exact tested installation by adding its environment mapping and installer definition to those repository scripts. Then recreate or reinstall the promoted environment from that definition and revalidate it. A failed candidate MUST leave all three repository environment scripts unchanged.
 
@@ -313,7 +313,7 @@ Parser availability must come from the exact engine release/main/commit/PR and a
 
 Create a new candidate environment under `/tmp`; do not experiment inside an established environment used by other recipes. Record every exact package-manager command and upstream source revision used.
 
-Use `06_install_packages.sh` only as the installation-pattern reference during candidate validation. NEVER edit `05_setup_env.sh`, `06_install_packages.sh`, or `launch_env.sh` before the temporary environment and `/tmp` recipe pass API-readiness and behavioral validation.
+Use `installers/06_install_packages.sh` only as the installation-pattern reference during candidate validation. NEVER edit `installers/05_setup_env.sh`, `installers/06_install_packages.sh`, or `launch_env.sh` before the temporary environment and `/tmp` recipe pass API-readiness and behavioral validation.
 
 ### 4. Create the temporary recipe
 
@@ -461,10 +461,10 @@ Before copying, set `DEFAULT_TENSOR_PARALLEL_SIZE` to the smallest ladder count 
 
 1. copy the validated script into its respective repository directory `recipes/<repo>` (where `<repo>` matches the publisher parsed from the script name) with the standard relative helper lines (`RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"` and `source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"`);
 2. ensure executable mode;
-3. retain the exact validated engine source and package list in `06_install_packages.sh`;
+3. retain the exact validated engine source and package list in `installers/06_install_packages.sh`;
 4. add the validated environment to:
-   - `05_setup_env.sh`
-   - `06_install_packages.sh`
+   - `installers/05_setup_env.sh`
+   - `installers/06_install_packages.sh`
    - `launch_env.sh`
 5. insert the environment alphabetically by the existing publisher/environment ordering;
 6. renumber every numeric resolver/menu entry consistently;

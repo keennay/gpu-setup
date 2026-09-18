@@ -1,15 +1,15 @@
 #!/bin/bash
 
 if (( $# != 0 )); then
-    printf 'Usage: ./install.sh\n' >&2
+    printf 'Usage: ./setup.sh\n' >&2
     exit 1
 fi
 
 SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
-DEPENDENCY_INSTALLER="$SCRIPT_DIR/01_install_dependencies.sh"
-CUDA_INSTALLER="$SCRIPT_DIR/02_install_cuda.sh"
-PYTHON_INSTALLER="$SCRIPT_DIR/03_install_python.sh"
-CLI_INSTALLER="$SCRIPT_DIR/04_install_coding_clis.sh"
+DEPENDENCY_INSTALLER="$SCRIPT_DIR/installers/01_install_dependencies.sh"
+CUDA_INSTALLER="$SCRIPT_DIR/installers/02_install_cuda.sh"
+PYTHON_INSTALLER="$SCRIPT_DIR/installers/03_install_python.sh"
+CLI_INSTALLER="$SCRIPT_DIR/installers/04_install_coding_clis.sh"
 INSTALLERS=(
     "$DEPENDENCY_INSTALLER"
     "$CUDA_INSTALLER"

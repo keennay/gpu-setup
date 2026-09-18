@@ -1,5 +1,5 @@
 #!/bin/bash
-# Script: model_install.sh
+# Script: model_download.sh
 # Purpose: Download Hugging Face models or datasets to a custom location with easy replication
 # Colors for output
 RED='\033[0;31m'
@@ -213,7 +213,7 @@ elif [ -n "$HF_HUB_CACHE" ]; then
     print_info "Using existing HF_HUB_CACHE environment variable: $HF_CACHE_PATH"
     print_info "Inferred HF_HOME: $HF_PATH"
 else
-    # No environment variable set, ask user (same logic as 05_setup_env.sh)
+    # No environment variable set, ask user (same logic as installers/05_setup_env.sh)
     if [ "$AUTO_MODE" = false ]; then
         echo ""
         print_info "Where would you like to store HuggingFace models and datasets?"
@@ -273,7 +273,7 @@ if ! check_hf_fast_download_tooling; then
     print_warning "Installing/upgrading Hugging Face fast-download tooling in the active environment..."
     if ! uv pip install -U "huggingface_hub[hf-xet]"; then
         print_error "Failed to install Hugging Face Hub fast-download tooling"
-        print_info "Run source ./05_setup_env.sh first, then retry this script."
+        print_info "Run source ./installers/05_setup_env.sh first, then retry this script."
         exit 1
     fi
 
@@ -506,7 +506,7 @@ try:
     from huggingface_hub.utils import LocalEntryNotFoundError
 except ImportError as e:
     print(f"Error: Missing required package: {e}")
-    print("Run source ./05_setup_env.sh first; it installs Hugging Face Hub tooling into the selected environment.")
+    print("Run source ./installers/05_setup_env.sh first; it installs Hugging Face Hub tooling into the selected environment.")
     sys.exit(1)
 
 repo_id = os.environ["MODEL_NAME"]

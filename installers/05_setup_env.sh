@@ -2,7 +2,7 @@
 
 # Script: 05_setup_env.sh
 # Purpose: Create ML virtual environment and set up environment variables
-# Usage: source 05_setup_env.sh [--auto] [ENV_NAME|1-120]
+# Usage: source ./installers/05_setup_env.sh [--auto] [ENV_NAME|1-120]
 
 # Source bashrc to ensure environment is properly loaded
 if [ -f "$HOME/.bashrc" ]; then
@@ -574,7 +574,7 @@ select_cuda_for_env() {
     fi
 
     if [ -z "$bashrc_cuda_home" ] && [ ${#CUDA_CANDIDATE_HOMES[@]} -eq 0 ]; then
-        fail_script "No CUDA toolkit detected. Install CUDA first with ./02_install_cuda.sh before setting up an ML environment."
+        fail_script "No CUDA toolkit detected. Install CUDA first with ./installers/02_install_cuda.sh before setting up an ML environment."
         return 1
     fi
 
@@ -883,7 +883,7 @@ PYTHON_VERSION=$($PYTHON_BIN --version 2>&1)
 print_info "Using Python from: $PYTHON_BIN ($PYTHON_VERSION)"
 
 if ! uses_pip_venv && ! command -v uv &> /dev/null; then
-    print_error "uv is not installed. Please run 03_install_python.sh first."
+    print_error "uv is not installed. Please run ./installers/03_install_python.sh first."
     if [ "$BEING_SOURCED" = false ]; then
         exit 1
     else
@@ -1162,7 +1162,7 @@ apply_env_cuda_selection() {
         explicit)
             if ! cuda_home_is_valid "$CUDA_ENV_HOME"; then
                 echo "[ERROR] Selected CUDA toolkit is not available: $CUDA_ENV_HOME"
-                echo "[ERROR] Install CUDA first with ./02_install_cuda.sh or rerun 05_setup_env.sh to select another CUDA version."
+                echo "[ERROR] Install CUDA first with ./installers/02_install_cuda.sh or rerun ./installers/05_setup_env.sh to select another CUDA version."
                 return 1
             fi
             export CUDA_HOME="${CUDA_ENV_HOME%/}"
@@ -1172,7 +1172,7 @@ apply_env_cuda_selection() {
         bashrc|"")
             local default_cuda_home
             if ! default_cuda_home=$(detect_default_cuda_home); then
-                echo "[ERROR] No CUDA toolkit detected. Install CUDA first with ./02_install_cuda.sh."
+                echo "[ERROR] No CUDA toolkit detected. Install CUDA first with ./installers/02_install_cuda.sh."
                 return 1
             fi
             export CUDA_HOME="${default_cuda_home%/}"

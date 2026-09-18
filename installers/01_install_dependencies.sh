@@ -1405,7 +1405,7 @@ if section_selected "$SELECT_TMUX"; then
             print_info "✓ tmux installed"
         fi
 
-        TMUX_CONFIG_SOURCE="$(dirname "$0")/configs/.tmux.conf"
+        TMUX_CONFIG_SOURCE="$(dirname "$0")/../configs/.tmux.conf"
         TMUX_CONFIG_TARGET="$HOME/.tmux.conf"
         if [ -f "$TMUX_CONFIG_SOURCE" ]; then
             if cp "$TMUX_CONFIG_SOURCE" "$TMUX_CONFIG_TARGET"; then

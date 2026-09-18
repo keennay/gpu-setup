@@ -104,7 +104,7 @@ apply_env_cuda_selection() {
         explicit)
             if ! cuda_home_is_valid "$CUDA_ENV_HOME"; then
                 print_error "Selected CUDA toolkit is not available: $CUDA_ENV_HOME"
-                print_error "Install CUDA first with ./02_install_cuda.sh or rerun 05_setup_env.sh to select another CUDA version."
+                print_error "Install CUDA first with ./installers/02_install_cuda.sh or rerun ./installers/05_setup_env.sh to select another CUDA version."
                 return 1
             fi
             export CUDA_HOME="${CUDA_ENV_HOME%/}"
@@ -114,7 +114,7 @@ apply_env_cuda_selection() {
         bashrc|"")
             local default_cuda_home
             if ! default_cuda_home=$(detect_default_cuda_home); then
-                print_error "No CUDA toolkit detected. Install CUDA first with ./02_install_cuda.sh."
+                print_error "No CUDA toolkit detected. Install CUDA first with ./installers/02_install_cuda.sh."
                 return 1
             fi
             export CUDA_HOME="${default_cuda_home%/}"
@@ -704,7 +704,7 @@ ENV_PATH="$HOME/env_${ENV_NAME}"
 # Check if environment exists
 if [ ! -d "$ENV_PATH" ]; then
     print_error "Environment '$ENV_NAME' not found at $ENV_PATH"
-    print_info "Run 05_setup_env.sh first to create it"
+    print_info "Run ./installers/05_setup_env.sh first to create it"
     return 1
 fi
 
@@ -870,4 +870,4 @@ fi
 
 echo ""
 print_info "To deactivate: deactivate"
-print_info "To install or configure environment packages: ./06_install_packages.sh"
+print_info "To install or configure environment packages: ./installers/06_install_packages.sh"
