@@ -54,7 +54,7 @@ The below are each package / service provided across the installers
 #### CUDA (optional installation):
 - CUDA 13.0 is selected by default. For a custom install you can type either any CUDA version number or to 10 version numbers with the 1st number in the list set as the default system-wide CUDA version
 
-#### Python (pyenv managed) & Astral UV (optional installation):
+#### Pyenv, Pyenv managed Python, & Astral UV (optional installation):
 - Pytnon 3.11.16 is selected by default. For a custom install you an type any other version of Python in full major.mino.macro format (3.**.**). If selected the latest Astral UV is installed.
 
 #### Coding CLIs (optional installation):
