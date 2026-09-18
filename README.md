@@ -20,7 +20,7 @@ Any CUDA, Node.js 24, or Python installation through this setup replaces existin
 `03_install_python.sh`<br>
 `04_install_coding_clis.sh`
 
-The `/workspace` is the default repo directory used in this guide, yet you're at liberty to chose any other path for the installation.
+The `/workspace` is the default repo directory used in this guide, yet you're at liberty to choose any other path for the installation.
 
 ##### Cloning the Repo onto a GPU Instance with a Root user:
 ```
