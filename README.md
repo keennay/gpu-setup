@@ -8,13 +8,15 @@
 
 [Go to Additional Tools](#additional-tools)
 
-## Summary
+***
 
-A quick & simple way to stage an Ubuntu / RHEL NVIDIA node for ML workloads, including building & serving inference cookbook recipes for Large Language Models & Visual-Language Models. Stage for a bare-metal server, virtual machine, or rental cloud provider setup (Verda, Massed Compute, Prime Intellect, etc).
+## Introduction
+
+This repo provides quick & simple way to stage an Ubuntu / RHEL NVIDIA node for ML workloads, including building & serving inference cookbook recipes for Large Language Models & Visual-Language Models. Stage for a bare-metal server, virtual machine, or rental cloud provider setup (Verda, Massed Compute, Prime Intellect, etc).
 
 AMD & additional hardware vendor support is in the works.
 
-An [installation guide](#installation-guide) is provided to clone this repo and run `setup.sh` to display the below terminal interface. All options are selected by default with the ability to choose or omit packages / services, single or multiple CUDA versions, Python, Astral UV, & coding CLIs.
+An [installation guide](#installation-guide) is provided with steps to clone this repo and run `setup.sh` to display the below terminal interface. All options are selected by default with the ability to choose or omit packages / services, single or multiple CUDA versions, Python, Astral UV, & coding CLIs.
 
 Any CUDA, Node.js 24, or Python installation through this setup replaces existing defaults, using Node Version Manager (NVM) for managing Node.js 24 & Simple Python Version Management (Pyenv) for managing Python. CUDA drivers are installed and/or updated to the latest version within a CUDA installation.
 
