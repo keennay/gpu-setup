@@ -1,6 +1,6 @@
 # Compute Setup
 
-A quick & simple way to stage an Ubuntu / RHEL NVIDIA node for ML workloads, including building & serving inference cookbook recipes for Large Language Models & Visual-Language Models. Use on your own bare-metal / VM server or rental cloud provider (Verda, Massed Compute, Prime Intellect, etc).
+A quick & simple way to stage an Ubuntu / RHEL NVIDIA node for ML workloads, including building & serving inference cookbook recipes for Large Language Models & Visual-Language Models. Stage for a bare-metal server, virtual machine, or rental cloud provider setup (Verda, Massed Compute, Prime Intellect, etc).
 
 AMD & additional hardware vendor support is in the works.
 
