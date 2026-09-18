@@ -262,9 +262,9 @@ echo ""
 
 # Basic Linux essentials installed after upgrades to keep tooling current
 if [ "$OS_TYPE" = "ubuntu" ]; then
-    BASIC_LINUX_ESSENTIALS=(curl wget zip unzip less vim nano git git-lfs htop nvtop ripgrep shellcheck bubblewrap ffmpeg)
+    BASIC_LINUX_ESSENTIALS=(curl wget zip unzip less vim nano git git-lfs gh htop nvtop ripgrep shellcheck bubblewrap ffmpeg)
 else
-    BASIC_LINUX_ESSENTIALS=(curl wget zip unzip less vim-enhanced nano git git-lfs htop nvtop ripgrep ShellCheck bubblewrap ffmpeg)
+    BASIC_LINUX_ESSENTIALS=(curl wget zip unzip less vim-enhanced nano git git-lfs gh htop nvtop ripgrep ShellCheck bubblewrap ffmpeg)
 fi
 if [ "$AUTO_YES" = true ]; then
     INSTALL_BASICS="y"
