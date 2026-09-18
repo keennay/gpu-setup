@@ -42,22 +42,22 @@ cd gpu-setup
 
 The below are each package / service provided across the installers
 
-#### Basic Linux essentials (required installation):
+#### Basic Linux essentials (required):
 - curl, wget, zip, unzip, less, vim, nano, tmux, git, git-lfs, htop, nvtop, ripgrep, shellcheck, bubblewrap, ffmpeg
 
-#### Core build dependencies for ML and Python packages (required installation):
+#### Core build dependencies for ML and Python packages (required):
 - build-essential, gcc, g++, make, cmake, pkg-config, protobuf-compiler, libclang-dev, numactl, libnuma-dev, libhwloc-dev, libssl-dev, libffi-dev, liblzma-dev, libbz2-dev, libreadline-dev, libsqlite3-dev, libncurses-dev, zlib1g-dev
 
-#### Additional services (optional installation):
+#### Additional services (optional):
 - Docker, Node.js 24 (NVM managed), pnpm, Bun, Go, Rust, Zig, Neovim, Tmux
 
-#### CUDA (optional installation):
+#### CUDA (optional):
 - CUDA 13.0 is selected by default. For a custom install you can type either any CUDA version number or to 10 version numbers with the 1st number in the list set as the default system-wide CUDA version
 
-#### Pyenv, Pyenv managed Python, & Astral UV (optional installation):
+#### Pyenv, Pyenv managed Python, & Astral UV (optional):
 - Pytnon 3.11.16 is selected by default. For a custom install you an type any other version of Python in full major.mino.macro format (3.**.**). If selected the latest Astral UV is installed.
 
-#### Coding CLIs (optional installation):
+#### Coding CLIs (optional):
 - Arcee nac, Claude Code, DeepSeek Harness, Gemini CLI, Grok Build, Kimi Code, Meta Muse Code, MiMo Code, OMP, OpenAI Codex, OpenCode, Pi, Prime Intellect Agent, Qwen Code
 
 ***
