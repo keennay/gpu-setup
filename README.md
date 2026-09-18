@@ -79,7 +79,7 @@ The below are each package / service provided across the installers.
 ## Inference Cookbook Recipes:
 
 Inference cookbook recipes are provided for the following model companies as bash scripts:
-- Allen Institute for AI, Arcee AI, Cohere, Datalab, DeepSeek, Dots Studio, Google, IBM Granite, Inclusion Ai, Inferact, Intel, Liquid AI, MiniMax, Nanbeige, Prime Intellect, Qwen, RadixArk, Red Hat AI, Xiaomi, Zyphra
+- Allen Institute for AI, Arcee AI, Cohere, Datalab, DeepSeek, Dots Studio, Google, IBM Granite, Inclusion Ai, Inco AI, Inferact, Intel, Liquid AI, Meta, Microsoft, MiniMax, Mistral AI, Moonshot AI, Nanbeige, Nex-AGI, NVIDIA, OpenAI, Prime Intellect, Poolside, Qwen, RadixArk, Red Hat AI, StepFun, Tencent, Thinking Machines Lab, Xiaomi, Z Lab, Z.ai, Zyphra
 
 ***
 
