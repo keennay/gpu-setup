@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Script: 03_install_python.sh
-# Purpose: Check and install the latest Python via pyenv and uv
+# Purpose: Check and install Python via pyenv and/or standalone uv
 
 # Colors
 RED='\033[0;31m'
@@ -22,6 +22,7 @@ is_valid_python_version_arg() {
 # Parse arguments
 AUTO_YES=false
 INSTALL_UV_SELECTED=false
+UV_ONLY=false
 PYTHON_VERSION_ARG=""
 for arg in "$@"; do
     case "$arg" in
@@ -31,10 +32,16 @@ for arg in "$@"; do
         --uv)
             INSTALL_UV_SELECTED=true
             ;;
+        --uv-only)
+            INSTALL_UV_SELECTED=true
+            UV_ONLY=true
+            ;;
         -h|--help)
             echo "Usage: $0 [-y|--auto] [--uv] [python-version]"
-            echo "  -y, --auto        Automatically accept Python and pyenv prompts"
+            echo "       $0 [-y|--auto] --uv-only"
+            echo "  -y, --auto        Automatically accept installation prompts"
             echo "  --uv              Include uv in automatic installation"
+            echo "  --uv-only         Install uv without installing or configuring Python/pyenv"
             echo "  python-version    Automatically select custom Python version (e.g. 3.11.15)"
             exit 0
             ;;
@@ -54,7 +61,56 @@ for arg in "$@"; do
     esac
 done
 
+if [ "$UV_ONLY" = true ] && [ -n "$PYTHON_VERSION_ARG" ]; then
+    print_error "--uv-only cannot be combined with a Python version."
+    exit 1
+fi
+
 NEEDS_PATH_UPDATE=false
+
+install_uv() {
+    local INSTALL_UV
+
+    if [ "$AUTO_YES" = true ] && [ "$INSTALL_UV_SELECTED" = false ]; then
+        print_info "Skipping uv installation."
+        return 0
+    fi
+
+    print_info "Checking uv..."
+    if command -v uv &> /dev/null; then
+        print_info "✓ uv is installed ($(uv --version))"
+        return 0
+    fi
+    print_error "✗ uv is not installed"
+
+    if [ "$AUTO_YES" = true ]; then
+        INSTALL_UV="y"
+    else
+        read -r -p "Install uv? (y/n): " INSTALL_UV
+    fi
+
+    if [[ ! "$INSTALL_UV" =~ ^[Yy]$ ]]; then
+        print_info "Skipping uv installation."
+        return 0
+    fi
+
+    print_info "Installing uv..."
+    if ! (
+        set -o pipefail
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+    ); then
+        print_error "Failed to install uv."
+        return 1
+    fi
+
+    print_info "Open a new shell or follow the uv installer's PATH instructions."
+    print_info "Then verify with: uv --version"
+}
+
+if [ "$UV_ONLY" = true ]; then
+    install_uv
+    exit $?
+fi
 
 # Function to reload shell environment
 reload_shell_env() {
@@ -364,39 +420,7 @@ fi
 echo ""
 
 # Step 3: Check and install uv
-print_info "Checking uv..."
-if command -v uv &> /dev/null; then
-    print_info "✓ uv is installed ($(uv --version))"
-else
-    print_error "✗ uv is not installed"
-    
-    if [ "$AUTO_YES" = true ]; then
-        if [ "$INSTALL_UV_SELECTED" = true ]; then
-            INSTALL_UV="y"
-        else
-            INSTALL_UV="n"
-        fi
-    else
-        read -r -p "Install uv? (y/n): " INSTALL_UV
-    fi
-    
-    if [[ "$INSTALL_UV" =~ ^[Yy]$ ]]; then
-        print_info "Installing uv..."
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        
-        # Add to PATH if not present
-        if ! grep -q ".cargo/bin" "$HOME/.bashrc"; then
-            echo 'export PATH="$HOME/.cargo/bin:$PATH"' >> "$HOME/.bashrc"
-            print_info "Added cargo/bin to PATH in ~/.bashrc"
-            NEEDS_PATH_UPDATE=true
-        fi
-        
-        print_info "Please run: source ~/.bashrc"
-        print_info "Then verify with: which uv"
-    else
-        print_info "Skipping uv installation."
-    fi
-fi
+install_uv || exit $?
 
 echo ""
 echo "=============================================="

@@ -132,10 +132,10 @@ install_defaults_selected() {
 }
 CUDA_DEFAULT_VERSION="13.0"
 PYTHON_DEFAULT_VERSION="3.11.16"
-CUDA_GUIDANCE_LINE_ONE="Select 13.0 or type a custom CUDA version >= 12.8."
+CUDA_GUIDANCE_LINE_ONE="Select 13.0 or type a custom CUDA version"
 CUDA_GUIDANCE_LINE_TWO="Up to 10 CUDA versions can be installed, comma separated, with the"
 CUDA_GUIDANCE_LINE_THREE="first in the list as the default CUDA option"
-PYTHON_GUIDANCE="Select 3.11.16 or type a custom Python version >= 3.11"
+PYTHON_GUIDANCE="Select 3.11.16 or type a custom Python version"
 CONTROLS_TEXT="Click/Arrows/Tab move  Space select  Enter activate  i install  q cancel"
 cuda_choice="default"
 python_choice="default"
@@ -486,17 +486,17 @@ build_panel() {
 
     append_separator "CUDA Version"
     append_blank_line
-    selected_mark=" "
+    active=0
     if [ "$cuda_choice" = "default" ]; then
-        selected_mark="x"
+        active=1
     fi
-    control_text "cuda_default" "(${selected_mark}) $CUDA_DEFAULT_VERSION"
+    checkbox_text "cuda_default" "$active" "$CUDA_DEFAULT_VERSION"
     default_text="$CONTROL_TEXT"
-    selected_mark=" "
+    active=0
     if [ "$cuda_choice" = "custom" ]; then
-        selected_mark="x"
+        active=1
     fi
-    control_text "cuda_custom" "(${selected_mark}) Custom"
+    checkbox_text "cuda_custom" "$active" "Custom"
     custom_text="$CONTROL_TEXT"
     active=0
     if [ "$editing" = "cuda" ]; then
@@ -522,17 +522,17 @@ build_panel() {
     append_blank_line
     append_separator "Python Version"
     append_blank_line
-    selected_mark=" "
+    active=0
     if [ "$python_choice" = "default" ]; then
-        selected_mark="x"
+        active=1
     fi
-    control_text "python_default" "(${selected_mark}) $PYTHON_DEFAULT_VERSION"
+    checkbox_text "python_default" "$active" "$PYTHON_DEFAULT_VERSION"
     default_text="$CONTROL_TEXT"
-    selected_mark=" "
+    active=0
     if [ "$python_choice" = "custom" ]; then
-        selected_mark="x"
+        active=1
     fi
-    control_text "python_custom" "(${selected_mark}) Custom"
+    checkbox_text "python_custom" "$active" "Custom"
     custom_text="$CONTROL_TEXT"
     active=0
     if [ "$editing" = "python" ]; then
@@ -567,11 +567,7 @@ build_panel() {
                 cells[column]="$CONTROL_TEXT"
             fi
         done
-        if (( row == 4 )); then
-            printf -v content '%-25.25s%-27.27s%-24.24s' "${cells[0]}" "${cells[1]}" "${cells[2]}"
-        else
-            printf -v content '%-25.25s%-25.25s%-26.26s' "${cells[0]}" "${cells[1]}" "${cells[2]}"
-        fi
+        printf -v content '%-25.25s%-27.27s%-24.24s' "${cells[0]}" "${cells[1]}" "${cells[2]}"
         PANEL_LINES+=("│ ${content} │")
         for ((column = 0; column < 3; column++)); do
             index=$((row * 3 + column))
@@ -666,9 +662,7 @@ style_panel_line() {
             before="${body%%"$FOCUSED_TEXT"*}"
             after="${body#*"$FOCUSED_TEXT"}"
             before="${before//"[X]"/${STYLE_SELECTED}[X]${STYLE_RESET}}"
-            before="${before//"(x)"/${STYLE_SELECTED}(x)${STYLE_RESET}}"
             after="${after//"[X]"/${STYLE_SELECTED}[X]${STYLE_RESET}}"
-            after="${after//"(x)"/${STYLE_SELECTED}(x)${STYLE_RESET}}"
             focused="${FOCUSED_TEXT/#>/›}"
             if (( FLASH_PHASE )); then
                 focus_style="$STYLE_FOCUS_ALTERNATE"
@@ -678,7 +672,6 @@ style_panel_line() {
             body="${before}${focus_style}${focused}${STYLE_RESET}${after}"
         else
             body="${body//"[X]"/${STYLE_SELECTED}[X]${STYLE_RESET}}"
-            body="${body//"(x)"/${STYLE_SELECTED}(x)${STYLE_RESET}}"
         fi
     fi
     if (( line_index == 14 )) && [ "$cuda_choice" != "custom" ]; then
@@ -765,19 +758,6 @@ draw_screen() {
         printf '\033[?25h\033[%d;%dH' "$cursor_row" "$cursor_column" >&"$TTY_FD"
     fi
 }
-version_at_least() {
-    local major_value
-    local minor_value
-    local minimum_major_value
-    local minimum_minor_value
-
-    major_value=$((10#$1))
-    minor_value=$((10#$2))
-    minimum_major_value=$((10#$3))
-    minimum_minor_value=$((10#$4))
-    (( major_value > minimum_major_value ||
-        (major_value == minimum_major_value && minor_value >= minimum_minor_value) ))
-}
 
 validate_cuda_versions() {
     local buffer="$1"
@@ -819,10 +799,6 @@ validate_cuda_versions() {
         if [ "$remainder" != "$token" ]; then
             minor="${remainder%%.*}"
         fi
-        if ! version_at_least "$major" "$minor" 12 8; then
-            status_message="CUDA versions must be 12.8 or newer: $token."
-            return 1
-        fi
 
         stream="$((10#$major)).$((10#$minor))"
         for existing_stream in "${streams[@]}"; do
@@ -842,20 +818,9 @@ validate_cuda_versions() {
 validate_python_version() {
     local buffer="$1"
     local python_pattern='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
-    local major
-    local remainder
-    local minor
 
     if [[ ! "$buffer" =~ $python_pattern ]]; then
         status_message="Python must be major.minor.patch, for example 3.11.16."
-        return 1
-    fi
-
-    major="${buffer%%.*}"
-    remainder="${buffer#*.}"
-    minor="${remainder%%.*}"
-    if ! version_at_least "$major" "$minor" 3 11; then
-        status_message="Python version must be 3.11 or newer."
         return 1
     fi
 
@@ -1128,7 +1093,14 @@ edit_version() {
         case "$KEY" in
             mouse)
                 if focus_mouse_control && [ "$MOUSE_CONTROL" != "${kind}_field" ]; then
+                    if [ "$MOUSE_CONTROL" = "astral_uv" ]; then
+                        activate_focused "mouse"
+                        set_focus_control "${kind}_field"
+                        draw_screen
+                        continue
+                    fi
                     if [ "$MOUSE_CONTROL" = "${kind}_default" ] ||
+                       [ "$MOUSE_CONTROL" = "${kind}_custom" ] ||
                        [ "$MOUSE_CONTROL" = "install_defaults" ]; then
                         editing=""
                         status_message=""
@@ -1144,15 +1116,12 @@ edit_version() {
 
                     if [ -z "$current_buffer" ]; then
                         if [ "$kind" = "cuda" ]; then
-                            cuda_choice="default"
+                            cuda_choice="$saved_choice"
                         else
-                            python_choice="default"
+                            python_choice="$saved_choice"
                         fi
                         editing=""
                         status_message=""
-                        if [ "$MOUSE_CONTROL" = "${kind}_custom" ]; then
-                            return 0
-                        fi
                     elif [ "$kind" = "cuda" ]; then
                         if validate_cuda_versions "$cuda_buffer"; then
                             editing=""
@@ -1362,7 +1331,7 @@ perform_installation() {
 
     if [ "$cuda_choice" = "default" ]; then
         cuda_args+=("$CUDA_DEFAULT_VERSION" "-d")
-    else
+    elif [ "$cuda_choice" = "custom" ]; then
         cuda_args+=("${CUDA_VERSION_ARGS[0]}" "-d")
         for ((index = 1; index < ${#CUDA_VERSION_ARGS[@]}; index++)); do
             cuda_args+=("${CUDA_VERSION_ARGS[$index]}")
@@ -1370,11 +1339,15 @@ perform_installation() {
     fi
 
     if (( ASTRAL_UV_SELECTED )); then
-        python_args+=("--uv")
+        if [ "$python_choice" = "none" ]; then
+            python_args+=("--uv-only")
+        else
+            python_args+=("--uv")
+        fi
     fi
     if [ "$python_choice" = "default" ]; then
         python_args+=("$PYTHON_DEFAULT_VERSION")
-    else
+    elif [ "$python_choice" = "custom" ]; then
         python_args+=("$python_buffer")
     fi
 
@@ -1395,8 +1368,16 @@ perform_installation() {
 
     leave_tui
     run_command "[1/4]" "$DEPENDENCY_INSTALLER" "${dependency_args[@]}" || return $?
-    run_command "[2/4]" "$CUDA_INSTALLER" "${cuda_args[@]}" || return $?
-    run_command "[3/4]" "$PYTHON_INSTALLER" "${python_args[@]}" || return $?
+    if [ "$cuda_choice" = "none" ]; then
+        printf '[2/4] Skipping CUDA installation (none selected)\n'
+    else
+        run_command "[2/4]" "$CUDA_INSTALLER" "${cuda_args[@]}" || return $?
+    fi
+    if [ "$python_choice" = "none" ] && (( ! ASTRAL_UV_SELECTED )); then
+        printf '[3/4] Skipping Python and Astral UV (none selected)\n'
+    else
+        run_command "[3/4]" "$PYTHON_INSTALLER" "${python_args[@]}" || return $?
+    fi
 
     refresh_runtime_paths
     if (( cli_selected_count == 0 )); then
@@ -1437,21 +1418,35 @@ activate_focused() {
             DEPENDENCY_SELECTED[index]=$((1 - DEPENDENCY_SELECTED[index]))
             ;;
         cuda_default)
-            cuda_choice="default"
-            cuda_buffer=""
+            if [ "$cuda_choice" = "default" ]; then
+                cuda_choice="none"
+            else
+                cuda_choice="default"
+            fi
             ;;
         cuda_custom)
-            cuda_choice="custom"
+            if [ "$cuda_choice" = "custom" ]; then
+                cuda_choice="none"
+            else
+                cuda_choice="custom"
+            fi
             ;;
         cuda_field)
             edit_version "cuda" "$cuda_choice" "$cuda_buffer"
             ;;
         python_default)
-            python_choice="default"
-            python_buffer=""
+            if [ "$python_choice" = "default" ]; then
+                python_choice="none"
+            else
+                python_choice="default"
+            fi
             ;;
         python_custom)
-            python_choice="custom"
+            if [ "$python_choice" = "custom" ]; then
+                python_choice="none"
+            else
+                python_choice="custom"
+            fi
             ;;
         python_field)
             edit_version "python" "$python_choice" "$python_buffer"
