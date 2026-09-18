@@ -1,4 +1,4 @@
-<img width="500" height="507" alt="yoniq_setup" src="https://github.com/user-attachments/assets/ccbe2513-8eaa-4bf0-8ba5-f4b29825a800" />
+<img width="500" height="507" alt="compute" src="https://github.com/user-attachments/assets/93ef9cd8-3380-4f4f-8652-f9dfb27e4bb6" />
 
 ***
 
@@ -18,9 +18,9 @@ This repo provides a quick & simple way to stage an Ubuntu / RHEL NVIDIA node fo
 
 AMD & additional hardware vendor support is in the works.
 
-An [installation guide](#installation-guide) is provided with steps to clone this repo and run `setup.sh` to display the above terminal interface. All options are selected by default with the ability to choose or omit packages / services, single or multiple CUDA versions, Python, Astral UV, & coding CLIs.
+An [installation guide](#installation-guide) is provided with steps to clone this repo and run `setup.sh` to display the above terminal interface. All options are selected by default with the ability to choose or omit packages / services, single or multiple CUDA versions, Python, Astral UV, & coding CLIs. You can also only install [basic Linux essentials](#basic-linux-essentials-required) & [core build dependencies](#core-build-dependencies-for-ml-and-python-packages-required) while completely bypassing the installation of additional packages / services, CUDA, Python, Astral UV, & coding CLIs. 
 
-Any CUDA, Node.js 24, or Python installation through this setup replaces existing defaults, using Node Version Manager (NVM) for managing Node.js 24 & Simple Python Version Management (Pyenv) for managing Python. CUDA drivers are installed and/or updated to the latest version within a CUDA installation.
+Installing CUDA, Node.js 24, or Python through this guide replaces existing defaults, using Node Version Manager (NVM) for managing Node.js 24 & Simple Python Version Management (Pyenv) for managing Python. CUDA drivers are installed and/or updated to the latest version within a CUDA installation.
 
 [Inference cookbook recipes](#inference-cookbook-recipes) are also included for a variety of the popular Large Language Model & Visual-Language model companies. These exist as bash scripts and automatically create new Python environments within the $HOME directory upon execution, while installing pinned versions of either SGLang or vLLM + any additional packages necessary for a proper inference deployment.
 
@@ -31,10 +31,10 @@ New recipes can be created using [the provided skills](#included-skills) within 
 ## Installation Guide:
 
 `setup.sh` runs up to 4 installer files:<br><br>
-`01_install_dependencies.sh`<br>
-`02_install_cuda.sh`<br>
-`03_install_python.sh`<br>
-`04_install_coding_clis.sh`
+`installers/01_install_dependencies.sh`<br>
+`installers/02_install_cuda.sh`<br>
+`installers/03_install_python.sh`<br>
+`installers/04_install_coding_clis.sh`
 
 The `/workspace` is the default repo directory used in this guide, yet you're at liberty to choose any other path for the installation.
 
