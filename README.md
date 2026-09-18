@@ -87,9 +87,9 @@ The below are each package / service provided across the installers.
     - https://docs.sglang.io/cookbook/
     - https://recipes.vllm.ai/
 - llm-vlm-cookbook-recipe-creation-and-update
-  - Process for generating inference recipes using the `llm-vlm-cookbook-recipe-source` skill as the guide
+  - The process for generating inference recipes using the `llm-vlm-cookbook-recipe-source` skill as the guide
 - llm-inference-bench-creation-and-update
-  - Tool for creating beautiful prefill / decode benchmark tables & additional metrics by the wonderful crew over at Local Inference Lab
+  - The tool for creating beautiful pre-fill / decode benchmark tables & additional metrics by the wonderful crew over at Local Inference Lab
     - https://github.com/local-inference-lab/llm-inference-bench
     - https://x.com/YourLocalAILab
 ***
