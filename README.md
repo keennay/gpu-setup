@@ -2,7 +2,7 @@
 
 [Go to Installation Guide](#installation-guide)
 
-[Go to Inference Recipe Cookbook](#inference-recipe-cookbook)
+[Go to Inference Cookbook Recipes](#inference-cookbook-recipes)
 
 [Go to Included Skills](#included-skills)
 
@@ -20,7 +20,7 @@ An [installation guide](#installation-guide) is provided with steps to clone thi
 
 Any CUDA, Node.js 24, or Python installation through this setup replaces existing defaults, using Node Version Manager (NVM) for managing Node.js 24 & Simple Python Version Management (Pyenv) for managing Python. CUDA drivers are installed and/or updated to the latest version within a CUDA installation.
 
-[Inference recipes](#inference-recipe-cookbook) are also included for a variety of the popular Large Language Model & Visual-Language model companies. These exist as bash scripts and automatically create new Python environments within the $HOME directory upon execution, while installing pinned versions of either SGLang or vLLM + any additional packages necessary for a proper inference deployment. New recipes can be created using [the provided skills](#included-skills) within this repo, added to your coding CLI of choice, and building them based off the existing recipes for NVIDIA H200 NVL / SXM, & RTX Pro 6000s.
+[Inference cookbook recipes](#inference-cookbook-recipes) are also included for a variety of the popular Large Language Model & Visual-Language model companies. These exist as bash scripts and automatically create new Python environments within the $HOME directory upon execution, while installing pinned versions of either SGLang or vLLM + any additional packages necessary for a proper inference deployment. New recipes can be created using [the provided skills](#included-skills) within this repo, added to your coding CLI of choice, and building them based off the existing recipes for NVIDIA H200 NVL / SXM, & RTX Pro 6000s.
 
 <img width="500" height="507" alt="yoniq_setup" src="https://github.com/user-attachments/assets/ccbe2513-8eaa-4bf0-8ba5-f4b29825a800" />
 
@@ -76,11 +76,11 @@ The below are each package / service provided across the installers.
 
 ***
 
-## Inference Recipe Cookbook
+## Inference Cookbook Recipes:
 
 ***
 
-## Included Skills
+## Included Skills:
 
 - llm-vlm-cookbook-recipe-source
   - Prioritize retrieving inference recipes from SGLang & vLLM's Cookbook recipe sites, with the HuggingFace model card as the fallback
