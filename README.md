@@ -4,7 +4,7 @@ A quick & simple way to stage an Ubuntu / RHEL NVIDIA node for ML workloads, inc
 
 AMD & additional hardware vendor support is in the works.
 
-Clone this repo and run `setup.sh` to display the below terminal interface. All options are selected by default, with the ability to choose or omit packages / services, single or multiple CUDA versions, Python, Astral UV, & coding CLIs.
+Clone this repo and run `setup.sh` to display the below terminal interface. All options are selected by default with the ability to choose or omit packages / services, single or multiple CUDA versions, Python, Astral UV, & coding CLIs.
 
 Any CUDA, Node.js 24, or Python installation through this setup replaces existing defaults, using Node Version Manager (NVM) & Simple Python Version Management (pyenv) for managing Node.js 24 & Python respectively. CUDA drivers are installed / updated to the latest version within a CUDA installation.
 
