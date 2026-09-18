@@ -4,9 +4,11 @@ A quick & simple way to stage an Ubuntu / RHEL NVIDIA node for ML workloads, inc
 
 AMD & additional hardware vendor support is in the works.
 
-Clone this repo and run `setup.sh` to display the below terminal interface. All options are selected by default with the ability to choose or omit packages / services, single or multiple CUDA versions, Python, Astral UV, & coding CLIs.
+Clone this repo and run `setup.sh` to display the above terminal interface. All options are selected by default with the ability to choose or omit packages / services, single or multiple CUDA versions, Python, Astral UV, & coding CLIs.
 
 Any CUDA, Node.js 24, or Python installation through this setup replaces existing defaults, using Node Version Manager (NVM) for managing Node.js 24 & Simple Python Version Management (Pyenv) for managing Python. CUDA drivers are installed and/or updated to the latest version within a CUDA installation.
+
+Inference recipes are also included for a variety of the popular Large Language Model & Visual-Language model companies. These exist as bash scripts and automatically create new Python environments within the $HOME directory upon execution, while installing pinned versions of either SGLang or vLLM + any additional packages necessary for a proper inference deployment. New recipes can be created using the provided skills within this repo, added to your coding CLI of choice, and building them based off the existing recipes for NVIDIA H200 NVL / SXM, & RTX Pro 6000s.
 
 <img width="500" height="507" alt="yoniq_setup" src="https://github.com/user-attachments/assets/ccbe2513-8eaa-4bf0-8ba5-f4b29825a800" />
 
@@ -52,14 +54,28 @@ The below are each package / service provided across the installers.
 - Docker, Node.js 24 (NVM managed), pnpm, Bun, Go, Rust, Zig, Neovim, Tmux
 
 #### CUDA (optional):
-- CUDA 13.0 is selected by default. For a custom install you can type either any CUDA version number or to 10 version numbers with the 1st number in the list set as the default system-wide CUDA version
+- CUDA 13.0 is selected by default. For a custom install you can type either any CUDA version number, or up to 10 version numbers with the 1st number in the list set as the default system-wide CUDA version
 
 #### Pyenv, Pyenv managed Python, & Astral UV (optional):
-- Python 3.11.16 is selected by default. For a custom install you an type any other version of Python in full major.mino.macro format (3.**.**). Pyenv is first installed following the desired Python version. Astral UV is provided as an installation option if selected.
+- Python 3.11.16 is selected by default. For a custom install you can type any other version of Python in full major.mino.macro format (3.**.**). Pyenv is first installed following the desired Python version. Astral UV is provided as an installation option if selected.
 
 #### Coding CLIs (optional):
 - Arcee nac, Claude Code, DeepSeek Harness, Gemini CLI, Grok Build, Kimi Code, Meta Muse Code, MiMo Code, OMP, OpenAI Codex, OpenCode, Pi, Prime Intellect Agent, Qwen Code
 
+***
+
+### Included Skills
+
+- llm-vlm-cookbook-recipe-source
+  - Prioritize retrieving inference recipes from SGLang & vLLM's Cookbook recipe sites, with the HuggingFace model card as the fallback
+    - https://docs.sglang.io/cookbook/
+    - https://recipes.vllm.ai/
+- llm-vlm-cookbook-recipe-creation-and-update
+  - Process for generating inference recipes using the `llm-vlm-cookbook-recipe-source` skill as the guide
+- llm-inference-bench-creation-and-update
+  - Tool for creating beautiful prefill / decode benchmark tables & additional metrics by the wonderful crew over at Local Inference Lab
+    - https://github.com/local-inference-lab/llm-inference-bench
+    - https://x.com/YourLocalAILab
 ***
 
 ### Additional Tools:
