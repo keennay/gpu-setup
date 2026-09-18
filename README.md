@@ -1,5 +1,7 @@
 # Compute Setup
 
+The fastest way to stage an Ubuntu 24 / RHEL based system GPU compute system.
+
 <img width="500" height="507" alt="yoniq_setup" src="https://github.com/user-attachments/assets/ccbe2513-8eaa-4bf0-8ba5-f4b29825a800" />
 
 
@@ -26,7 +28,7 @@ The default work directory for the scripts is `/workspace`. Edit as needed.
 ```
 mkdir -p /workspace
 cd /workspace
-git clone https://github.com/keennay/gpu-cluster-setup.git
+git clone https://github.com/keennay/gpu-setup.git
 mv gpu-cluster-setup scripts
 cd scripts
 ```
@@ -35,7 +37,7 @@ cd scripts
 sudo mkdir -p /workspace
 sudo chown -R ubuntu:ubuntu /workspace
 cd /workspace
-git clone https://github.com/keennay/gpu-cluster-setup.git
+git clone https://github.com/keennay/gpu-setup.git
 mv gpu-cluster-setup scripts
 cd scripts
 ```
