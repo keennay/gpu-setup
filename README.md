@@ -22,7 +22,7 @@ You can also select the minimal installation of [basic Linux essentials](#basic-
 
 Installing CUDA, Node.js 24, or Python through this guide replaces existing defaults, using Node Version Manager (NVM) for managing Node.js 24 & Simple Python Version Management (Pyenv) for managing Python. CUDA drivers are installed and/or updated to the latest version within a CUDA installation.
 
-[Inference cookbook recipes](#inference-cookbook-recipes) are also included for a variety of the popular Large Language Model & Visual-Language model companies. These exist as bash scripts and automatically create new Python environments within the $HOME directory upon execution, while installing pinned versions of either SGLang or vLLM + any additional packages necessary for a proper inference deployment. Additionally each script has the ability customize specific flags based off CUDA architecture target.
+[Inference cookbook recipes](#inference-cookbook-recipes) are also included for a variety of the popular Large Language Model & Visual-Language model companies. These exist as bash scripts and automatically create new Python environments within the $HOME directory upon execution, while installing pinned versions of either SGLang or vLLM + any additional packages necessary for a proper inference deployment. Additionally each script has the ability customize specific flags based off your CUDA architecture target.
 
 New recipes can be created using [the provided skills](#included-skills) within this repo, added to your coding CLI of choice, and building them based off the existing recipes.
 
@@ -85,13 +85,13 @@ Inference cookbook recipes are provided for the following model companies as bas
 
 All scripts follow a singular format, allowing easy replicability for newer models & hardware architecture. Specific flags are also defined by CUDA architecture target, allowing the same script to run on multiple hardware, with a singular architecture per launch.
 
-Launch each scripts to automatically detect your GPU's CUDA architecture & run inference. For heterogenous GPU setups, provide `CUDA_VISIBLE_DEVICES=` followed by your GPU(s) of choice as a script argument to define your CUDA architecture from the first GPU in the list.
+Launch each script to automatically detect your GPU's CUDA architecture and run inference. For heterogenous GPU setups, provide `CUDA_VISIBLE_DEVICES=` followed by your GPU(s) of choice as a script argument to define your target CUDA architecture from the first GPU in the list.
 
 Launch examples:
 - `./vllm_Qwen_Qwen3.8-27B.sh`
 - `./vllm_Qwen_Qwen3.8-27B.sh CUDA_VISIBLE_DEVICES=1`
 
-Each script & model launch found in this repo was validated against 1x, 2x, 4x, and 8x NVIDIA H200s, with future support for sm100, sm103, sm120, & sm121 architecture GPUs.
+Each script and model launch found in this repo was validated against 1x, 2x, 4x, and 8x NVIDIA H200s, with future support for sm100, sm103, sm120, & sm121 architecture GPUs.
 
 Below are the CUDA architecture specific flags per cookbook recipe script:
 
