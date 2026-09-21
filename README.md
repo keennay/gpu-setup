@@ -83,11 +83,19 @@ The below are each package / service provided across the installers.
 Inference cookbook recipes are provided for the following model companies as bash scripts:
 - Allen Institute for AI, Arcee AI, Cohere, Datalab, DeepSeek, Dots Studio, Google, IBM Granite, Inclusion Ai, Inco AI, Inferact, Intel, Liquid AI, Meta, Microsoft, MiniMax, Mistral AI, Moonshot AI, Nanbeige, Nex-AGI, NVIDIA, OpenAI, Prime Intellect, Poolside, Qwen, RadixArk, Red Hat AI, StepFun, Tencent, Thinking Machines Lab, Xiaomi, Z Lab, Z.ai, Zyphra
 
-All scripts follow a singular format, allowing easy replicability for newer models & hardware architecture. Specific flags are also defined by CUDA architecture target, allowing the same script to run on multiple hardware, with a singular architecture per launch. Each script & model launch found in this repo was validated against 1x, 2x, 4x, and 8x NVIDIA H200s, with future support for sm100, sm103, sm120, & sm121 architecture GPUs.
+All scripts follow a singular format, allowing easy replicability for newer models & hardware architecture. Specific flags are also defined by CUDA architecture target, allowing the same script to run on multiple hardware, with a singular architecture per launch.
+
+Launch each scripts to automatically detect your GPU's CUDA architecture & run inference. For heterogenous GPU setups, provide `CUDA_VISIBLE_DEVICES=` followed by your GPU(s) of choice as a script argument to define your CUDA architecture from the first GPU in the list.
+
+Launch examples:
+- `./vllm_Qwen_Qwen3.8-27B.sh`
+- `./vllm_Qwen_Qwen3.8-27B.sh CUDA_VISIBLE_DEVICES=1`
+
+Each script & model launch found in this repo was validated against 1x, 2x, 4x, and 8x NVIDIA H200s, with future support for sm100, sm103, sm120, & sm121 architecture GPUs.
 
 Below are the CUDA architecture specific flags per cookbook recipe script:
 
-| Script Env | SGLang Flag | vLLM Flag |
+| Script Envs | SGLang Flag | vLLM Flag |
 | --- | --- | --- |
 | BACKEND_ATTENTION_SM* | --attention-backend | --attention-backend |
 | BACKEND_FP8_GEMM_SM* | --fp8-gemm-backend | --linear-backend |
