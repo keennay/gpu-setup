@@ -655,7 +655,11 @@ run_inference_recipe() {
     local -a base_command_args=()
     read -r -a base_command_args <<< "$base_command"
 
-    echo "Command: $base_command"
+    printf 'Command: '
+    if [ "${CUDA_VISIBLE_DEVICES+x}" = "x" ]; then
+        printf 'CUDA_VISIBLE_DEVICES=%s ' "$CUDA_VISIBLE_DEVICES"
+    fi
+    printf '%s\n' "$base_command"
     echo ""
     echo "Press Ctrl+C to stop the server"
     echo "============================================================"
