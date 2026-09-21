@@ -6,6 +6,8 @@
 
 [Go to Inference Cookbook Recipes](#inference-cookbook-recipes)
 
+[Go to Benchmark Data for Decode Throughput](#benchmarks-for-decode-throughput)
+
 [Go to Included Skills](#included-skills)
 
 [Go to Additional Tools](#additional-tools)
@@ -18,11 +20,11 @@ This repo provides a quick & simple way to stage an Ubuntu / RHEL NVIDIA node fo
 
 An [installation guide](#installation-guide) is provided with steps to clone this repo and run `setup.sh` to display the above terminal interface. All options are selected by default with the ability to choose or omit packages / services, single or multiple CUDA versions, Python, Astral UV, & coding CLIs.
 
-You can also select the minimal installation of [basic Linux essentials](#basic-linux-essentials-required) & [core build dependencies](#core-build-dependencies-for-ml-and-python-packages-required). This option completely bypasses the installation of additional packages / services, CUDA, Python, Astral UV, & coding CLIs. 
+You can also select the minimal installation of [basic Linux essentials](#basic-linux-essentials-required) and [core build dependencies](#core-build-dependencies-for-ml-and-python-packages-required). This option completely bypasses the installation of additional packages / services, CUDA, Python, Astral UV, & coding CLIs. 
 
 Installing CUDA, Node.js 24, or Python through this guide replaces existing defaults, using Node Version Manager (NVM) for managing Node.js 24 & Simple Python Version Management (Pyenv) for managing Python. CUDA drivers are installed and/or updated to the latest version within a CUDA installation.
 
-[Inference cookbook recipes](#inference-cookbook-recipes) are also included for a variety of the popular Large Language Model & Visual-Language model companies. These exist as bash scripts and automatically create new Python environments within the $HOME directory upon execution, while installing pinned versions of either SGLang or vLLM + any additional packages necessary for a proper inference deployment. Additionally each script has the ability customize specific flags based off your CUDA architecture target.
+[Inference cookbook recipes](#inference-cookbook-recipes) are also included for a variety of the popular Large Language Model & Visual-Language model companies. These exist as bash scripts and automatically create new Python environments within the $HOME directory upon execution, while installing pinned versions of either SGLang or vLLM + any additional packages necessary for a proper inference deployment. Additionally each script has the ability customize specific flags based off your CUDA architecture target. [Benchmark data for decode throughput](#benchmarks-for-decode-throughput) per model, GPU hardware, and GPU quantity are also included.
 
 New recipes can be created using [the provided skills](#included-skills) within this repo, added to your coding CLI of choice, and building them based off the existing recipes.
 
@@ -89,7 +91,7 @@ Launch each script to automatically detect your GPU's CUDA architecture and run 
 
 Launch examples:
 - `./vllm_Qwen_Qwen3.8-27B.sh`
-- `./vllm_Qwen_Qwen3.8-27B.sh CUDA_VISIBLE_DEVICES=1`
+- `CUDA_VISIBLE_DEVICES=1 ./vllm_Qwen_Qwen3.8-27B.sh`
 
 Each script and model launch found in this repo was validated against 1x, 2x, 4x, and 8x NVIDIA H200s, with future support for sm100, sm103, sm120, & sm121 architecture GPUs.
 
@@ -103,6 +105,15 @@ Below are the CUDA architecture specific flags per cookbook recipe script:
 | BACKEND_MOE_RUNNER_SM* | --moe-runner-backend | --moe-backend |
 | GPU_MEM_UTIL_VALUE_SM* | --mem-fraction-static | --gpu-mem-util |
 | TENSOR_PARALLEL_SIZE_SM* | --tp | --tensor-parallel-size |
+
+***
+
+## Benchmark Data for Decode Throughput:
+
+Under each recipe directory is an `llm-inference-bench` directory containing decode throughput benchmark data associated each model script, GPU type, and GPU quantity. The LLM Inference Bench repo can be found at: https://github.com/local-inference-lab/llm-inference-bench
+
+Below is an example decode throughput data for DeepSeek-V4-Flash-0731 running on 2x NVIDIA H200 NVL
+<img width="600" height="442" alt="llm-inference-bench-example" src="https://github.com/user-attachments/assets/fa72801b-bbad-415e-9d06-c44bd5393d86" />
 
 ***
 
