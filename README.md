@@ -16,7 +16,7 @@
 
 ## Introduction
 
-This repo provides a quick & simple way to stage an Ubuntu / RHEL NVIDIA node for ML workloads, including serving inference cookbook recipes for Large Language Models & Visual-Language Models, while providing the tools to build new inference cookbook recipes. Setup and stage a bare-metal server, virtual machine, or rental cloud provider node (Verda, Massed Compute, Prime Intellect, etc). AMD & additional hardware vendor support is in the works.
+This repo provides a quick & simple way to stage an Ubuntu / RHEL NVIDIA node for ML workloads, including serving inference cookbook recipes for Large Language Models & Visual-Language Models, while providing the tools to build new inference cookbook recipes. Setup and stage a bare-metal server, virtual machine, or rental cloud provider node (Verda, Massed Compute, Prime Intellect, etc). AMD and additional hardware vendor support is in the works.
 
 An [installation guide](#installation-guide) is provided with steps to clone this repo and run `setup.sh` to display the above terminal interface. All options are selected by default with the ability to choose or omit packages / services, single or multiple CUDA versions, Python, Astral UV, & coding CLIs.
 
@@ -82,7 +82,9 @@ The below are each package / service provided across the installers.
 
 ## Inference Cookbook Recipes:
 
-Inference cookbook recipes are provided for the following model companies as bash scripts:
+Inference cookbook recipes are provided for the following model companies as bash scripts, validated against 1x, 2x, 4x, and 8x NVIDIA H200s, with future support for sm100, sm103, sm120, & sm121 architecture GPUs.
+
+Cookbook recipes are included for the following companies:
 - Allen Institute for AI, Arcee AI, Cohere, Datalab, DeepSeek, Dots Studio, Google, IBM Granite, Inclusion Ai, Inco AI, Inferact, Intel, Liquid AI, Meta, Microsoft, MiniMax, Mistral AI, Moonshot AI, Nanbeige, Nex-AGI, NVIDIA, OpenAI, Prime Intellect, Poolside, Qwen, RadixArk, Red Hat AI, StepFun, Tencent, Thinking Machines Lab, Xiaomi, Z Lab, Z.ai, Zyphra
 
 All scripts follow a singular format, allowing easy replicability for newer models & hardware architecture. Specific flags are also defined by CUDA architecture target, allowing the same script to run on multiple hardware, with a singular architecture per launch.
@@ -92,8 +94,6 @@ Launch each script to automatically detect your GPU's CUDA architecture and run 
 Launch examples:
 - `./vllm_Qwen_Qwen3.8-27B.sh`
 - `CUDA_VISIBLE_DEVICES=1 ./vllm_Qwen_Qwen3.8-27B.sh`
-
-Each script and model launch found in this repo was validated against 1x, 2x, 4x, and 8x NVIDIA H200s, with future support for sm100, sm103, sm120, & sm121 architecture GPUs.
 
 Below are the CUDA architecture specific flags per cookbook recipe script:
 
