@@ -110,9 +110,13 @@ Below are the CUDA architecture specific flags per cookbook recipe script:
 
 ## Benchmark Data for Decode Throughput:
 
-Under each recipe directory is an `llm-inference-bench` directory containing decode throughput benchmark data associated each model script, GPU type, and GPU quantity. The LLM Inference Bench repo can be found at: https://github.com/local-inference-lab/llm-inference-bench
+Under each recipe directory is an `llm-inference-bench` directory containing decode throughput benchmark data, using a tool created by the wonderful crew over at Local Inference Lab. Each benchmark file is categorized by model script, GPU type, and GPU quantity.
 
-Below is an example decode throughput data for DeepSeek-V4-Flash-0731 running on 2x NVIDIA H200 NVL
+Local Inference Lab's contact info and their LLM Inference Bench repo can be found at:
+- https://x.com/YourLocalAILab
+- https://github.com/local-inference-lab/llm-inference-bench
+
+Below is an example decode throughput data for DeepSeek-V4-Flash-0731 running on 2x NVIDIA H200 NVL GPUs:
 <img width="600" height="442" alt="llm-inference-bench-example" src="https://github.com/user-attachments/assets/fa72801b-bbad-415e-9d06-c44bd5393d86" />
 
 ***
