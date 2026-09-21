@@ -6,23 +6,14 @@ INFERENCE_ENV=""
 MODEL_REPO="Qwen/Qwen3.5-35B-A3B"
 MODEL_NAME="qwen3"
 SERVED_MODEL_NAME="qwen"
-CONTEXT_LEN_VALUE=262144
-DEFAULT_TENSOR_PARALLEL_SIZE=1
 TRUST_REMOTE_CODE="--trust-remote-code"
 REASONING_PARSER="--reasoning-parser qwen3"
 ENABLE_AUTO_TOOL_CHOICE=""
 TOOL_CALL_PARSER="--tool-call-parser qwen3_coder"
-GPU_MEM_UTIL_VALUE=0.857035
 METRICS_FLAG="--enable-metrics"
 HOST="0.0.0.0"
 DEFAULT_PORT=8000
 API_KEY="--api-key YOUR_API_KEY"
-
-BACKEND_MOE_RUNNER_SM90=""
-BACKEND_MOE_RUNNER_SM100=""
-BACKEND_MOE_RUNNER_SM103=""
-BACKEND_MOE_RUNNER_SM120=""
-BACKEND_MOE_RUNNER_SM121=""
 
 ENABLE_CACHE_FLAG=0
 ENABLE_SPECULATIVE=1
@@ -31,8 +22,49 @@ SPECULATIVE="--speculative-algorithm DFLASH --speculative-draft-model-path z-lab
 QUANTIZATION=""
 NO_PREFIX_CACHE="--disable-radix-cache"
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS="--attention-backend flashinfer --linear-attn-prefill-backend flashinfer --linear-attn-decode-backend flashinfer --mamba-scheduler-strategy extra_buffer --max-running-requests 32 --cuda-graph-max-bs-decode 32 --cuda-graph-backend-prefill tc_piecewise --enable-flashinfer-allreduce-fusion"
+EXTRA_ARGS="--linear-attn-prefill-backend flashinfer --linear-attn-decode-backend flashinfer --mamba-scheduler-strategy extra_buffer --max-running-requests 32 --cuda-graph-max-bs-decode 32 --cuda-graph-backend-prefill tc_piecewise --enable-flashinfer-allreduce-fusion"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
+
+BACKEND_ATTENTION_SM90="--attention-backend flashinfer"
+BACKEND_FP8_GEMM_SM90=""
+BACKEND_FP4_GEMM_SM90=""
+BACKEND_MOE_RUNNER_SM90=""
+CONTEXT_LEN_VALUE_SM90=262144
+GPU_MEM_UTIL_VALUE_SM90=0.857035
+TENSOR_PARALLEL_SIZE_SM90=1
+
+BACKEND_ATTENTION_SM100=""
+BACKEND_FP8_GEMM_SM100=""
+BACKEND_FP4_GEMM_SM100=""
+BACKEND_MOE_RUNNER_SM100=""
+CONTEXT_LEN_VALUE_SM100=""
+GPU_MEM_UTIL_VALUE_SM100=""
+TENSOR_PARALLEL_SIZE_SM100=""
+
+BACKEND_ATTENTION_SM103=""
+BACKEND_FP8_GEMM_SM103=""
+BACKEND_FP4_GEMM_SM103=""
+BACKEND_MOE_RUNNER_SM103=""
+CONTEXT_LEN_VALUE_SM103=""
+GPU_MEM_UTIL_VALUE_SM103=""
+TENSOR_PARALLEL_SIZE_SM103=""
+
+BACKEND_ATTENTION_SM120=""
+BACKEND_FP8_GEMM_SM120=""
+BACKEND_FP4_GEMM_SM120=""
+BACKEND_MOE_RUNNER_SM120=""
+CONTEXT_LEN_VALUE_SM120=""
+GPU_MEM_UTIL_VALUE_SM120=""
+TENSOR_PARALLEL_SIZE_SM120=""
+
+BACKEND_ATTENTION_SM121=""
+BACKEND_FP8_GEMM_SM121=""
+BACKEND_FP4_GEMM_SM121=""
+BACKEND_MOE_RUNNER_SM121=""
+CONTEXT_LEN_VALUE_SM121=""
+GPU_MEM_UTIL_VALUE_SM121=""
+TENSOR_PARALLEL_SIZE_SM121=""
+
 run_inference_recipe "$@"

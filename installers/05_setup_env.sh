@@ -2,7 +2,8 @@
 
 # Script: 05_setup_env.sh
 # Purpose: Create ML virtual environment and set up environment variables
-# Usage: source ./installers/05_setup_env.sh [--auto] [ENV_NAME|1-120]
+# Usage: source ./installers/05_setup_env.sh [--auto] [--refresh-activation] [ENV_NAME|1-120]
+# --refresh-activation updates only generated architecture settings in an existing environment.
 
 # Source bashrc to ensure environment is properly loaded
 if [ -f "$HOME/.bashrc" ]; then
@@ -20,6 +21,8 @@ print_info() { echo -e "${GREEN}[INFO]${NC} $1"; }
 print_error() { echo -e "${RED}[ERROR]${NC} $1"; }
 print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 print_command() { echo -e "${BLUE}[RUN]${NC} $1"; }
+
+TORCH_CUDA_ARCH_BANNER="echo \"  - TORCH_CUDA_ARCH_LIST: \${TORCH_CUDA_ARCH_LIST:-unset}\""
 
 fail_script() {
     local message="$1"
@@ -89,6 +92,73 @@ PY
 
     VIRTUAL_ENV="$ENV_PATH" PATH="$ENV_PATH/bin:$PATH" hf --help >/dev/null || return 1
     print_info "✓ Hugging Face Hub Python library and hf CLI installed"
+}
+
+refresh_activation_script() {
+    local activation_script="$ENV_PATH/activate_ml"
+    if [ ! -f "$activation_script" ]; then
+        print_error "Generated activation script not found: $activation_script"
+        return 1
+    fi
+
+    python3 -I -S -B - "$activation_script" "$TORCH_CUDA_ARCH_BANNER" <<'PY'
+import os
+from pathlib import Path
+import re
+import sys
+import tempfile
+
+path = Path(sys.argv[1])
+banner = sys.argv[2]
+if path.is_symlink():
+    raise SystemExit(f"Refusing to replace a symbolic-link activation script: {path}")
+original = path.read_bytes().decode("utf-8")
+if not original.startswith("#!/bin/bash\n# Activate virtual environment\n"):
+    raise SystemExit(f"Unrecognized generated activation script: {path}")
+
+updated = re.sub(
+    r'^# GPU architecture for PyTorch\n'
+    r'(?:export TORCH_CUDA_ARCH_LIST=(?:"[0-9]+\.[0-9]+"|[0-9]+\.[0-9]+)\n)?\n',
+    "",
+    original,
+    flags=re.MULTILINE,
+)
+updated = re.sub(
+    r'^echo[ \t]+(?:"[ \t]*- TORCH_CUDA_ARCH_LIST: [0-9]+\.[0-9]+"'
+    r'|- TORCH_CUDA_ARCH_LIST: [0-9]+\.[0-9]+)\n',
+    "",
+    updated,
+    flags=re.MULTILINE,
+)
+updated = re.sub(r'^[ \t]*#[ \t]*shellcheck\b[^\n]*(?:\n|$)', "", updated, flags=re.MULTILINE)
+updated = updated.replace(banner + "\n", "")
+if "TORCH_CUDA_ARCH_LIST" in updated:
+    raise SystemExit(f"Unrecognized architecture configuration; leaving unchanged: {path}")
+
+python_banner = 'echo "  - Python: $(python --version)"\n'
+if updated.count(python_banner) != 1:
+    raise SystemExit(f"Unrecognized activation reporting section; leaving unchanged: {path}")
+updated = updated.replace(python_banner, banner + "\n" + python_banner, 1)
+if updated == original:
+    print(f"Activation architecture policy is already current: {path}")
+    raise SystemExit(0)
+
+metadata = path.stat()
+temporary_path = None
+try:
+    with tempfile.NamedTemporaryFile(
+        mode="wb", prefix=".activate_ml.", dir=path.parent, delete=False
+    ) as temporary:
+        temporary_path = Path(temporary.name)
+        temporary.write(updated.encode("utf-8"))
+        os.fchown(temporary.fileno(), metadata.st_uid, metadata.st_gid)
+        os.fchmod(temporary.fileno(), metadata.st_mode & 0o7777)
+    os.replace(temporary_path, path)
+finally:
+    if temporary_path is not None:
+        temporary_path.unlink(missing_ok=True)
+print(f"Refreshed activation architecture policy: {path}")
+PY
 }
 
 resolve_env_type() {
@@ -656,11 +726,17 @@ fi
 
 # Parse arguments
 AUTO_MODE=false
+REFRESH_ACTIVATION=false
 ENV_TYPE=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --auto)
+            AUTO_MODE=true
+            shift
+            ;;
+        --refresh-activation)
+            REFRESH_ACTIVATION=true
             AUTO_MODE=true
             shift
             ;;
@@ -682,6 +758,13 @@ while [[ $# -gt 0 ]]; do
             ;;
     esac
 done
+
+if [ "$REFRESH_ACTIVATION" = true ] && [ -z "$ENV_TYPE" ]; then
+    fail_script "--refresh-activation requires an existing environment name or number."
+    if [ "$BEING_SOURCED" = true ]; then
+        return 1
+    fi
+fi
 
 # Prompt for environment type if not provided and not in auto mode
 if [ -z "$ENV_TYPE" ] && [ "$AUTO_MODE" = false ]; then
@@ -836,6 +919,19 @@ fi
 ENV_NAME=$(resolve_env_name "$ENV_TYPE")
 
 ENV_PATH="$HOME/${ENV_NAME}"
+
+if [ "$REFRESH_ACTIVATION" = true ]; then
+    if ! refresh_activation_script; then
+        fail_script "Failed to refresh the activation script for $ENV_NAME."
+        if [ "$BEING_SOURCED" = true ]; then
+            return 1
+        fi
+    fi
+    if [ "$BEING_SOURCED" = true ]; then
+        return 0
+    fi
+    exit 0
+fi
 
 # Ask for HuggingFace model storage location
 DEFAULT_HF_PATH="/workspace/models/huggingface"
@@ -992,82 +1088,6 @@ if ! install_huggingface_hub; then
         return 1
     fi
 fi
-
-# Detect GPU architecture
-print_info "Detecting GPU architecture..."
-TORCH_CUDA_ARCH_LIST=""
-
-if command -v nvidia-smi &> /dev/null; then
-    GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1 | tr '[:lower:]' '[:upper:]')
-    
-    if [ -n "$GPU_NAME" ]; then
-        print_info "Detected GPU: $GPU_NAME"
-        
-        # Determine architecture based on GPU model
-        if [[ "$GPU_NAME" == *"V100"* ]]; then
-            TORCH_CUDA_ARCH_LIST="7.0"
-            print_info "  → $GPU_NAME (Volta) detected: sm_70"
-            
-        elif [[ "$GPU_NAME" == *"T4"* ]] || \
-             { [[ "$GPU_NAME" == *"RTX 5000"* ]] && [[ "$GPU_NAME" != *"ADA"* ]]; } || \
-             { [[ "$GPU_NAME" == *"RTX 4000"* ]] && [[ "$GPU_NAME" != *"ADA"* ]]; } || \
-             { [[ "$GPU_NAME" == *"RTX 6000"* ]] && [[ "$GPU_NAME" != *"ADA"* ]]; }; then
-            TORCH_CUDA_ARCH_LIST="7.5"
-            print_info "  → $GPU_NAME (Turing) detected: sm_75"
-            
-        elif [[ "$GPU_NAME" == *"A100"* ]] || [[ "$GPU_NAME" == *"A30"* ]]; then
-            TORCH_CUDA_ARCH_LIST="8.0"
-            print_info "  → $GPU_NAME (Ampere) detected: sm_80"
-            
-        elif [[ "$GPU_NAME" == *"RTX 3090"* ]] || [[ "$GPU_NAME" == *"3090"* ]] || \
-             [[ "$GPU_NAME" == *"RTX 3080"* ]] || [[ "$GPU_NAME" == *"3080"* ]] || \
-             [[ "$GPU_NAME" == *"RTX 3070"* ]] || [[ "$GPU_NAME" == *"3070"* ]] || \
-             [[ "$GPU_NAME" == *"RTX A6000"* ]] || [[ "$GPU_NAME" == *"A6000"* ]] || \
-             [[ "$GPU_NAME" == *"RTX A5000"* ]] || [[ "$GPU_NAME" == *"A5000"* ]] || \
-             [[ "$GPU_NAME" == *"RTX A4500"* ]] || [[ "$GPU_NAME" == *"A4500"* ]] || \
-             [[ "$GPU_NAME" == *"RTX A4000"* ]] || [[ "$GPU_NAME" == *"A4000"* ]] || \
-             [[ "$GPU_NAME" == *"RTX A2000"* ]] || [[ "$GPU_NAME" == *"A2000"* ]] || \
-             [[ "$GPU_NAME" == *"A10"* ]] || [[ "$GPU_NAME" == *"A40"* ]]; then
-            TORCH_CUDA_ARCH_LIST="8.6"
-            print_info "  → $GPU_NAME (Ampere) detected: sm_86"
-            
-        elif [[ "$GPU_NAME" == *"RTX 4090"* ]] || [[ "$GPU_NAME" == *"4090"* ]] || \
-             [[ "$GPU_NAME" == *"RTX 4070 TI"* ]] || [[ "$GPU_NAME" == *"4070 TI"* ]] || \
-             [[ "$GPU_NAME" == *"L40S"* ]] || [[ "$GPU_NAME" == *"L40"* ]] || [[ "$GPU_NAME" == *"L4"* ]] || \
-             { [[ "$GPU_NAME" == *"RTX 6000"* ]] && [[ "$GPU_NAME" == *"ADA"* ]]; } || \
-             { [[ "$GPU_NAME" == *"RTX 5000"* ]] && [[ "$GPU_NAME" == *"ADA"* ]]; } || \
-             { [[ "$GPU_NAME" == *"RTX 4000"* ]] && [[ "$GPU_NAME" == *"ADA"* ]]; }; then
-            TORCH_CUDA_ARCH_LIST="8.9"
-            print_info "  → $GPU_NAME (Ada Lovelace) detected: sm_89"
-            
-        elif [[ "$GPU_NAME" == *"H100"* ]] || [[ "$GPU_NAME" == *"H200"* ]] || [[ "$GPU_NAME" == *"GH200"* ]]; then
-            TORCH_CUDA_ARCH_LIST="9.0"
-            print_info "  → $GPU_NAME (Hopper) detected: sm_90"
-            
-        elif [[ "$GPU_NAME" == *"B200"* ]]; then
-            TORCH_CUDA_ARCH_LIST="10.0"
-            print_info "  → $GPU_NAME (Blackwell) detected: sm_100"
-            
-        elif [[ "$GPU_NAME" == *"RTX 5090"* ]] || [[ "$GPU_NAME" == *"5090"* ]] || \
-             { [[ "$GPU_NAME" == *"RTX PRO 6000"* ]] && [[ "$GPU_NAME" == *"BLACKWELL"* ]]; }; then
-            TORCH_CUDA_ARCH_LIST="12.0"
-            print_info "  → $GPU_NAME (Blackwell) detected: sm_120"
-            
-        else
-            print_warning "  → Unknown GPU model, will use default PyTorch CUDA architectures"
-        fi
-        
-        if [ -n "$TORCH_CUDA_ARCH_LIST" ]; then
-            print_info "  → Set TORCH_CUDA_ARCH_LIST=$TORCH_CUDA_ARCH_LIST"
-        fi
-    else
-        print_warning "Could not detect GPU name"
-    fi
-else
-    print_warning "nvidia-smi not found - no GPU detected"
-fi
-
-echo ""
 
 # Create activation script with environment variables
 print_info "Creating activation script with ML environment variables..."
@@ -1226,9 +1246,6 @@ export HF_HOME="$HF_PATH"
 export HF_HUB_CACHE="$HF_PATH/hub"
 ${CUDA_ACTIVATE_SNIPPET}
 
-# GPU architecture for PyTorch
-${TORCH_CUDA_ARCH_LIST:+export TORCH_CUDA_ARCH_LIST="$TORCH_CUDA_ARCH_LIST"}
-
 echo "ML environment activated with:"
 echo "  - Virtual env: $ENV_PATH"
 echo "  - HF_HOME: $HF_PATH"
@@ -1236,7 +1253,7 @@ echo "  - HF_HUB_CACHE: $HF_PATH/hub"
 if [ -n "\${ML_ENV_CUDA_HOME:-}" ]; then
     echo "  - CUDA toolkit: \${ML_ENV_CUDA_HOME} (\${ML_ENV_CUDA_VERSION:-unknown}, \${ML_ENV_CUDA_SOURCE:-configured})"
 fi
-${TORCH_CUDA_ARCH_LIST:+echo "  - TORCH_CUDA_ARCH_LIST: $TORCH_CUDA_ARCH_LIST"}
+${TORCH_CUDA_ARCH_BANNER}
 echo "  - Python: \$(python --version)"
 EOF
 
@@ -1251,12 +1268,8 @@ if ! grep -q "HF_HOME=" ~/.bashrc; then
 # ML Environment Variables
 export HF_HOME="$HF_PATH"
 export HF_HUB_CACHE="$HF_PATH/hub"
-${TORCH_CUDA_ARCH_LIST:+export TORCH_CUDA_ARCH_LIST="$TORCH_CUDA_ARCH_LIST"}
 EOF
     print_info "Added HF_HOME to ~/.bashrc"
-    if [ -n "$TORCH_CUDA_ARCH_LIST" ]; then
-        print_info "Added TORCH_CUDA_ARCH_LIST to ~/.bashrc"
-    fi
 fi
 
 

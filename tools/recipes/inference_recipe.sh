@@ -1,15 +1,120 @@
 #!/usr/bin/env bash
 
-# Shared inference recipe runtime; source after defining recipe configuration.
-: "${RECIPE_DIR:?RECIPE_DIR must be set by the calling recipe}"
-PYTHON_ENV="${PYTHON_ENV:-}"
-INFERENCE_PROVIDER_NORMALIZED="${INFERENCE_PROVIDER,,}"
-HELPER_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-SCRIPTS_DIR="$(cd -- "$HELPER_DIR/../.." && pwd -P)"
-SETUP_ENV_SCRIPT="$SCRIPTS_DIR/installers/05_setup_env.sh"
-PACKAGE_INSTALLER_SCRIPT="$SCRIPTS_DIR/installers/06_install_packages.sh"
-INFERENCE_COMMAND=""
-INFERENCE_EXECUTABLE=""
+# Shared inference recipe runtime; configure the recipe and SM profile before calling run_inference_recipe.
+
+detect_gpu_configuration() {
+    if ! command -v nvidia-smi >/dev/null 2>&1; then
+        echo "Error: nvidia-smi is required for GPU detection." >&2
+        return 1
+    fi
+
+    local gpu_inventory
+    if ! gpu_inventory="$(nvidia-smi --query-gpu=index --format=csv,noheader,nounits)"; then
+        echo "Error: unable to enumerate NVIDIA GPUs." >&2
+        return 1
+    fi
+    if [ -z "$gpu_inventory" ]; then
+        echo "Error: no NVIDIA GPUs detected." >&2
+        return 1
+    fi
+
+    local -a gpu_ids=()
+    mapfile -t gpu_ids <<< "$gpu_inventory"
+    TOTAL_GPU_COUNT="${#gpu_ids[@]}"
+    FIRST_VISIBLE_GPU="${gpu_ids[0]}"
+    if [ "${CUDA_VISIBLE_DEVICES+x}" = "x" ]; then
+        FIRST_VISIBLE_GPU="${CUDA_VISIBLE_DEVICES%%,*}"
+    fi
+    FIRST_VISIBLE_GPU="${FIRST_VISIBLE_GPU//[[:space:]]/}"
+    if [ -z "$FIRST_VISIBLE_GPU" ] || [ "$FIRST_VISIBLE_GPU" = "-1" ]; then
+        echo "Error: CUDA_VISIBLE_DEVICES exposes no GPUs." >&2
+        return 1
+    fi
+
+    if ! CUDA_SM_VERSION="$(get_cuda_sm_version "$FIRST_VISIBLE_GPU")"; then
+        return 1
+    fi
+
+    local attention_backend
+    local gemm_backend
+    local moe_backend
+    case "$CUDA_SM_VERSION" in
+        sm_90)
+            TENSOR_PARALLEL_SIZE_VALUE="${TENSOR_PARALLEL_SIZE_SM90:-}"
+            GPU_MEM_UTIL_VALUE="${GPU_MEM_UTIL_VALUE_SM90:-}"
+            CONTEXT_LEN_VALUE="${CONTEXT_LEN_VALUE_SM90:-}"
+            attention_backend="${BACKEND_ATTENTION_SM90:-}"
+            gemm_backend="${BACKEND_FP8_GEMM_SM90:-${BACKEND_FP4_GEMM_SM90:-}}"
+            moe_backend="${BACKEND_MOE_RUNNER_SM90:-}"
+            ;;
+        sm_100)
+            TENSOR_PARALLEL_SIZE_VALUE="${TENSOR_PARALLEL_SIZE_SM100:-}"
+            GPU_MEM_UTIL_VALUE="${GPU_MEM_UTIL_VALUE_SM100:-}"
+            CONTEXT_LEN_VALUE="${CONTEXT_LEN_VALUE_SM100:-}"
+            attention_backend="${BACKEND_ATTENTION_SM100:-}"
+            gemm_backend="${BACKEND_FP8_GEMM_SM100:-${BACKEND_FP4_GEMM_SM100:-}}"
+            moe_backend="${BACKEND_MOE_RUNNER_SM100:-}"
+            ;;
+        sm_103)
+            TENSOR_PARALLEL_SIZE_VALUE="${TENSOR_PARALLEL_SIZE_SM103:-}"
+            GPU_MEM_UTIL_VALUE="${GPU_MEM_UTIL_VALUE_SM103:-}"
+            CONTEXT_LEN_VALUE="${CONTEXT_LEN_VALUE_SM103:-}"
+            attention_backend="${BACKEND_ATTENTION_SM103:-}"
+            gemm_backend="${BACKEND_FP8_GEMM_SM103:-${BACKEND_FP4_GEMM_SM103:-}}"
+            moe_backend="${BACKEND_MOE_RUNNER_SM103:-}"
+            ;;
+        sm_120)
+            TENSOR_PARALLEL_SIZE_VALUE="${TENSOR_PARALLEL_SIZE_SM120:-}"
+            GPU_MEM_UTIL_VALUE="${GPU_MEM_UTIL_VALUE_SM120:-}"
+            CONTEXT_LEN_VALUE="${CONTEXT_LEN_VALUE_SM120:-}"
+            attention_backend="${BACKEND_ATTENTION_SM120:-}"
+            gemm_backend="${BACKEND_FP8_GEMM_SM120:-${BACKEND_FP4_GEMM_SM120:-}}"
+            moe_backend="${BACKEND_MOE_RUNNER_SM120:-}"
+            ;;
+        sm_121)
+            TENSOR_PARALLEL_SIZE_VALUE="${TENSOR_PARALLEL_SIZE_SM121:-}"
+            GPU_MEM_UTIL_VALUE="${GPU_MEM_UTIL_VALUE_SM121:-}"
+            CONTEXT_LEN_VALUE="${CONTEXT_LEN_VALUE_SM121:-}"
+            attention_backend="${BACKEND_ATTENTION_SM121:-}"
+            gemm_backend="${BACKEND_FP8_GEMM_SM121:-${BACKEND_FP4_GEMM_SM121:-}}"
+            moe_backend="${BACKEND_MOE_RUNNER_SM121:-}"
+            ;;
+        *)
+            echo "Error: no recipe configuration is defined for $CUDA_SM_VERSION." >&2
+            return 1
+            ;;
+    esac
+
+    if [ -z "$TENSOR_PARALLEL_SIZE_VALUE" ] || [ -z "$GPU_MEM_UTIL_VALUE" ] || [ -z "$CONTEXT_LEN_VALUE" ]; then
+        echo "Error: tensor-parallel size, GPU memory utilization, and context length must be configured for $CUDA_SM_VERSION." >&2
+        return 1
+    fi
+
+    local backend_args
+    for backend_args in "$attention_backend" "$gemm_backend" "$moe_backend"; do
+        if [ -n "$backend_args" ]; then
+            EXTRA_ARGS+="${EXTRA_ARGS:+ }$backend_args"
+        fi
+    done
+    printf 'GPU configuration: total=%s first=%s SM=%s TP=%s memory=%s\n' \
+        "$TOTAL_GPU_COUNT" "$FIRST_VISIBLE_GPU" "$CUDA_SM_VERSION" \
+        "$TENSOR_PARALLEL_SIZE_VALUE" "$GPU_MEM_UTIL_VALUE"
+}
+
+get_cuda_sm_version() {
+    local gpu_id="$1"
+    local compute_capability
+    if ! compute_capability="$(nvidia-smi --id="$gpu_id" --query-gpu=compute_cap --format=csv,noheader,nounits)"; then
+        echo "Error: unable to determine CUDA SM version for GPU $gpu_id." >&2
+        return 1
+    fi
+    compute_capability="${compute_capability//[[:space:]]/}"
+    if [[ ! "$compute_capability" =~ ^([0-9]+)\.([0-9]+)$ ]]; then
+        echo "Error: invalid CUDA compute capability '$compute_capability' for GPU $gpu_id." >&2
+        return 1
+    fi
+    printf 'sm_%s%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+}
 
 configured_environment_is_usable() {
     local env_path="$1"
@@ -18,13 +123,13 @@ configured_environment_is_usable() {
         [ -x "$env_path/bin/python" ] &&
         { [ -f "$env_path/activate_ml" ] || [ -f "$env_path/bin/activate" ]; }
 }
+
 is_valid_python_environment_name() {
     local env_name="$1"
 
     [ "${#env_name}" -le 128 ] &&
         [[ "$env_name" =~ ^env_[a-z0-9]+([._-][a-z0-9]+)*$ ]]
 }
-
 
 install_inference_provider() {
     if [ ! -x "$PACKAGE_INSTALLER_SCRIPT" ]; then
@@ -96,93 +201,6 @@ prepare_inference_runtime() {
     fi
     INFERENCE_EXECUTABLE="$provider_path"
 }
-
-case "$INFERENCE_PROVIDER_NORMALIZED" in
-    sglang)
-        INFERENCE_COMMAND="sglang"
-        MODEL_PATH="--model-path $MODEL_REPO"
-        TENSOR_PARALLEL_SIZE_FLAG="--tp"
-        CONTEXT_LEN_FLAG="--context-length $CONTEXT_LEN_VALUE"
-        GPU_MEM_UTIL_FLAG="--mem-fraction-static $GPU_MEM_UTIL_VALUE"
-        ;;
-    vllm)
-        INFERENCE_COMMAND="vllm"
-        MODEL_PATH="$MODEL_REPO"
-        TENSOR_PARALLEL_SIZE_FLAG="--tensor-parallel-size"
-        CONTEXT_LEN_FLAG="--max-model-len $CONTEXT_LEN_VALUE"
-        GPU_MEM_UTIL_FLAG="--gpu-memory-utilization $GPU_MEM_UTIL_VALUE"
-        ;;
-    *)
-        echo "INFERENCE_LAUNCH needs a value" >&2
-        exit 1
-        ;;
-esac
-if ! prepare_inference_runtime; then
-    exit 1
-fi
-INFERENCE_LAUNCH="$INFERENCE_EXECUTABLE serve"
-
-
-# Runtime argument state
-DEFAULT_ENABLE_SPECULATIVE="$ENABLE_SPECULATIVE"
-INTERACTIVE_MODE=0
-POSITIONAL_ARGS=()
-LOG_SUFFIX="${INFERENCE_PROVIDER,,}"
-case "$LOG_SUFFIX" in
-    vllm|sglang)
-        ;;
-    *)
-        echo "Error: unsupported inference provider for logging: $INFERENCE_PROVIDER" >&2
-        exit 1
-        ;;
-esac
-CALLING_SCRIPT="${BASH_SOURCE[1]:-$0}"
-CALLING_BASENAME="$(basename -- "$CALLING_SCRIPT")"
-CALLING_REPO=""
-if [[ "$CALLING_BASENAME" =~ ^(vllm|sglang)_([^_]+)_ ]]; then
-    CALLING_REPO="${BASH_REMATCH[2]}"
-elif [ -n "$RECIPE_DIR" ] && [ "$(basename "$(dirname "$RECIPE_DIR")")" = "recipes" ]; then
-    CALLING_REPO="$(basename "$RECIPE_DIR")"
-fi
-
-if [ -n "$CALLING_REPO" ] && [ "$CALLING_REPO" != "recipes" ]; then
-    LOG_DIR="$SCRIPTS_DIR/recipes/${CALLING_REPO,,}/logs"
-elif [ -n "$RECIPE_DIR" ] && [ -d "$RECIPE_DIR" ]; then
-    LOG_DIR="$RECIPE_DIR/logs"
-else
-    LOG_DIR="$SCRIPTS_DIR/recipes/logs"
-fi
-LOG_TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
-LAUNCH_LOG="$LOG_DIR/${LOG_TIMESTAMP}_${LOG_SUFFIX}.log"
-LAUNCH_LOG_REL="./logs/${LOG_TIMESTAMP}_${LOG_SUFFIX}.log"
-if ! mkdir -p "$LOG_DIR"; then
-    echo "Error: unable to create log directory: $LOG_DIR" >&2
-    exit 1
-fi
-if ! : > "$LAUNCH_LOG"; then
-    echo "Error: unable to write log file: $LAUNCH_LOG" >&2
-    exit 1
-fi
-if [ "$LOG_SUFFIX" = "sglang" ]; then
-    SGLANG_LAUNCH_LOG="$LAUNCH_LOG"
-    export SGLANG_LAUNCH_LOG
-else
-    VLLM_LAUNCH_LOG="$LAUNCH_LOG"
-    export VLLM_LAUNCH_LOG
-fi
-exec > >(trap '' INT TERM HUP QUIT; exec tee -a "$LAUNCH_LOG") 2>&1
-echo "$INFERENCE_PROVIDER log: $LAUNCH_LOG_REL"
-echo "Full log path: $LAUNCH_LOG"
-
-echo ""
-echo "$MODEL_REPO $INFERENCE_PROVIDER Launcher"
-
-SERVER_PID=""
-SERVER_MONITOR_PID=""
-SERVER_PID_FILE=""
-SERVER_SHUTDOWN_STARTED=0
-SERVER_INTERRUPT_GRACE_SECONDS="${SERVER_INTERRUPT_GRACE_SECONDS:-10}"
-SERVER_TERMINATE_GRACE_SECONDS="${SERVER_TERMINATE_GRACE_SECONDS:-5}"
 
 server_process_group_is_alive() {
     [ -n "$SERVER_PID" ] && kill -0 -- "-$SERVER_PID" 2>/dev/null
@@ -337,87 +355,8 @@ launch_inference_server() {
     return "$server_status"
 }
 
-trap 'handle_inference_signal INT 130' INT
-trap 'handle_inference_signal TERM 143' TERM
-trap 'handle_inference_signal HUP 129' HUP
-trap 'handle_inference_signal QUIT 131' QUIT
-trap 'handle_inference_exit "$?"' EXIT
-
-get_cuda_sm_version() {
-    local visible_devices="${CUDA_VISIBLE_DEVICES:-}"
-
-    if [ "${GPU_SELECTION_MODE:-}" = "custom" ]; then
-        visible_devices="$CUDA_VISIBLE_DEVICES_VALUE"
-    fi
-
-    if [ -n "$visible_devices" ]; then
-        CUDA_VISIBLE_DEVICES="$visible_devices" python3 - <<'PY' 2>/dev/null
-import torch
-
-if torch.cuda.is_available():
-    major, minor = torch.cuda.get_device_capability(0)
-    print(f"sm_{major}{minor}")
-PY
-    else
-        python3 - <<'PY' 2>/dev/null
-import torch
-
-if torch.cuda.is_available():
-    major, minor = torch.cuda.get_device_capability(0)
-    print(f"sm_{major}{minor}")
-PY
-    fi
-}
-
-configure_moe_runner_backend() {
-    local sm_version=""
-
-    if [ -n "$BACKEND_MOE_RUNNER_SM90" ] ||
-        [ -n "$BACKEND_MOE_RUNNER_SM100" ] ||
-        [ -n "$BACKEND_MOE_RUNNER_SM103" ] ||
-        [ -n "$BACKEND_MOE_RUNNER_SM120" ] ||
-        [ -n "$BACKEND_MOE_RUNNER_SM121" ]; then
-        sm_version="$(get_cuda_sm_version || true)"
-    fi
-
-    case "$sm_version" in
-        sm_90)
-            BACKEND_MOE_RUNNER="$BACKEND_MOE_RUNNER_SM90"
-            ;;
-        sm_100)
-            BACKEND_MOE_RUNNER="$BACKEND_MOE_RUNNER_SM100"
-            ;;
-        sm_103)
-            BACKEND_MOE_RUNNER="$BACKEND_MOE_RUNNER_SM103"
-            ;;
-        sm_120)
-            BACKEND_MOE_RUNNER="$BACKEND_MOE_RUNNER_SM120"
-            ;;
-        sm_121)
-            BACKEND_MOE_RUNNER="$BACKEND_MOE_RUNNER_SM121"
-            ;;
-        *)
-            BACKEND_MOE_RUNNER="${BACKEND_MOE_RUNNER:-}"
-            ;;
-    esac
-
-    export BACKEND_MOE_RUNNER
-}
-
 is_valid_tensor_parallel_size() {
     [[ "$1" =~ ^(1|2|4|8)$ ]]
-}
-
-is_valid_gpu_list() {
-    [[ "$1" =~ ^[0-9]+(,[0-9]+)*$ ]]
-}
-
-count_gpus() {
-    local list="$1"
-    local IFS=,
-    local gpu_array=()
-    read -ra gpu_array <<< "$list"
-    echo "${#gpu_array[@]}"
 }
 
 collect_selected_gpu_ids() {
@@ -428,9 +367,7 @@ collect_selected_gpu_ids() {
     local -a candidates=()
     SELECTED_GPU_IDS=()
 
-    if [ "$GPU_SELECTION_MODE" = "custom" ]; then
-        visible_devices="$CUDA_VISIBLE_DEVICES_VALUE"
-    elif [ "${CUDA_VISIBLE_DEVICES+x}" = "x" ]; then
+    if [ "${CUDA_VISIBLE_DEVICES+x}" = "x" ]; then
         visible_devices="$CUDA_VISIBLE_DEVICES"
     else
         for ((index = 0; index < requested_count; index++)); do
@@ -515,45 +452,12 @@ is_valid_port() {
     [[ "$1" =~ ^[0-9]+$ ]] && [ "$1" -ge 1 ] && [ "$1" -le 65535 ]
 }
 
-parse_arguments() {
-    ENABLE_SPECULATIVE="$DEFAULT_ENABLE_SPECULATIVE"
-    ENABLE_CACHE_FLAG=0
-    INTERACTIVE_MODE=0
-    POSITIONAL_ARGS=()
-
-    local arg
-    for arg in "$@"; do
-        case "$arg" in
-            --interactive)
-                INTERACTIVE_MODE=1
-                ;;
-            --speculative)
-                ENABLE_SPECULATIVE=1
-                ;;
-            --cache)
-                ENABLE_CACHE_FLAG=1
-                ;;
-            *)
-                POSITIONAL_ARGS+=("$arg")
-                ;;
-        esac
-    done
-}
-
-set_custom_gpus() {
-    local gpu_list="$1"
-    GPU_SELECTION_MODE="custom"
-    CUDA_VISIBLE_DEVICES_VALUE="$gpu_list"
-    TENSOR_PARALLEL_SIZE_VALUE="$(count_gpus "$gpu_list")"
-}
-
 build_extra_args() {
     local configured_extra_args="$EXTRA_ARGS"
     EXTRA_ARGS=""
     if [ -n "$configured_extra_args" ]; then
         EXTRA_ARGS+="$configured_extra_args "
     fi
-    configure_moe_runner_backend
 
     if [ "$ENABLE_SPECULATIVE" -eq 1 ]; then
         EXTRA_ARGS+="$SPECULATIVE "
@@ -561,9 +465,6 @@ build_extra_args() {
     EXTRA_ARGS+="$QUANTIZATION "
     if [ "$ENABLE_CACHE_FLAG" -eq 1 ]; then
         EXTRA_ARGS+="$NO_PREFIX_CACHE "
-    fi
-    if [ -n "$BACKEND_MOE_RUNNER" ]; then
-        EXTRA_ARGS+="--moe-runner-backend ${BACKEND_MOE_RUNNER} "
     fi
 }
 
@@ -596,122 +497,122 @@ print_speculative_config() {
     fi
 }
 
-get_tensor_parallel_size() {
-    local arg_value="$1"
-    GPU_SELECTION_MODE="tensor"
-
-    if [ -n "$arg_value" ]; then
-        if is_valid_tensor_parallel_size "$arg_value"; then
-            TENSOR_PARALLEL_SIZE_VALUE="$arg_value"
-            return
-        elif [[ "$arg_value" =~ ^gpus?=(.*)$ ]]; then
-            local gpu_list="${BASH_REMATCH[1]}"
-            if is_valid_gpu_list "$gpu_list"; then
-                set_custom_gpus "$gpu_list"
-                return
-            else
-                echo "Invalid GPU list in argument '$arg_value'. Expected format gpus=0,1,2."
-                exit 1
-            fi
-        elif [[ "$arg_value" == *","* ]] && is_valid_gpu_list "$arg_value"; then
-            set_custom_gpus "$arg_value"
-            return
-        else
-            echo "Invalid tensor parallel argument '$arg_value'. Use 1/2/4/8 or gpus=0,1."
-            exit 1
-        fi
-    fi
-
-    GPU_SELECTION_MODE="tensor"
-    while true; do
-        echo ""
-        echo "============================================================"
-        echo "Tensor Parallel Configuration"
-        echo "============================================================"
-        echo ""
-        echo "Tensor parallel size determines how many GPUs to use:"
-        echo "  1 = Single GPU"
-        echo "  2 = 2 GPUs"
-        echo "  4 = 4 GPUs"
-        echo "  8 = 8 GPUs (default)"
-        echo ""
-        echo "Or type 'custom' (or provide a comma-separated list like 0,2,3) to set specific GPU IDs (overrides tensor parallel size)."
-        echo ""
-
-        read -r -p "Enter tensor parallel size (1/2/4/8) or 'custom' [default: ${DEFAULT_TENSOR_PARALLEL_SIZE}]: " size
-        size="${size,,}"
-
-        if [ -z "$size" ]; then
-            TENSOR_PARALLEL_SIZE_VALUE="$DEFAULT_TENSOR_PARALLEL_SIZE"
-            break
-        elif is_valid_tensor_parallel_size "$size"; then
-            TENSOR_PARALLEL_SIZE_VALUE="$size"
-            break
-        elif [[ "$size" == "custom" || "$size" == "c" ]]; then
-            read -r -p "Enter GPU IDs to use (comma-separated, e.g., 0,2,3): " custom_list
-            if is_valid_gpu_list "$custom_list"; then
-                set_custom_gpus "$custom_list"
-                break
-            else
-                echo "Invalid GPU list. Expected comma-separated integers (e.g., 0,1,3)."
-            fi
-        elif [[ "$size" == *","* ]] && is_valid_gpu_list "$size"; then
-            set_custom_gpus "$size"
-            break
-        else
-            echo "Invalid choice. Please enter 1, 2, 4, 8, or a comma-separated GPU list."
-        fi
-    done
-}
-
-get_port() {
-    local arg_value="$1"
-
-    if [ -n "$arg_value" ]; then
-        if is_valid_port "$arg_value"; then
-            INFERENCE_PORT="$arg_value"
-            return
-        else
-            echo "Invalid port '$arg_value'. Please provide a value between 1 and 65535."
-            exit 1
-        fi
-    fi
-
-    while true; do
-        echo ""
-        echo "============================================================"
-        echo "$INFERENCE_PROVIDER Server Port"
-        echo "============================================================"
-        echo ""
-
-        read -r -p "Enter Inference Provider server port [default: ${DEFAULT_PORT}]: " port
-
-        if [ -z "$port" ]; then
-            INFERENCE_PORT="$DEFAULT_PORT"
-            break
-        elif is_valid_port "$port"; then
-            INFERENCE_PORT="$port"
-            break
-        else
-            echo "Invalid port. Please enter a number between 1 and 65535."
-        fi
-    done
-}
-
 run_inference_recipe() {
-    parse_arguments "$@"
-    local tensor_parallel_arg="${POSITIONAL_ARGS[0]:-}"
-    local port_arg="${POSITIONAL_ARGS[1]:-}"
+    : "${RECIPE_DIR:?RECIPE_DIR must be set by the calling recipe}"
+    PYTHON_ENV="${PYTHON_ENV:-}"
+    INFERENCE_PROVIDER_NORMALIZED="${INFERENCE_PROVIDER,,}"
+    HELPER_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+    SCRIPTS_DIR="/workspace/scripts"
+    SETUP_ENV_SCRIPT="$SCRIPTS_DIR/installers/05_setup_env.sh"
+    PACKAGE_INSTALLER_SCRIPT="$SCRIPTS_DIR/installers/06_install_packages.sh"
+    INFERENCE_COMMAND=""
+    INFERENCE_EXECUTABLE=""
 
-    if [ "$INTERACTIVE_MODE" -eq 0 ]; then
-        tensor_parallel_arg="${tensor_parallel_arg:-$DEFAULT_TENSOR_PARALLEL_SIZE}"
-        port_arg="${port_arg:-$DEFAULT_PORT}"
+    if ! detect_gpu_configuration; then
+        exit 1
     fi
-    get_tensor_parallel_size "$tensor_parallel_arg"
+
+    case "$INFERENCE_PROVIDER_NORMALIZED" in
+        sglang)
+            INFERENCE_COMMAND="sglang"
+            MODEL_PATH="--model-path $MODEL_REPO"
+            TENSOR_PARALLEL_SIZE_FLAG="--tp"
+            CONTEXT_LEN_FLAG="--context-length $CONTEXT_LEN_VALUE"
+            GPU_MEM_UTIL_FLAG="--mem-fraction-static $GPU_MEM_UTIL_VALUE"
+            ;;
+        vllm)
+            INFERENCE_COMMAND="vllm"
+            MODEL_PATH="$MODEL_REPO"
+            TENSOR_PARALLEL_SIZE_FLAG="--tensor-parallel-size"
+            CONTEXT_LEN_FLAG="--max-model-len $CONTEXT_LEN_VALUE"
+            GPU_MEM_UTIL_FLAG="--gpu-memory-utilization $GPU_MEM_UTIL_VALUE"
+            ;;
+        *)
+            echo "INFERENCE_LAUNCH needs a value" >&2
+            exit 1
+            ;;
+    esac
+    if ! prepare_inference_runtime; then
+        exit 1
+    fi
+    INFERENCE_LAUNCH="$INFERENCE_EXECUTABLE serve"
+
+
+    LOG_SUFFIX="${INFERENCE_PROVIDER,,}"
+    case "$LOG_SUFFIX" in
+        vllm|sglang)
+            ;;
+        *)
+            echo "Error: unsupported inference provider for logging: $INFERENCE_PROVIDER" >&2
+            exit 1
+            ;;
+    esac
+    CALLING_SCRIPT="${BASH_SOURCE[1]:-$0}"
+    CALLING_BASENAME="$(basename -- "$CALLING_SCRIPT")"
+    CALLING_REPO=""
+    if [[ "$CALLING_BASENAME" =~ ^(vllm|sglang)_([^_]+)_ ]]; then
+        CALLING_REPO="${BASH_REMATCH[2]}"
+    elif [ -n "$RECIPE_DIR" ] && [ "$(basename "$(dirname "$RECIPE_DIR")")" = "recipes" ]; then
+        CALLING_REPO="$(basename "$RECIPE_DIR")"
+    fi
+
+    if [ -n "$CALLING_REPO" ] && [ "$CALLING_REPO" != "recipes" ]; then
+        LOG_DIR="$HELPER_DIR/logs/${CALLING_REPO,,}"
+    elif [ -n "$RECIPE_DIR" ] && [ -d "$RECIPE_DIR" ]; then
+        LOG_DIR="$RECIPE_DIR/logs"
+    else
+        LOG_DIR="$HELPER_DIR/logs"
+    fi
+    LOG_TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
+    LAUNCH_LOG="$LOG_DIR/${LOG_TIMESTAMP}_${LOG_SUFFIX}.log"
+    LAUNCH_LOG_REL="./logs/${LOG_TIMESTAMP}_${LOG_SUFFIX}.log"
+    if ! mkdir -p "$LOG_DIR"; then
+        echo "Error: unable to create log directory: $LOG_DIR" >&2
+        exit 1
+    fi
+    if ! : > "$LAUNCH_LOG"; then
+        echo "Error: unable to write log file: $LAUNCH_LOG" >&2
+        exit 1
+    fi
+    if [ "$LOG_SUFFIX" = "sglang" ]; then
+        SGLANG_LAUNCH_LOG="$LAUNCH_LOG"
+        export SGLANG_LAUNCH_LOG
+    else
+        VLLM_LAUNCH_LOG="$LAUNCH_LOG"
+        export VLLM_LAUNCH_LOG
+    fi
+    exec > >(trap '' INT TERM HUP QUIT; exec tee -a "$LAUNCH_LOG") 2>&1
+    echo "$INFERENCE_PROVIDER log: $LAUNCH_LOG_REL"
+    echo "Full log path: $LAUNCH_LOG"
+
+    echo ""
+    echo "$MODEL_REPO $INFERENCE_PROVIDER Launcher"
+
+    SERVER_PID=""
+    SERVER_MONITOR_PID=""
+    SERVER_PID_FILE=""
+    SERVER_SHUTDOWN_STARTED=0
+    SERVER_INTERRUPT_GRACE_SECONDS="${SERVER_INTERRUPT_GRACE_SECONDS:-10}"
+    SERVER_TERMINATE_GRACE_SECONDS="${SERVER_TERMINATE_GRACE_SECONDS:-5}"
+
+    trap 'handle_inference_signal INT 130' INT
+    trap 'handle_inference_signal TERM 143' TERM
+    trap 'handle_inference_signal HUP 129' HUP
+    trap 'handle_inference_signal QUIT 131' QUIT
+    trap 'handle_inference_exit "$?"' EXIT
+
+    if ! is_valid_tensor_parallel_size "$TENSOR_PARALLEL_SIZE_VALUE"; then
+        echo "Invalid tensor parallel size '$TENSOR_PARALLEL_SIZE_VALUE'. Use 1/2/4/8." >&2
+        return 1
+    fi
     if ! check_selected_gpu_processes; then
         return 1
     fi
-    get_port "$port_arg"
+    INFERENCE_PORT="$DEFAULT_PORT"
+    if ! is_valid_port "$INFERENCE_PORT"; then
+        echo "Invalid port '$INFERENCE_PORT'. Please provide a value between 1 and 65535." >&2
+        return 1
+    fi
     build_extra_args
 
     echo ""
@@ -722,14 +623,8 @@ run_inference_recipe() {
     echo "Model name: $MODEL_NAME"
     echo "Served as: $SERVED_MODEL_NAME"
     echo "Tensor parallel size: $TENSOR_PARALLEL_SIZE_VALUE"
-    if [ "$GPU_SELECTION_MODE" = "custom" ]; then
-        echo "GPU selection: CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES_VALUE"
-    fi
     echo "Port: $INFERENCE_PORT"
     print_speculative_config
-    if [ -n "$BACKEND_MOE_RUNNER" ]; then
-        echo "MoE runner backend: $BACKEND_MOE_RUNNER"
-    fi
     echo ""
 
     if [ "$ENABLE_REASONING_PARSER" -eq 1 ] && [ ! -f "$REASONING_PARSER_PLUGIN" ]; then
@@ -760,20 +655,11 @@ run_inference_recipe() {
     local -a base_command_args=()
     read -r -a base_command_args <<< "$base_command"
 
-    if [ "$GPU_SELECTION_MODE" = "custom" ]; then
-        echo "Command: CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES_VALUE $base_command"
-    else
-        echo "Command: $base_command"
-    fi
+    echo "Command: $base_command"
     echo ""
     echo "Press Ctrl+C to stop the server"
     echo "============================================================"
     echo ""
 
-    if [ "$GPU_SELECTION_MODE" = "custom" ]; then
-        launch_inference_server env "CUDA_VISIBLE_DEVICES=$CUDA_VISIBLE_DEVICES_VALUE" "${base_command_args[@]}"
-    else
-        launch_inference_server "${base_command_args[@]}"
-    fi
+    launch_inference_server "${base_command_args[@]}"
 }
-

@@ -750,81 +750,6 @@ elif [ -f "$ENV_PATH/bin/activate" ]; then
     export HF_HOME="$HF_PATH"
     export HF_HUB_CACHE="$HF_PATH/hub"
 
-    # Detect GPU architecture
-    print_info "Detecting GPU architecture..."
-    TORCH_CUDA_ARCH_LIST=""
-    
-    if command -v nvidia-smi &> /dev/null; then
-        GPU_NAME=$(nvidia-smi --query-gpu=name --format=csv,noheader 2>/dev/null | head -1 | tr '[:lower:]' '[:upper:]')
-        
-        if [ -n "$GPU_NAME" ]; then
-            print_info "Detected GPU: $GPU_NAME"
-            
-            # Determine architecture based on GPU model
-            if [[ "$GPU_NAME" == *"V100"* ]]; then
-                TORCH_CUDA_ARCH_LIST="7.0"
-                print_info "  → $GPU_NAME (Volta) detected: sm_70"
-                
-            elif [[ "$GPU_NAME" == *"T4"* ]] || \
-                 { [[ "$GPU_NAME" == *"RTX 5000"* ]] && [[ "$GPU_NAME" != *"ADA"* ]]; } || \
-                 { [[ "$GPU_NAME" == *"RTX 4000"* ]] && [[ "$GPU_NAME" != *"ADA"* ]]; } || \
-                 { [[ "$GPU_NAME" == *"RTX 6000"* ]] && [[ "$GPU_NAME" != *"ADA"* ]]; }; then
-                TORCH_CUDA_ARCH_LIST="7.5"
-                print_info "  → $GPU_NAME (Turing) detected: sm_75"
-                
-            elif [[ "$GPU_NAME" == *"A100"* ]] || [[ "$GPU_NAME" == *"A30"* ]]; then
-                TORCH_CUDA_ARCH_LIST="8.0"
-                print_info "  → $GPU_NAME (Ampere) detected: sm_80"
-                
-            elif [[ "$GPU_NAME" == *"RTX 3090"* ]] || [[ "$GPU_NAME" == *"3090"* ]] || \
-                 [[ "$GPU_NAME" == *"RTX 3080"* ]] || [[ "$GPU_NAME" == *"3080"* ]] || \
-                 [[ "$GPU_NAME" == *"RTX 3070"* ]] || [[ "$GPU_NAME" == *"3070"* ]] || \
-                 [[ "$GPU_NAME" == *"RTX A6000"* ]] || [[ "$GPU_NAME" == *"A6000"* ]] || \
-                 [[ "$GPU_NAME" == *"RTX A5000"* ]] || [[ "$GPU_NAME" == *"A5000"* ]] || \
-                 [[ "$GPU_NAME" == *"RTX A4500"* ]] || [[ "$GPU_NAME" == *"A4500"* ]] || \
-                 [[ "$GPU_NAME" == *"RTX A4000"* ]] || [[ "$GPU_NAME" == *"A4000"* ]] || \
-                 [[ "$GPU_NAME" == *"RTX A2000"* ]] || [[ "$GPU_NAME" == *"A2000"* ]] || \
-                 [[ "$GPU_NAME" == *"A10"* ]] || [[ "$GPU_NAME" == *"A40"* ]]; then
-                TORCH_CUDA_ARCH_LIST="8.6"
-                print_info "  → $GPU_NAME (Ampere) detected: sm_86"
-                
-            elif [[ "$GPU_NAME" == *"RTX 4090"* ]] || [[ "$GPU_NAME" == *"4090"* ]] || \
-                 [[ "$GPU_NAME" == *"RTX 4070 TI"* ]] || [[ "$GPU_NAME" == *"4070 TI"* ]] || \
-                 [[ "$GPU_NAME" == *"L40S"* ]] || [[ "$GPU_NAME" == *"L40"* ]] || [[ "$GPU_NAME" == *"L4"* ]] || \
-                 { [[ "$GPU_NAME" == *"RTX 6000"* ]] && [[ "$GPU_NAME" == *"ADA"* ]]; } || \
-                 { [[ "$GPU_NAME" == *"RTX 5000"* ]] && [[ "$GPU_NAME" == *"ADA"* ]]; } || \
-                 { [[ "$GPU_NAME" == *"RTX 4000"* ]] && [[ "$GPU_NAME" == *"ADA"* ]]; }; then
-                TORCH_CUDA_ARCH_LIST="8.9"
-                print_info "  → $GPU_NAME (Ada Lovelace) detected: sm_89"
-                
-            elif [[ "$GPU_NAME" == *"H100"* ]] || [[ "$GPU_NAME" == *"H200"* ]] || [[ "$GPU_NAME" == *"GH200"* ]]; then
-                TORCH_CUDA_ARCH_LIST="9.0"
-                print_info "  → $GPU_NAME (Hopper) detected: sm_90"
-                
-            elif [[ "$GPU_NAME" == *"B200"* ]]; then
-                TORCH_CUDA_ARCH_LIST="10.0"
-                print_info "  → $GPU_NAME (Blackwell) detected: sm_100"
-            
-            elif [[ "$GPU_NAME" == *"RTX 5090"* ]] || [[ "$GPU_NAME" == *"5090"* ]] || \
-                 { [[ "$GPU_NAME" == *"RTX PRO 6000"* ]] && [[ "$GPU_NAME" == *"BLACKWELL"* ]]; }; then
-                TORCH_CUDA_ARCH_LIST="12.0"
-                print_info "  → $GPU_NAME (Blackwell) detected: sm_120"
-                
-            else
-                print_warning "  → Unknown GPU model, will use default PyTorch CUDA architectures"
-            fi
-            
-            if [ -n "$TORCH_CUDA_ARCH_LIST" ]; then
-                export TORCH_CUDA_ARCH_LIST="$TORCH_CUDA_ARCH_LIST"
-                print_info "  → Set TORCH_CUDA_ARCH_LIST=$TORCH_CUDA_ARCH_LIST"
-            fi
-        else
-            print_warning "Could not detect GPU name"
-        fi
-    else
-        print_warning "nvidia-smi not found - no GPU detected"
-    fi
-
 else
     print_error "No activation script found for environment '$ENV_NAME'"
     print_info "Expected $ENV_PATH/activate_ml or $ENV_PATH/bin/activate"
@@ -858,9 +783,7 @@ if [ ! -f "$ENV_PATH/activate_ml" ]; then
     echo "  - HF_HOME: $HF_HOME"
     echo "  - HF_HUB_CACHE: $HF_HUB_CACHE"
     echo "  - CPU threads: $OMP_NUM_THREADS"
-    if [ -n "$TORCH_CUDA_ARCH_LIST" ]; then
-        echo "  - TORCH_CUDA_ARCH_LIST: $TORCH_CUDA_ARCH_LIST"
-    fi
+    echo "  - TORCH_CUDA_ARCH_LIST: ${TORCH_CUDA_ARCH_LIST:-unset}"
     if [ -n "${ML_ENV_CUDA_HOME:-}" ]; then
         echo "  - CUDA toolkit: $ML_ENV_CUDA_HOME (${ML_ENV_CUDA_VERSION:-unknown}, ${ML_ENV_CUDA_SOURCE:-configured})"
     elif command -v nvcc &> /dev/null; then
