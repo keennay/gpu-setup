@@ -6,7 +6,7 @@
 
 [Go to Inference Cookbook Recipes](#inference-cookbook-recipes)
 
-[Go to Benchmark Data for Decode Throughput](#benchmarks-for-decode-throughput)
+[Go to Benchmark Data for Decode Throughput](#benchmark-data-for-decode-throughput)
 
 [Go to Included Skills](#included-skills)
 
@@ -24,7 +24,7 @@ You can also select the minimal installation of [basic Linux essentials](#basic-
 
 Installing CUDA, Node.js 24, or Python through this guide replaces existing defaults, using Node Version Manager (NVM) for managing Node.js 24 & Simple Python Version Management (Pyenv) for managing Python. CUDA drivers are installed and/or updated to the latest version within a CUDA installation.
 
-[Inference cookbook recipes](#inference-cookbook-recipes) are also included for a variety of the popular Large Language Model & Visual-Language model companies. These exist as bash scripts and automatically create new Python environments within the $HOME directory upon execution, while installing pinned versions of either SGLang or vLLM + any additional packages necessary for a proper inference deployment. Additionally each script has the ability customize specific flags based off your CUDA architecture target. [Benchmark data for decode throughput](#benchmarks-for-decode-throughput) per model, GPU hardware, and GPU quantity are also included.
+[Inference cookbook recipes](#inference-cookbook-recipes) are also included for a variety of the popular Large Language Model & Visual-Language model companies. These exist as bash scripts and automatically create new Python environments within the $HOME directory upon execution, while installing pinned versions of either SGLang or vLLM + any additional packages necessary for a proper inference deployment. Additionally each script has the ability customize specific flags based off your CUDA architecture target. [Benchmark data for decode throughput](#benchmark-data-for-decode-throughput) per model, GPU hardware, and GPU quantity are also included.
 
 New recipes can be created using [the provided skills](#included-skills) within this repo, added to your coding CLI of choice, and building them based off the existing recipes.
 
