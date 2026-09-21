@@ -103,7 +103,7 @@ CLI_FLAGS=(
     "--prime"
     "--qwen"
 )
-CLI_SELECTED=(1 1 1 1 1 1 1 1 1 1 1 1 1 1 1)
+CLI_SELECTED=(0 0 0 0 0 0 0 0 0 0 0 0 0 0 0)
 ASTRAL_UV_SELECTED=1
 
 all_dependencies_selected() {
@@ -117,11 +117,11 @@ all_dependencies_selected() {
     return 0
 }
 
-all_clis_selected() {
+no_clis_selected() {
     local selected
 
     for selected in "${CLI_SELECTED[@]}"; do
-        if (( ! selected )); then
+        if (( selected )); then
             return 1
         fi
     done
@@ -131,7 +131,7 @@ all_clis_selected() {
 install_defaults_selected() {
     all_dependencies_selected &&
         (( ASTRAL_UV_SELECTED )) &&
-        all_clis_selected &&
+        no_clis_selected &&
         [ "$cuda_choice" = "default" ] &&
         [ "$python_choice" = "default" ]
 }
@@ -1216,7 +1216,7 @@ select_install_defaults() {
         DEPENDENCY_SELECTED[index]=1
     done
     for ((index = 0; index < ${#CLI_SELECTED[@]}; index++)); do
-        CLI_SELECTED[index]=1
+        CLI_SELECTED[index]=0
     done
     ASTRAL_UV_SELECTED=1
     cuda_choice="default"
