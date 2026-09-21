@@ -82,9 +82,9 @@ The below are each package / service provided across the installers.
 
 ## Inference Cookbook Recipes:
 
-Inference cookbook recipes are provided for the following model companies as bash scripts, validated against 1x, 2x, 4x, and 8x NVIDIA H200s, with future support for sm100, sm103, sm120, & sm121 architecture GPUs.
+Inference cookbook recipes are provided as bash scripts, validated against 1x, 2x, 4x, and 8x NVIDIA H200s, with future support for sm100, sm103, sm120, & sm121 architecture GPUs.
 
-Cookbook recipes are included for the following companies:
+The currently supported companies are:
 - Allen Institute for AI, Arcee AI, Cohere, Datalab, DeepSeek, Dots Studio, Google, IBM Granite, Inclusion Ai, Inco AI, Inferact, Intel, Liquid AI, Meta, Microsoft, MiniMax, Mistral AI, Moonshot AI, Nanbeige, Nex-AGI, NVIDIA, OpenAI, Prime Intellect, Poolside, Qwen, RadixArk, Red Hat AI, StepFun, Tencent, Thinking Machines Lab, Xiaomi, Z Lab, Z.ai, Zyphra
 
 All scripts follow a singular format, allowing easy replicability for newer models & hardware architecture. Specific flags are also defined by CUDA architecture target, allowing the same script to run on multiple hardware, with a singular architecture per launch.
