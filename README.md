@@ -14,7 +14,7 @@
 
 ## Introduction
 
-This repo provides a quick & simple way to stage an Ubuntu / RHEL NVIDIA node for ML workloads, including building & serving inference cookbook recipes for Large Language Models & Visual-Language Models. Setup and stage a bare-metal server, virtual machine, or rental cloud provider setup (Verda, Massed Compute, Prime Intellect, etc). AMD & additional hardware vendor support is in the works.
+This repo provides a quick & simple way to stage an Ubuntu / RHEL NVIDIA node for ML workloads, including serving inference cookbook recipes for Large Language Models & Visual-Language Models, while providing the tools to build new inference cookbook recipes. Setup and stage a bare-metal server, virtual machine, or rental cloud provider node (Verda, Massed Compute, Prime Intellect, etc). AMD & additional hardware vendor support is in the works.
 
 An [installation guide](#installation-guide) is provided with steps to clone this repo and run `setup.sh` to display the above terminal interface. All options are selected by default with the ability to choose or omit packages / services, single or multiple CUDA versions, Python, Astral UV, & coding CLIs.
 
@@ -83,18 +83,18 @@ The below are each package / service provided across the installers.
 Inference cookbook recipes are provided for the following model companies as bash scripts:
 - Allen Institute for AI, Arcee AI, Cohere, Datalab, DeepSeek, Dots Studio, Google, IBM Granite, Inclusion Ai, Inco AI, Inferact, Intel, Liquid AI, Meta, Microsoft, MiniMax, Mistral AI, Moonshot AI, Nanbeige, Nex-AGI, NVIDIA, OpenAI, Prime Intellect, Poolside, Qwen, RadixArk, Red Hat AI, StepFun, Tencent, Thinking Machines Lab, Xiaomi, Z Lab, Z.ai, Zyphra
 
-All scripts follow a singular format, allowing easy replicability for newer models & hardware architecture. Specific flags are also defined by CUDA architecture target, allowing the same script to run on multiple hardware, with a singular architecture per launch. As of now each script & model launch was tested on 1x, 2x, 4x, and 8x NVIDIA H200s, with future support for sm100, sm103, sm120, & sm121 architecture GPUs.
+All scripts follow a singular format, allowing easy replicability for newer models & hardware architecture. Specific flags are also defined by CUDA architecture target, allowing the same script to run on multiple hardware, with a singular architecture per launch. Each script & model launch found in this repo was validated against 1x, 2x, 4x, and 8x NVIDIA H200s, with future support for sm100, sm103, sm120, & sm121 architecture GPUs.
 
-Below are the CUDA architecture specific flags:
+Below are the CUDA architecture specific flags per cookbook recipe script:
 
-| SGLang Flag | vLLM Flag | Script Env |
+| Script Env | SGLang Flag | vLLM Flag |
 | --- | --- | --- |
-| --attention-backend | --attention-backend | BACKEND_ATTENTION_SM* |
-| --fp8-gemm-backend | --linear-backend | BACKEND_FP8_GEMM_SM* |
-| --fp8-gemm-backend | --linear-backend | BACKEND_FP4_GEMM_SM* |
-| --moe-runner-backend | --moe-backend | BACKEND_MOE_RUNNER_SM* |
-| --mem-fraction-static | --gpu-mem-util | GPU_MEM_UTIL_VALUE_SM* |
-| --tp | --tensor-parallel-size | TENSOR_PARALLEL_SIZE_SM* |
+| BACKEND_ATTENTION_SM* | --attention-backend | --attention-backend |
+| BACKEND_FP8_GEMM_SM* | --fp8-gemm-backend | --linear-backend |
+| BACKEND_FP4_GEMM_SM* | --fp4-gemm-backend | --linear-backend |
+| BACKEND_MOE_RUNNER_SM* | --moe-runner-backend | --moe-backend |
+| GPU_MEM_UTIL_VALUE_SM* | --mem-fraction-static | --gpu-mem-util |
+| TENSOR_PARALLEL_SIZE_SM* | --tp | --tensor-parallel-size |
 
 ***
 
