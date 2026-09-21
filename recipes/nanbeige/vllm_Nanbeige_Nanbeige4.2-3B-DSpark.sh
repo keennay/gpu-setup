@@ -27,11 +27,10 @@ BACKEND_MOE_RUNNER_SM121=""
 ENABLE_CACHE_FLAG=0
 ENABLE_SPECULATIVE=1
 ENABLE_REASONING_PARSER=0
-SPECULATIVE='--speculative-config {"method":"dspark","model":"Nanbeige/Nanbeige4.2-3B-DSpark","num_speculative_tokens":7}'
+SPECULATIVE="--speculative-config {\"method\":\"dspark\",\"model\":\"Nanbeige/Nanbeige4.2-3B-DSpark\",\"num_speculative_tokens\":7}"
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
-SCRIPT_DIR=""
-REASONING_PARSER_PLUGIN="${SCRIPT_DIR:+$SCRIPT_DIR/plugins/super_v3_reasoning_parser.py}"
+REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS=""
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"

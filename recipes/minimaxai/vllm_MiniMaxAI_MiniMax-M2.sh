@@ -31,7 +31,7 @@ SPECULATIVE=""
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS='--dtype bfloat16 --compilation-config {"mode":3,"pass_config":{"fuse_minimax_qk_norm":true}}'
+EXTRA_ARGS="--dtype bfloat16 --compilation-config {\"mode\":3,\"pass_config\":{\"fuse_minimax_qk_norm\":true}}"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"

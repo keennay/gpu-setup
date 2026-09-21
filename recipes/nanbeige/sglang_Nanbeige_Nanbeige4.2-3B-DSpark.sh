@@ -30,8 +30,7 @@ ENABLE_REASONING_PARSER=0
 SPECULATIVE="--speculative-algorithm DSPARK --speculative-draft-model-path Nanbeige/Nanbeige4.2-3B-DSpark --speculative-dspark-block-size 7"
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
-SCRIPT_DIR=""
-REASONING_PARSER_PLUGIN="${SCRIPT_DIR:+$SCRIPT_DIR/plugins/super_v3_reasoning_parser.py}"
+REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS=""
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"

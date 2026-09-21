@@ -34,5 +34,5 @@ REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS="--kernel-config.enable_flashinfer_autotune=False"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-source "/workspace/scripts/tools/recipes/inference_recipe.sh"
+source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
 run_inference_recipe "$@"

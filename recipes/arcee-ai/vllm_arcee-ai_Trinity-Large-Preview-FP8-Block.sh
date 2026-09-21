@@ -31,7 +31,7 @@ SPECULATIVE=""
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS='--dtype bfloat16 --hf-overrides {"max_position_embeddings":524288}'
+EXTRA_ARGS="--dtype bfloat16 --hf-overrides {\"max_position_embeddings\":524288}"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"

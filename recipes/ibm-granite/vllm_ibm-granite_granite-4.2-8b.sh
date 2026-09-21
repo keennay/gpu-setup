@@ -30,8 +30,7 @@ ENABLE_REASONING_PARSER=1
 SPECULATIVE=""
 QUANTIZATION=""
 NO_PREFIX_CACHE="--no-enable-prefix-caching"
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-REASONING_PARSER_PLUGIN="$SCRIPT_DIR/plugins/granite_thinking_parser.py"
+REASONING_PARSER_PLUGIN="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)/plugin/granite_thinking_parser.py"
 EXTRA_ARGS="--dtype bfloat16"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"

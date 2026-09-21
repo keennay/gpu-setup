@@ -6,7 +6,6 @@ INFERENCE_ENV=""
 MODEL_REPO="openai/whisper-large-v3"
 MODEL_NAME="whisper"
 SERVED_MODEL_NAME="whisper"
-# Scheduler envelope: 1500 encoder positions + 448 decoder positions + two reservations.
 CONTEXT_LEN_VALUE=1950
 DEFAULT_TENSOR_PARALLEL_SIZE=4
 TRUST_REMOTE_CODE="--trust-remote-code"

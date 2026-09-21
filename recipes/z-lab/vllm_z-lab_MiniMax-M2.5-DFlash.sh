@@ -27,12 +27,12 @@ BACKEND_MOE_RUNNER_SM121=""
 ENABLE_CACHE_FLAG=0
 ENABLE_SPECULATIVE=1
 ENABLE_REASONING_PARSER=0
-SPECULATIVE='--speculative-config {"method":"dflash","model":"z-lab/MiniMax-M2.5-DFlash","num_speculative_tokens":8}'
+SPECULATIVE="--speculative-config {\"method\":\"dflash\",\"model\":\"z-lab/MiniMax-M2.5-DFlash\",\"num_speculative_tokens\":8}"
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS="--kernel-config.enable_flashinfer_autotune=False"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-source "/workspace/scripts/tools/recipes/inference_recipe.sh"
+source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
 run_inference_recipe "$@"

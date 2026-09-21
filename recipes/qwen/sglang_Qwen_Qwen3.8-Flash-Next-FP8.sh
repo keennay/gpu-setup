@@ -30,8 +30,7 @@ ENABLE_REASONING_PARSER=0
 SPECULATIVE="--speculative-algorithm NEXTN --speculative-num-steps 3 --speculative-eagle-topk 1 --speculative-num-draft-tokens 4"
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
-SCRIPT_DIR=""
-REASONING_PARSER_PLUGIN="${SCRIPT_DIR:+$SCRIPT_DIR/plugins/super_v3_reasoning_parser.py}"
+REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS="--ep 2 --chunked-prefill-size 8192 --linear-attn-prefill-backend flashinfer --linear-attn-decode-backend flashinfer --mamba-ssm-dtype bfloat16 --max-running-requests 96"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"

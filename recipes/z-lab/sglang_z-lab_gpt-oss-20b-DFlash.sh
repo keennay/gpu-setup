@@ -30,8 +30,7 @@ ENABLE_REASONING_PARSER=0
 SPECULATIVE="--speculative-algorithm DFLASH --speculative-draft-model-path z-lab/gpt-oss-20b-DFlash"
 QUANTIZATION=""
 NO_PREFIX_CACHE="--disable-radix-cache"
-SCRIPT_DIR=""
-REASONING_PARSER_PLUGIN="${SCRIPT_DIR:+$SCRIPT_DIR/plugins/super_v3_reasoning_parser.py}"
+REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS="--dtype bfloat16 --attention-backend fa3"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"

@@ -27,11 +27,10 @@ BACKEND_MOE_RUNNER_SM121=""
 ENABLE_CACHE_FLAG=0
 ENABLE_SPECULATIVE=0
 ENABLE_REASONING_PARSER=0
-SPECULATIVE=''
+SPECULATIVE=""
 QUANTIZATION=""
 NO_PREFIX_CACHE="--no-enable-prefix-caching"
-SCRIPT_DIR=""
-REASONING_PARSER_PLUGIN="${SCRIPT_DIR:+$SCRIPT_DIR/plugins/super_v3_reasoning_parser.py}"
+REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS="--video-pruning-rate 0.5 --max-num-seqs 384 --allowed-local-media-path / --media-io-kwargs {\"video\":{\"fps\":2,\"num_frames\":256}}"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"

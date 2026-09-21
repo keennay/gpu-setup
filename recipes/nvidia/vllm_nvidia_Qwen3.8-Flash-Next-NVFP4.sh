@@ -27,11 +27,11 @@ BACKEND_MOE_RUNNER_SM121=""
 ENABLE_CACHE_FLAG=0
 ENABLE_SPECULATIVE=1
 ENABLE_REASONING_PARSER=0
-SPECULATIVE='--speculative-config {"method":"mtp","num_speculative_tokens":1,"moe_backend":"triton"}'
+SPECULATIVE="--speculative-config {\"method\":\"mtp\",\"num_speculative_tokens\":1,\"moe_backend\":\"triton\"}"
 QUANTIZATION="--quantization modelopt"
 NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS='--dtype bfloat16 --moe-backend emulation --enable-expert-parallel --kv-cache-dtype bfloat16 --mamba-cache-dtype auto --mamba-ssm-cache-dtype float32 --enable-prefix-caching --mamba-cache-mode align --attention-config {"indexer_kv_dtype":"bf16"} --no-enable-flashinfer-autotune'
+EXTRA_ARGS="--dtype bfloat16 --moe-backend emulation --enable-expert-parallel --kv-cache-dtype bfloat16 --mamba-cache-dtype auto --mamba-ssm-cache-dtype float32 --enable-prefix-caching --mamba-cache-mode align --attention-config {\"indexer_kv_dtype\":\"bf16\"} --no-enable-flashinfer-autotune"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"

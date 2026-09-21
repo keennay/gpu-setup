@@ -27,11 +27,11 @@ BACKEND_MOE_RUNNER_SM121=""
 ENABLE_CACHE_FLAG=0
 ENABLE_SPECULATIVE=1
 ENABLE_REASONING_PARSER=0
-SPECULATIVE='--speculative-config {"method":"mtp","num_speculative_tokens":1}'
+SPECULATIVE="--speculative-config {\"method\":\"mtp\",\"num_speculative_tokens\":1}"
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS='--dtype bfloat16 --enable-expert-parallel --engram-config {"cpu_offload":false}'
+EXTRA_ARGS="--dtype bfloat16 --enable-expert-parallel --engram-config {\"cpu_offload\":false}"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"

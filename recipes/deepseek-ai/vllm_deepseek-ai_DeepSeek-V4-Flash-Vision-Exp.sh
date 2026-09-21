@@ -27,11 +27,11 @@ BACKEND_MOE_RUNNER_SM121=""
 ENABLE_CACHE_FLAG=0
 ENABLE_SPECULATIVE=0
 ENABLE_REASONING_PARSER=0
-SPECULATIVE='--speculative-config {"method":"dspark","model":"deepseek-ai/DeepSeek-V4-Flash-Vision-Exp","num_speculative_tokens":3,"draft_sample_method":"probabilistic","enable_adaptive_verification":true}'
+SPECULATIVE="--speculative-config {\"method\":\"dspark\",\"model\":\"deepseek-ai/DeepSeek-V4-Flash-Vision-Exp\",\"num_speculative_tokens\":3,\"draft_sample_method\":\"probabilistic\",\"enable_adaptive_verification\":true}"
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS='--kv-cache-dtype fp8 --block-size 256 --tokenizer-mode deepseek_v4 --reasoning-config {"reasoning_parser":"deepseek_v4","reasoning_start_str":"","reasoning_end_str":""}'
+EXTRA_ARGS="--kv-cache-dtype fp8 --block-size 256 --tokenizer-mode deepseek_v4 --reasoning-config {\"reasoning_parser\":\"deepseek_v4\",\"reasoning_start_str\":\"\",\"reasoning_end_str\":\"\"}"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"

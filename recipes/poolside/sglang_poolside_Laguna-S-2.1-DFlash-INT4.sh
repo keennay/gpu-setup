@@ -30,8 +30,7 @@ ENABLE_REASONING_PARSER=0
 SPECULATIVE="--speculative-algorithm DFLASH --speculative-draft-model-path poolside/Laguna-S-2.1-DFlash-INT4"
 QUANTIZATION=""
 NO_PREFIX_CACHE="--disable-radix-cache"
-SCRIPT_DIR=""
-REASONING_PARSER_PLUGIN="${SCRIPT_DIR:+$SCRIPT_DIR/plugins/super_v3_reasoning_parser.py}"
+REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS="--attention-backend fa3 --page-size 1"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"

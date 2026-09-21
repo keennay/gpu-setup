@@ -27,12 +27,12 @@ BACKEND_MOE_RUNNER_SM121=""
 ENABLE_CACHE_FLAG=0
 ENABLE_SPECULATIVE=1
 ENABLE_REASONING_PARSER=0
-SPECULATIVE='--speculative-config {"method":"eagle3","model":"nvidia/Kimi-K2.5-Thinking-Eagle3","num_speculative_tokens":3}'
+SPECULATIVE="--speculative-config {\"method\":\"eagle3\",\"model\":\"nvidia/Kimi-K2.5-Thinking-Eagle3\",\"num_speculative_tokens\":3}"
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS="--enforce-eager --max-num-batched-tokens 16384 --kernel-config.enable_flashinfer_autotune=False"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-source "/workspace/scripts/tools/recipes/inference_recipe.sh"
+source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
 run_inference_recipe "$@"

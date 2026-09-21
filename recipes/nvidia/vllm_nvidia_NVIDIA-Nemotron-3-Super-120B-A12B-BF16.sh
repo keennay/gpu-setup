@@ -27,11 +27,10 @@ BACKEND_MOE_RUNNER_SM121=""
 ENABLE_CACHE_FLAG=0
 ENABLE_SPECULATIVE=0
 ENABLE_REASONING_PARSER=0
-SPECULATIVE='--speculative-config {"method":"nemotron_h_mtp","num_speculative_tokens":1}'
+SPECULATIVE="--speculative-config {\"method\":\"nemotron_h_mtp\",\"num_speculative_tokens\":1}"
 QUANTIZATION=""
 NO_PREFIX_CACHE="--no-enable-prefix-caching"
-SCRIPT_DIR=""
-REASONING_PARSER_PLUGIN="${SCRIPT_DIR:+$SCRIPT_DIR/plugins/super_v3_reasoning_parser.py}"
+REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS="--async-scheduling --dtype auto --kv-cache-dtype fp8 --mamba-ssm-cache-dtype float32 --max-num-seqs 256 --max-cudagraph-capture-size 128 --enable-chunked-prefill"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"

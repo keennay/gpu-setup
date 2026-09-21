@@ -27,11 +27,10 @@ BACKEND_MOE_RUNNER_SM121=""
 ENABLE_CACHE_FLAG=0
 ENABLE_SPECULATIVE=0
 ENABLE_REASONING_PARSER=0
-SPECULATIVE='--speculative_config {"method":"mtp","num_speculative_tokens":1}'
+SPECULATIVE="--speculative_config {\"method\":\"mtp\",\"num_speculative_tokens\":1}"
 QUANTIZATION=""
 NO_PREFIX_CACHE="--no-enable-prefix-caching"
-SCRIPT_DIR=""
-REASONING_PARSER_PLUGIN="${SCRIPT_DIR:+$SCRIPT_DIR/plugins/super_v3_reasoning_parser.py}"
+REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS="--kv-cache-dtype fp8 --block-size 256 --tokenizer-mode $MODEL_NAME"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"

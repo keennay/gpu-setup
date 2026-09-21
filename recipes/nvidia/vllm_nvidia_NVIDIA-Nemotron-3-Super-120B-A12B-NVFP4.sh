@@ -27,11 +27,10 @@ BACKEND_MOE_RUNNER_SM121=""
 ENABLE_CACHE_FLAG=0
 ENABLE_SPECULATIVE=0
 ENABLE_REASONING_PARSER=1
-SPECULATIVE=''
+SPECULATIVE=""
 QUANTIZATION=""
 NO_PREFIX_CACHE="--no-enable-prefix-caching"
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-REASONING_PARSER_PLUGIN="${SCRIPT_DIR:+$SCRIPT_DIR/plugins/super_v3_reasoning_parser.py}"
+REASONING_PARSER_PLUGIN="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)/plugin/super_v3_reasoning_parser.py"
 EXTRA_ARGS="--async-scheduling --dtype auto --kv-cache-dtype fp8 --attention-backend TRITON_ATTN --max-cudagraph-capture-size 128 --enable-chunked-prefill --mamba-ssm-cache-dtype float16 --reasoning-parser-plugin $REASONING_PARSER_PLUGIN"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"

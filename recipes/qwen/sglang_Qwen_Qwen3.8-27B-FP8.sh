@@ -30,8 +30,7 @@ ENABLE_REASONING_PARSER=0
 SPECULATIVE=""
 QUANTIZATION=""
 NO_PREFIX_CACHE="--disable-radix-cache"
-SCRIPT_DIR=""
-REASONING_PARSER_PLUGIN="${SCRIPT_DIR:+$SCRIPT_DIR/plugins/super_v3_reasoning_parser.py}"
+REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS="--kv-cache-dtype fp8_e4m3 --attention-backend flashinfer --chunked-prefill-size 32768 --max-prefill-tokens 32768"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"

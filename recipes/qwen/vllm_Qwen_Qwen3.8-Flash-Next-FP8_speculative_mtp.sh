@@ -27,11 +27,10 @@ BACKEND_MOE_RUNNER_SM121=""
 ENABLE_CACHE_FLAG=0
 ENABLE_SPECULATIVE=1
 ENABLE_REASONING_PARSER=0
-SPECULATIVE='--speculative-config {"method":"mtp","num_speculative_tokens":3}'
+SPECULATIVE="--speculative-config {\"method\":\"mtp\",\"num_speculative_tokens\":3}"
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
-SCRIPT_DIR=""
-REASONING_PARSER_PLUGIN="${SCRIPT_DIR:+$SCRIPT_DIR/plugins/super_v3_reasoning_parser.py}"
+REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS="--max-num-seqs 256 --enable-prefix-caching --no-enable-flashinfer-autotune --moe-backend triton --enable-expert-parallel"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"

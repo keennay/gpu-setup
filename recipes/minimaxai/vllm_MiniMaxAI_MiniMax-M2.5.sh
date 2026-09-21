@@ -31,7 +31,7 @@ SPECULATIVE=""
 QUANTIZATION=""
 NO_PREFIX_CACHE=""
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS='--dtype bfloat16 --compilation-config {"cudagraph_mode":"PIECEWISE"} --max-num-seqs 512 --max-num-batched-tokens 32768 --kv-cache-dtype fp8 --linear-backend cutlass --moe-backend triton'
+EXTRA_ARGS="--dtype bfloat16 --compilation-config {\"cudagraph_mode\":\"PIECEWISE\"} --max-num-seqs 512 --max-num-batched-tokens 32768 --kv-cache-dtype fp8 --linear-backend cutlass --moe-backend triton"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"

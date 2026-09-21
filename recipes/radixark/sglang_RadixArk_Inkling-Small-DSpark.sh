@@ -30,8 +30,7 @@ ENABLE_REASONING_PARSER=0
 SPECULATIVE="--speculative-algorithm DSPARK --speculative-draft-model-path RadixArk/Inkling-Small-DSpark --speculative-draft-model-quantization unquant --speculative-dspark-block-size 7"
 QUANTIZATION="--quantization modelopt_fp4"
 NO_PREFIX_CACHE="--disable-radix-cache"
-SCRIPT_DIR=""
-REASONING_PARSER_PLUGIN="${SCRIPT_DIR:+$SCRIPT_DIR/plugins/super_v3_reasoning_parser.py}"
+REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS="--page-size 128 --mamba-radix-cache-strategy extra_buffer --swa-full-tokens-ratio 0.1 --mamba-full-memory-ratio 0.1 --disable-flashinfer-autotune"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"

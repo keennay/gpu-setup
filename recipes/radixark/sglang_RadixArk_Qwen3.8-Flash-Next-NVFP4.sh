@@ -30,8 +30,7 @@ ENABLE_REASONING_PARSER=0
 SPECULATIVE=""
 QUANTIZATION="--quantization modelopt_fp4"
 NO_PREFIX_CACHE=""
-SCRIPT_DIR=""
-REASONING_PARSER_PLUGIN="${SCRIPT_DIR:+$SCRIPT_DIR/plugins/super_v3_reasoning_parser.py}"
+REASONING_PARSER_PLUGIN=""
 EXTRA_ARGS="--fp4-gemm-backend flashinfer_cutlass --page-size 64 --mamba-radix-cache-strategy extra_buffer --mamba-track-interval 64 --chunked-prefill-size 4096 --max-running-requests 36 --allow-auto-truncate"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
