@@ -65,6 +65,7 @@ ensure_sudo_installed() {
 
 # Parse arguments
 AUTO_YES=false
+PREFLIGHT=false
 SELECT_ALL=false
 SELECT_DOCKER=false
 SELECT_TMUX=false
@@ -76,9 +77,26 @@ SELECT_RUST=false
 SELECT_ZIG=false
 SELECT_NEOVIM=false
 
+NVM_INSTALL_URL="https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.5/install.sh"
+PNPM_INSTALL_URL="https://get.pnpm.io/install.sh"
+PNPM_INSTALL_HOME="${PNPM_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/pnpm}"
+BUN_INSTALL_URL="https://bun.com/install"
+RUSTUP_INSTALL_URL="https://sh.rustup.rs"
+GO_RELEASE_INDEX_URL="https://go.dev/dl/?mode=json"
+GO_DOWNLOAD_BASE_URL="https://go.dev/dl"
+NODE_RELEASE_INDEX_URL="https://nodejs.org/dist/index.tab"
+ZIG_INDEX_URL="https://ziglang.org/download/index.json"
+DOCKER_UBUNTU_REPOSITORY_URL="https://download.docker.com/linux/ubuntu"
+DOCKER_UBUNTU_GPG_URL="$DOCKER_UBUNTU_REPOSITORY_URL/gpg"
+DOCKER_RHEL_REPOSITORY_URL="https://download.docker.com/linux/rhel/docker-ce.repo"
+NEOVIM_RELEASE_DOWNLOAD_URL="https://github.com/neovim/neovim/releases/latest/download"
+
+DOCKER_PACKAGES=(docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin)
+
 print_usage() {
-    echo "Usage: $0 [-y|--auto] [--all] [section flags...]"
+    echo "Usage: $0 [-y|--auto] [--preflight] [--all] [section flags...]"
     echo "  -y, --auto       Automatically accept prompts for enabled sections"
+    echo "  --preflight      Check prerequisites without installing or changing files"
     echo "  --all            Enable every optional section"
     echo "  --docker         Enable Docker Engine installation"
     echo "  --node           Enable Node.js 24 installation/update"
@@ -94,9 +112,11 @@ print_usage() {
     echo "Without section flags, optional sections are skipped. Use --all to enable them."
 }
 
+
 for arg in "$@"; do
     case "$arg" in
         -y|--auto) AUTO_YES=true ;;
+        --preflight) PREFLIGHT=true ;;
         --all) SELECT_ALL=true ;;
         --docker) SELECT_DOCKER=true ;;
         --node) SELECT_NODE=true ;;
@@ -123,6 +143,15 @@ section_selected() {
     local selected="$1"
     [ "$SELECT_ALL" = true ] || [ "$selected" = true ]
 }
+if [ "$PREFLIGHT" = true ] || [ "${SETUP_RECHECK_PREFLIGHT:-0}" = 1 ]; then
+    PREFLIGHT_HELPER="$(dirname -- "${BASH_SOURCE[0]}")/preflight.sh"
+    if [ ! -r "$PREFLIGHT_HELPER" ]; then
+        print_error "Preflight helper is missing or unreadable: $PREFLIGHT_HELPER"
+        exit 1
+    fi
+    source "$PREFLIGHT_HELPER"
+fi
+
 
 # OS/package manager detection
 OS_TYPE=""
@@ -138,6 +167,7 @@ detect_os_package_manager() {
     if [ ! -f /etc/os-release ]; then
         return 1
     fi
+
 
     source /etc/os-release
     OS_ID="$ID"
@@ -185,6 +215,518 @@ detect_os_package_manager() {
     return 1
 }
 
+configure_dependency_package_lists() {
+    if [ "$OS_TYPE" = "ubuntu" ]; then
+        BASIC_LINUX_ESSENTIALS=(
+            curl wget zip unzip less vim nano git git-lfs gh htop nvtop ripgrep shellcheck bubblewrap ffmpeg
+        )
+        CORE_BUILD_DEPENDENCIES=(
+            build-essential gcc g++ make cmake pkg-config protobuf-compiler libclang-dev
+            numactl libnuma-dev libhwloc-dev
+            libssl-dev libffi-dev liblzma-dev libbz2-dev libreadline-dev libsqlite3-dev
+            libncurses-dev zlib1g-dev
+        )
+    else
+        BASIC_LINUX_ESSENTIALS=(
+            curl wget zip unzip less vim-enhanced nano git git-lfs gh htop nvtop ripgrep ShellCheck bubblewrap ffmpeg
+        )
+        CORE_BUILD_DEPENDENCIES=(
+            gcc gcc-c++ make cmake pkgconf-pkg-config protobuf-compiler clang-devel
+            numactl numactl-devel hwloc-devel
+            openssl-devel libffi-devel zlib-devel xz-devel bzip2-devel readline-devel
+            ncurses-devel sqlite-devel
+        )
+    fi
+}
+
+docker_ubuntu_codename() {
+    local codename=""
+    if [ -f /etc/os-release ]; then
+        source /etc/os-release
+        codename="${UBUNTU_CODENAME:-$VERSION_CODENAME}"
+    fi
+    printf '%s\n' "$codename"
+}
+
+docker_repository_arch() {
+    if command -v dpkg &> /dev/null; then
+        dpkg --print-architecture
+    else
+        uname -m
+    fi
+}
+
+resolve_go_release_metadata() {
+    local release_json="$1"
+    local arch="$2"
+
+    GO_VERSION="$(printf '%s\n' "$release_json" | sed -n 's/^[[:space:]]*"version": "\(go[^"]*\)",/\1/p' | head -n1)"
+    if [ -z "$GO_VERSION" ]; then
+        return 1
+    fi
+
+    GO_TARBALL="${GO_VERSION}.linux-${arch}.tar.gz"
+    GO_SHA256="$(printf '%s\n' "$release_json" | awk -v filename="$GO_TARBALL" '
+        index($0, "\"filename\": \"" filename "\"") { found=1; next }
+        found && /"sha256":/ {
+            sub(/^.*"sha256": "/, "")
+            sub(/".*$/, "")
+            print
+            exit
+        }
+    ')"
+    [ -n "$GO_SHA256" ]
+}
+
+resolve_zig_release_metadata() {
+    local release_json="$1"
+    local arch="$2"
+    local platform="${arch}-linux"
+
+    ZIG_VERSION="$(
+        printf '%s\n' "$release_json" \
+            | sed -nE '/^  "[0-9]+(\.[0-9]+)+": \{$/ { s/^  "([^"]+)".*/\1/; p; }' \
+            | sort -V \
+            | sed -n '$p'
+    )"
+    if [ -z "$ZIG_VERSION" ]; then
+        return 1
+    fi
+
+    ZIG_ASSET_METADATA="$(
+        printf '%s\n' "$release_json" | awk \
+            -v version="$ZIG_VERSION" \
+            -v platform="$platform" '
+            $0 == "  \"" version "\": {" {
+                in_version = 1
+                next
+            }
+            in_version && $0 == "    \"" platform "\": {" {
+                in_platform = 1
+                next
+            }
+            in_platform && /"tarball":/ {
+                tarball = $0
+                sub(/^.*"tarball": "/, "", tarball)
+                sub(/".*$/, "", tarball)
+                next
+            }
+            in_platform && /"shasum":/ {
+                shasum = $0
+                sub(/^.*"shasum": "/, "", shasum)
+                sub(/".*$/, "", shasum)
+                print tarball, shasum
+                exit
+            }
+        '
+    )"
+    read -r ZIG_DOWNLOAD_URL ZIG_SHA256 <<< "$ZIG_ASSET_METADATA"
+    [ -n "$ZIG_DOWNLOAD_URL" ] && [ -n "$ZIG_SHA256" ]
+}
+
+node_archive_arch() {
+    case "$(uname -m)" in
+        x86_64|amd64) printf '%s\n' "x64" ;;
+        aarch64|arm64) printf '%s\n' "arm64" ;;
+        *) return 1 ;;
+    esac
+}
+
+preflight_check_url() {
+    local label="$1"
+    local url="$2"
+
+    if preflight_can_fetch; then
+        preflight_url "$label" "$url" || :
+    else
+        preflight_defer "$label deferred until curl or wget is installed"
+    fi
+}
+
+PREFLIGHT_FETCH_TEXT=""
+preflight_fetch_metadata() {
+    local label="$1"
+    local url="$2"
+
+    PREFLIGHT_FETCH_TEXT=""
+    if ! preflight_can_fetch; then
+        preflight_defer "$label deferred until curl or wget is installed"
+        return 1
+    fi
+    if ! PREFLIGHT_FETCH_TEXT="$(preflight_fetch "$url")"; then
+        preflight_error "$label could not be retrieved; check network access and retry"
+        return 1
+    fi
+    if [ -z "$PREFLIGHT_FETCH_TEXT" ]; then
+        preflight_error "$label returned empty metadata"
+        return 1
+    fi
+    return 0
+}
+
+preflight_check_package_candidate() {
+    local pkg="$1"
+    local package_manager=""
+    local query_output=""
+
+    if [ "$OS_TYPE" = "ubuntu" ]; then
+        if dpkg-query -W -f='${Status}\n' "$pkg" 2>/dev/null | grep -q "install ok installed"; then
+            preflight_info "$pkg is already installed"
+            return 0
+        fi
+        if ! command -v apt-cache &> /dev/null; then
+            preflight_error "Cannot inspect candidate for $pkg: apt-cache is unavailable"
+            return 1
+        fi
+        query_output="$(apt-cache policy "$pkg" 2>/dev/null || true)"
+        if printf '%s\n' "$query_output" | awk '$1 == "Candidate:" && $2 != "(none)" { found=1 } END { exit !found }'; then
+            preflight_info "$pkg candidate is available in current APT metadata"
+        else
+            preflight_defer "$pkg candidate was not confirmed; refresh APT metadata before installation"
+        fi
+        return 0
+    fi
+
+    if command -v dnf &> /dev/null; then
+        package_manager="dnf"
+    elif command -v yum &> /dev/null; then
+        package_manager="yum"
+    else
+        preflight_error "Cannot inspect candidate for $pkg: dnf/yum is unavailable"
+        return 1
+    fi
+    if rpm -q "$pkg" &> /dev/null; then
+        preflight_info "$pkg is already installed"
+        return 0
+    fi
+    query_output="$("$package_manager" --cacheonly list --available "$pkg" 2>&1 || true)"
+    if printf '%s\n' "$query_output" | awk -v package="$pkg" '
+        $1 == package || index($1, package ".") == 1 { found=1 }
+        END { exit !found }
+    '; then
+        preflight_info "$pkg candidate is available in current package metadata"
+    else
+        preflight_defer "$pkg candidate was not confirmed; refresh package metadata before installation"
+    fi
+}
+
+preflight_check_package_candidates() {
+    local pkg
+    for pkg in "$@"; do
+        preflight_check_package_candidate "$pkg" || :
+    done
+}
+
+preflight_check_disk() {
+    local path="$1"
+    local minimum_gb="$2"
+    local available_kb
+    local minimum_kb=$((minimum_gb * 1024 * 1024))
+
+    available_kb="$(df -Pk "$path" 2>/dev/null | awk 'NR == 2 { print $4 }')"
+    if [[ ! "$available_kb" =~ ^[0-9]+$ ]]; then
+        preflight_error "Cannot determine free disk space for $path"
+    elif [ "$available_kb" -lt "$minimum_kb" ]; then
+        preflight_error "$path has $((available_kb / 1024 / 1024))GB free; at least ${minimum_gb}GB is required"
+    else
+        preflight_info "$path has at least ${minimum_gb}GB free"
+    fi
+}
+
+preflight_check_user_paths() {
+    local path
+    [ -n "$CONFIG_HOME" ] && preflight_writable "$CONFIG_HOME" || :
+    [ -n "$CONFIG_HOME" ] && preflight_writable "$CONFIG_HOME/.bashrc" || :
+    preflight_writable "$HOME" || :
+    preflight_writable /tmp || :
+
+    if section_selected "$SELECT_NODE"; then
+        preflight_writable "$HOME/.nvm" || :
+    fi
+    if section_selected "$SELECT_BUN"; then
+        preflight_writable "$HOME/.bun" || :
+    fi
+    if section_selected "$SELECT_RUST"; then
+        preflight_writable "$HOME/.cargo" || :
+        preflight_writable "$HOME/.rustup" || :
+    fi
+    if section_selected "$SELECT_TMUX"; then
+        preflight_writable "$HOME/.tmux.conf" || :
+    fi
+
+    if [ "$(id -u)" -eq 0 ]; then
+        for path in /var /usr/local /usr/local/bin /opt; do
+            preflight_writable "$path" || :
+        done
+        if [ "$OS_TYPE" = "ubuntu" ]; then
+            preflight_writable /etc/apt/keyrings || :
+            preflight_writable /etc/apt/sources.list.d || :
+        else
+            preflight_writable /etc/yum.repos.d || :
+        fi
+    else
+        preflight_info "System install paths will be checked through sudo during installation"
+    fi
+}
+
+preflight_check_docker() {
+    local codename=""
+    local arch=""
+    local repo_url=""
+
+    preflight_info "Checking Docker Engine prerequisites"
+    if ! command -v systemctl &> /dev/null; then
+        preflight_error "Docker installation requires systemctl"
+    elif [ ! -d /run/systemd/system ] && [ "$(cat /proc/1/comm 2>/dev/null || true)" != "systemd" ]; then
+        preflight_error "Docker installation starts a systemd service, but PID 1 is not systemd"
+    else
+        preflight_info "systemd service management is available for Docker"
+    fi
+
+    arch="$(docker_repository_arch 2>/dev/null || true)"
+    if [ -z "$arch" ]; then
+        preflight_error "Could not determine the Docker repository architecture"
+    fi
+
+    if [ "$OS_TYPE" = "ubuntu" ]; then
+        codename="$(docker_ubuntu_codename)"
+        if [ -z "$codename" ]; then
+            preflight_error "Could not determine the Ubuntu codename required by Docker's repository"
+        else
+            case "$arch" in
+                amd64|arm64|armhf) ;;
+                *) preflight_error "Docker's Ubuntu repository does not support architecture $arch" ;;
+            esac
+            repo_url="$DOCKER_UBUNTU_REPOSITORY_URL/dists/$codename/Release"
+            preflight_check_url "Docker Ubuntu $codename repository metadata" "$repo_url"
+            preflight_check_url "Docker Ubuntu signing key" "$DOCKER_UBUNTU_GPG_URL"
+            if [ -n "$arch" ]; then
+                preflight_check_url "Docker Ubuntu $codename $arch package metadata" \
+                    "$DOCKER_UBUNTU_REPOSITORY_URL/dists/$codename/stable/binary-$arch/Packages.gz"
+            fi
+        fi
+    elif [ "$OS_TYPE" = "rhel" ]; then
+        case "$arch" in
+            x86_64|aarch64|ppc64le|s390x) ;;
+            *) preflight_error "Docker's RHEL repository does not support architecture $arch" ;;
+        esac
+        preflight_check_url "Docker RHEL repository definition" "$DOCKER_RHEL_REPOSITORY_URL"
+    else
+        preflight_error "Docker has no supported repository for this operating system"
+    fi
+    preflight_info "Docker packages will use the upstream repository configured by the selected Docker step"
+}
+
+preflight_check_node() {
+    local node_arch=""
+    local node_index=""
+    local node_version=""
+
+    preflight_info "Checking Node.js 24 and nvm prerequisites"
+    preflight_check_url "nvm installer" "$NVM_INSTALL_URL"
+    preflight_writable "$HOME/.nvm" || :
+    if ! preflight_fetch_metadata "Node.js release index" "$NODE_RELEASE_INDEX_URL"; then
+        return 0
+    fi
+    node_index="$PREFLIGHT_FETCH_TEXT"
+    node_version="$(printf '%s\n' "$node_index" | awk -F '\t' '$1 ~ /^v24\./ { print $1; exit }')"
+    if [ -z "$node_version" ]; then
+        preflight_error "Node.js 24 is not present in the upstream release index"
+        return 0
+    fi
+    if ! node_arch="$(node_archive_arch)"; then
+        preflight_error "Node.js 24 has no supported archive for architecture $(uname -m)"
+        return 0
+    fi
+    preflight_check_url "Node.js $node_version $node_arch archive" \
+        "https://nodejs.org/dist/$node_version/node-$node_version-linux-$node_arch.tar.xz"
+}
+
+preflight_check_pnpm() {
+    preflight_info "Checking pnpm prerequisites"
+    preflight_check_url "pnpm installer" "$PNPM_INSTALL_URL"
+    preflight_writable "$PNPM_INSTALL_HOME" || :
+    preflight_writable "$PNPM_INSTALL_HOME/bin" || :
+}
+
+preflight_check_bun() {
+    preflight_info "Checking Bun prerequisites"
+    preflight_check_url "Bun installer" "$BUN_INSTALL_URL"
+    preflight_writable "$HOME/.bun" || :
+}
+
+preflight_check_go() {
+    local go_arch=""
+    local go_json=""
+
+    preflight_info "Checking Go release prerequisites"
+    case "$(uname -m)" in
+        x86_64|amd64) go_arch="amd64" ;;
+        aarch64|arm64) go_arch="arm64" ;;
+        *) preflight_error "Go has no supported archive for architecture $(uname -m)"; return 0 ;;
+    esac
+    if ! preflight_fetch_metadata "Go release metadata" "$GO_RELEASE_INDEX_URL"; then
+        return 0
+    fi
+    go_json="$PREFLIGHT_FETCH_TEXT"
+    if ! resolve_go_release_metadata "$go_json" "$go_arch"; then
+        preflight_error "Go release metadata has no ${go_arch} archive and checksum"
+        return 0
+    fi
+    preflight_info "Latest Go release is $GO_VERSION"
+    preflight_check_url "Go $GO_VERSION archive" "$GO_DOWNLOAD_BASE_URL/$GO_TARBALL"
+    preflight_writable "$CONFIG_HOME/go" || :
+}
+
+preflight_check_rust() {
+    preflight_info "Checking Rustup prerequisites"
+    preflight_check_url "Rustup installer" "$RUSTUP_INSTALL_URL"
+    preflight_writable "$HOME/.cargo" || :
+    preflight_writable "$HOME/.rustup" || :
+}
+
+preflight_check_zig() {
+    local zig_arch=""
+    local zig_json=""
+
+    preflight_info "Checking Zig release prerequisites"
+    case "$(uname -m)" in
+        x86_64|amd64) zig_arch="x86_64" ;;
+        aarch64|arm64) zig_arch="aarch64" ;;
+        *) preflight_error "Zig has no supported archive for architecture $(uname -m)"; return 0 ;;
+    esac
+    preflight_command tar 1 || :
+    preflight_command sha256sum 1 || :
+    preflight_command xz 1 || :
+    if [ "$OS_TYPE" = "ubuntu" ]; then
+        preflight_check_package_candidates xz-utils
+    else
+        preflight_check_package_candidates xz
+    fi
+    if ! preflight_fetch_metadata "Zig release metadata" "$ZIG_INDEX_URL"; then
+        return 0
+    fi
+    zig_json="$PREFLIGHT_FETCH_TEXT"
+    if ! resolve_zig_release_metadata "$zig_json" "$zig_arch"; then
+        preflight_error "Zig release metadata has no ${zig_arch}-linux archive and checksum"
+        return 0
+    fi
+    preflight_info "Latest Zig release is $ZIG_VERSION"
+    preflight_check_url "Zig $ZIG_VERSION archive" "$ZIG_DOWNLOAD_URL"
+}
+
+preflight_check_neovim() {
+    local nvim_arch=""
+    local asset=""
+    local found=0
+
+    preflight_info "Checking Neovim release prerequisites"
+    preflight_command tar 1 || :
+    if ! preflight_can_fetch; then
+        preflight_defer "Neovim archive checks deferred until curl or wget is installed"
+    else
+        case "$(uname -m)" in
+            x86_64|amd64) nvim_arch="x86_64" ;;
+            aarch64|arm64) nvim_arch="arm64" ;;
+            *) preflight_error "Neovim has no supported archive for architecture $(uname -m)" ;;
+        esac
+        if [ -n "$nvim_arch" ]; then
+            if [ "$nvim_arch" = "x86_64" ]; then
+                NEOVIM_ASSETS=("nvim-linux-x86_64.tar.gz" "nvim-linux64.tar.gz")
+            else
+                NEOVIM_ASSETS=("nvim-linux-arm64.tar.gz")
+            fi
+            for asset in "${NEOVIM_ASSETS[@]}"; do
+                if preflight_probe_url "$NEOVIM_RELEASE_DOWNLOAD_URL/$asset"; then
+                    preflight_info "Neovim archive $asset is reachable"
+                    found=1
+                    break
+                fi
+            done
+            if [ "$found" -eq 0 ]; then
+                preflight_error "No downloadable Neovim release archive matched architecture $nvim_arch"
+            fi
+        fi
+    fi
+    preflight_writable "$CONFIG_HOME/.bashrc" || :
+}
+
+preflight_check_tmux() {
+    local tmux_config_source
+    preflight_info "Checking tmux prerequisites"
+    preflight_check_package_candidates tmux
+    tmux_config_source="$(dirname -- "${BASH_SOURCE[0]}")/../configs/.tmux.conf"
+    if [ ! -r "$tmux_config_source" ]; then
+        preflight_error "tmux configuration is missing: $tmux_config_source"
+    fi
+    preflight_writable "$HOME/.tmux.conf" || :
+}
+
+run_preflight() {
+    local os_detected=0
+
+    preflight_init "01_install_dependencies"
+    if detect_os_package_manager; then
+        os_detected=1
+        preflight_info "Detected $OS_NAME $OS_VERSION_ID"
+    else
+        if [ ! -f /etc/os-release ]; then
+            preflight_error "Cannot determine the operating system: /etc/os-release is missing"
+        else
+            preflight_error "Unsupported operating system or version: ${OS_ID:-unknown} ${OS_VERSION_ID:-unknown}"
+        fi
+    fi
+
+    preflight_privileges || :
+    preflight_command df 1 || :
+    preflight_command awk 1 || :
+    preflight_command sed 1 || :
+    preflight_command tar 1 || :
+    preflight_command sha256sum 1 || :
+    preflight_command mktemp 1 || :
+    preflight_command curl 1 || :
+    preflight_command wget 1 || :
+    preflight_check_disk /var 5
+    preflight_check_disk /tmp 1
+    preflight_check_user_paths
+
+    if [ "$os_detected" -eq 1 ]; then
+        configure_dependency_package_lists
+        if [ "$OS_TYPE" = "ubuntu" ]; then
+            preflight_command apt 0 || :
+            preflight_command dpkg 0 || :
+            preflight_command apt-cache 0 || :
+        else
+            if command -v dnf &> /dev/null; then
+                preflight_command dnf 0 || :
+            else
+                preflight_command yum 0 || :
+            fi
+            preflight_command rpm 0 || :
+        fi
+        preflight_check_package_candidates \
+            "${BASIC_LINUX_ESSENTIALS[@]}" \
+            "${CORE_BUILD_DEPENDENCIES[@]}"
+    fi
+
+    if section_selected "$SELECT_DOCKER"; then preflight_check_docker || :; fi
+    if section_selected "$SELECT_NODE"; then preflight_check_node || :; fi
+    if section_selected "$SELECT_PNPM"; then preflight_check_pnpm || :; fi
+    if section_selected "$SELECT_BUN"; then preflight_check_bun || :; fi
+    if section_selected "$SELECT_GO"; then preflight_check_go || :; fi
+    if section_selected "$SELECT_RUST"; then preflight_check_rust || :; fi
+    if section_selected "$SELECT_ZIG"; then preflight_check_zig || :; fi
+    if section_selected "$SELECT_NEOVIM"; then preflight_check_neovim || :; fi
+    if section_selected "$SELECT_TMUX"; then preflight_check_tmux || :; fi
+
+    preflight_finish
+}
+if [ "$PREFLIGHT" = true ]; then
+    run_preflight
+    exit $?
+fi
+
+
 print_info "Initialization Script for Development Environment"
 echo ""
 
@@ -201,6 +743,8 @@ if ! detect_os_package_manager; then
     fi
     exit 1
 fi
+
+configure_dependency_package_lists
 
 if [ "$OS_TYPE" = "ubuntu" ]; then
     print_info "✓ Ubuntu $OS_VERSION_ID detected"
@@ -261,11 +805,6 @@ fi
 echo ""
 
 # Basic Linux essentials installed after upgrades to keep tooling current
-if [ "$OS_TYPE" = "ubuntu" ]; then
-    BASIC_LINUX_ESSENTIALS=(curl wget zip unzip less vim nano git git-lfs gh htop nvtop ripgrep shellcheck bubblewrap ffmpeg)
-else
-    BASIC_LINUX_ESSENTIALS=(curl wget zip unzip less vim-enhanced nano git git-lfs gh htop nvtop ripgrep ShellCheck bubblewrap ffmpeg)
-fi
 if [ "$AUTO_YES" = true ]; then
     INSTALL_BASICS="y"
 else
@@ -277,7 +816,8 @@ if [[ "$INSTALL_BASICS" =~ ^[Yy]$ ]]; then
     if $PKG_INSTALL_CMD "${BASIC_LINUX_ESSENTIALS[@]}"; then
         print_info "✓ Basic Linux essentials installed"
     else
-        print_warning "Failed to install some basic Linux essentials"
+        print_error "Failed to install basic Linux essentials"
+        exit 1
     fi
 else
     print_info "Skipped installing basic Linux essentials"
@@ -286,60 +826,6 @@ fi
 echo ""
 
 # Core/build dependencies for ML and Python package compilation
-if [ "$OS_TYPE" = "ubuntu" ]; then
-    CORE_BUILD_DEPENDENCIES=(
-        # Essential build tools
-        "build-essential"
-        "gcc"
-        "g++"
-        "make"
-        "cmake"
-        "pkg-config"
-        "protobuf-compiler"
-        "libclang-dev"
-
-        # NUMA optimization
-        "numactl"
-        "libnuma-dev"
-        "libhwloc-dev"
-
-        # Essential Python dependencies
-        "libssl-dev"
-        "libffi-dev"
-        "liblzma-dev"
-        "libbz2-dev"
-        "libreadline-dev"
-        "libsqlite3-dev"
-        "libncurses-dev"
-        "zlib1g-dev"
-    )
-else
-    CORE_BUILD_DEPENDENCIES=(
-        # Essential build tools
-        "gcc"
-        "gcc-c++"
-        "make"
-        "cmake"
-        "pkgconf-pkg-config"
-        "protobuf-compiler"
-        "clang-devel"
-
-        # NUMA optimization
-        "numactl"
-        "numactl-devel"
-        "hwloc-devel"
-
-        # Essential Python dependencies
-        "openssl-devel"
-        "libffi-devel"
-        "zlib-devel"
-        "xz-devel"
-        "bzip2-devel"
-        "readline-devel"
-        "ncurses-devel"
-        "sqlite-devel"
-    )
-fi
 
 print_info "Checking core/build dependencies..."
 MISSING_CORE_BUILD_DEPENDENCIES=()
@@ -452,13 +938,15 @@ if [[ "$INSTALL_CORE_BUILD_DEPENDENCIES" =~ ^[Yy]$ ]]; then
                             if sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-$GCC_VERSION 100; then
                                 print_info "✓ Set g++-$GCC_VERSION as default g++ compiler"
                             else
-                                print_warning "Could not set g++-$GCC_VERSION as default"
+                                print_error "Could not set g++-$GCC_VERSION as default"
+                                exit 1
                             fi
                         else
                             print_info "Skipped setting g++-$GCC_VERSION as default"
                         fi
                     else
-                        print_warning "Could not install g++-$GCC_VERSION - CUDA compilation may fail"
+                        print_error "Could not install g++-$GCC_VERSION"
+                        exit 1
                     fi
                 else
                     print_info "✓ gcc-c++ package provides matching g++ version on RHEL-compatible systems"
@@ -473,6 +961,16 @@ else
         print_info "Skipped installing core/build dependencies"
     fi
 fi
+if [ "${SETUP_RECHECK_PREFLIGHT:-0}" = 1 ]; then
+    print_info "Rechecking deferred prerequisites after core/basic packages..."
+    # Core tools and package indexes now exist; no unresolved source/package
+    # check may be carried past this boundary into optional installations.
+    if ! run_preflight || (( ${#PREFLIGHT_DEFERRED[@]} )); then
+        print_error "Deferred prerequisite checks did not resolve; refusing to start optional installers"
+        exit 1
+    fi
+fi
+
 
 # Install Docker Engine; Ubuntu follows https://docs.docker.com/engine/install/ubuntu/
 if section_selected "$SELECT_DOCKER"; then
@@ -506,7 +1004,7 @@ if section_selected "$SELECT_DOCKER"; then
             fi
 
             print_info "Installing Docker repository signing key..."
-            if ! sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc; then
+            if ! sudo curl -fsSL "$DOCKER_UBUNTU_GPG_URL" -o /etc/apt/keyrings/docker.asc; then
                 print_error "Failed to download Docker repository signing key"
                 exit 1
             fi
@@ -518,10 +1016,10 @@ if section_selected "$SELECT_DOCKER"; then
             print_info "Configuring the Docker APT repository..."
             if ! sudo tee /etc/apt/sources.list.d/docker.sources <<EOF
 Types: deb
-URIs: https://download.docker.com/linux/ubuntu
-Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
+URIs: $DOCKER_UBUNTU_REPOSITORY_URL
+Suites: $(docker_ubuntu_codename)
 Components: stable
-Architectures: $(dpkg --print-architecture)
+Architectures: $(docker_repository_arch)
 Signed-By: /etc/apt/keyrings/docker.asc
 EOF
             then
@@ -535,7 +1033,7 @@ EOF
             fi
 
             print_info "Installing Docker Engine..."
-            if ! sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin; then
+            if ! sudo apt install -y "${DOCKER_PACKAGES[@]}"; then
                 print_error "Failed to install Docker Engine"
                 exit 1
             fi
@@ -584,7 +1082,7 @@ EOF
             fi
 
             print_info "Installing Docker Engine..."
-            if ! sudo dnf install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin; then
+            if ! sudo dnf install -y "${DOCKER_PACKAGES[@]}"; then
                 print_error "Failed to install Docker Engine"
                 exit 1
             fi
@@ -604,7 +1102,6 @@ fi
 echo ""
 
 # Install Node.js 24 through nvm, installing nvm first when needed
-NVM_INSTALL_URL="https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.5/install.sh"
 
 load_nvm() {
     export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
@@ -636,7 +1133,7 @@ if section_selected "$SELECT_NODE"; then
             fi
 
             print_info "Installing nvm..."
-            if ! curl -o- "$NVM_INSTALL_URL" | bash; then
+            if ! (set -o pipefail; curl -fsSL -o- "$NVM_INSTALL_URL" | bash); then
                 print_error "Failed to install nvm"
                 exit 1
             fi
@@ -665,36 +1162,55 @@ if section_selected "$SELECT_NODE"; then
             fi
         fi
 
-        nvm alias default 24
+        if ! nvm alias default 24; then
+            print_error "Failed to set Node.js 24 as the nvm default"
+            exit 1
+        fi
 
         BASHRC_PATH="$CONFIG_HOME/.bashrc"
         if [ ! -f "$BASHRC_PATH" ]; then
             if ! touch "$BASHRC_PATH" 2>/dev/null; then
-                sudo touch "$BASHRC_PATH"
-                sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"
+                if ! sudo touch "$BASHRC_PATH" || ! sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"; then
+                    print_error "Failed to create $BASHRC_PATH"
+                    exit 1
+                fi
             fi
         fi
 
         if ! sed -i '/# nvm default Node version (added by 01_install_dependencies.sh)/,/^# End nvm default Node version/d' "$BASHRC_PATH" 2>/dev/null; then
-            sudo sed -i '/# nvm default Node version (added by 01_install_dependencies.sh)/,/^# End nvm default Node version/d' "$BASHRC_PATH"
-            sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"
+            if ! sudo sed -i '/# nvm default Node version (added by 01_install_dependencies.sh)/,/^# End nvm default Node version/d' "$BASHRC_PATH" ||
+                ! sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"; then
+                print_error "Failed to update $BASHRC_PATH"
+                exit 1
+            fi
         fi
 
         if [ -w "$BASHRC_PATH" ]; then
-            cat <<'EOF' >> "$BASHRC_PATH"
+            if ! cat >> "$BASHRC_PATH" <<'EOF'
 # nvm default Node version (added by 01_install_dependencies.sh)
 nvm use default >/dev/null 2>&1
 hash -r 2>/dev/null || true
 # End nvm default Node version
 EOF
+            then
+                print_error "Failed to append nvm default block to $BASHRC_PATH"
+                exit 1
+            fi
         else
-            cat <<'EOF' | sudo tee -a "$BASHRC_PATH" > /dev/null
+            if ! sudo tee -a "$BASHRC_PATH" > /dev/null <<'EOF'
 # nvm default Node version (added by 01_install_dependencies.sh)
 nvm use default >/dev/null 2>&1
 hash -r 2>/dev/null || true
 # End nvm default Node version
 EOF
-            sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"
+            then
+                print_error "Failed to append nvm default block to $BASHRC_PATH"
+                exit 1
+            fi
+            if ! sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"; then
+                print_error "Failed to set ownership on $BASHRC_PATH"
+                exit 1
+            fi
         fi
         print_info "✓ nvm default Node version block updated in $BASHRC_PATH"
 
@@ -738,18 +1254,22 @@ if section_selected "$SELECT_PNPM"; then
         fi
 
         print_info "Installing/updating pnpm..."
-        if (set -o pipefail; curl -fsSL https://get.pnpm.io/install.sh | sh -); then
-            if [ -d "$HOME/.local/share/pnpm" ]; then
-                export PNPM_HOME="${PNPM_HOME:-$HOME/.local/share/pnpm}"
-                export PATH="$PNPM_HOME:$PATH"
+        export PNPM_HOME="$PNPM_INSTALL_HOME"
+        if (set -o pipefail; curl -fsSL "$PNPM_INSTALL_URL" | sh -); then
+            PNPM_BIN_DIR="$PNPM_HOME/bin"
+            if [ ! -e "$PNPM_BIN_DIR/pnpm" ] && [ ! -L "$PNPM_BIN_DIR/pnpm" ] &&
+               [ -x "$PNPM_HOME/pnpm" ]; then
+                PNPM_BIN_DIR="$PNPM_HOME"
             fi
+            export PATH="$PNPM_BIN_DIR:$PATH"
             hash -r 2>/dev/null || true
 
-            PNPM_VERSION="$(pnpm --version 2>/dev/null || true)"
-            if [ -n "$PNPM_VERSION" ]; then
+            if PNPM_VERSION="$("$PNPM_BIN_DIR/pnpm" --version)" && [ -n "$PNPM_VERSION" ]; then
                 print_info "✓ pnpm ready: $PNPM_VERSION"
             else
-                print_info "✓ pnpm installed; restart your shell to load it"
+                print_error "pnpm at $PNPM_BIN_DIR/pnpm failed its version check"
+                [ -z "$PNPM_VERSION" ] || printf '%s\n' "$PNPM_VERSION" >&2
+                exit 1
             fi
         else
             print_error "Failed to install or update pnpm"
@@ -780,11 +1300,12 @@ elif command -v bun &> /dev/null; then
     if [[ "$UPDATE_BUN" =~ ^[Yy]$ ]]; then
         print_info "Updating Bun..."
         if bun upgrade; then
-            BUN_VERSION=$(bun --version 2>/dev/null)
+            BUN_VERSION="$(bun --version 2>/dev/null || true)"
             if [ -n "$BUN_VERSION" ]; then
                 print_info "✓ Bun ready: $BUN_VERSION"
             else
-                print_info "✓ Bun updated"
+                print_error "Bun upgrade completed, but Bun is not runnable in this shell"
+                exit 1
             fi
         else
             print_error "Failed to update Bun"
@@ -807,16 +1328,17 @@ else
         fi
 
         print_info "Installing Bun..."
-        if curl -fsSL https://bun.com/install | bash; then
+        if (set -o pipefail; curl -fsSL "$BUN_INSTALL_URL" | bash); then
             export BUN_INSTALL="$HOME/.bun"
             export PATH="$BUN_INSTALL/bin:$PATH"
             print_info "✓ Bun installed"
 
-            BUN_VERSION=$(bun --version 2>/dev/null)
+            BUN_VERSION="$(bun --version 2>/dev/null || true)"
             if [ -n "$BUN_VERSION" ]; then
                 print_info "Bun version: $BUN_VERSION"
             else
-                print_info "Restart your shell or run: source ~/.bashrc"
+                print_error "Bun installer completed, but Bun is not runnable in this shell"
+                exit 1
             fi
         else
             print_error "Failed to install Bun"
@@ -874,11 +1396,12 @@ if [[ "$INSTALL_GO" =~ ^[Yy]$ ]]; then
     esac
 
     print_info "Resolving latest stable Go release..."
-    GO_RELEASE_JSON="$(curl -fsSL 'https://go.dev/dl/?mode=json')"
-    GO_VERSION="$(printf '%s\n' "$GO_RELEASE_JSON" | sed -n 's/^[[:space:]]*"version": "\(go[^"]*\)",/\1/p' | head -n1)"
-
-    if [ -z "$GO_VERSION" ]; then
-        print_error "Failed to resolve latest Go version"
+    if ! GO_RELEASE_JSON="$(curl -fsSL "$GO_RELEASE_INDEX_URL")"; then
+        print_error "Failed to retrieve the Go release index"
+        exit 1
+    fi
+    if ! resolve_go_release_metadata "$GO_RELEASE_JSON" "$GO_ARCH"; then
+        print_error "Failed to resolve latest Go version or checksum for $GO_ARCH"
         exit 1
     fi
 
@@ -887,25 +1410,9 @@ if [[ "$INSTALL_GO" =~ ^[Yy]$ ]]; then
         print_info "Go is already at latest stable version: $GO_VERSION"
         GO_PATHS_READY=true
     else
-        GO_TARBALL="${GO_VERSION}.linux-${GO_ARCH}.tar.gz"
-        GO_SHA256="$(printf '%s\n' "$GO_RELEASE_JSON" | awk -v filename="$GO_TARBALL" '
-            index($0, "\"filename\": \"" filename "\"") { found=1; next }
-            found && /"sha256":/ {
-                sub(/^.*"sha256": "/, "")
-                sub(/".*$/, "")
-                print
-                exit
-            }
-        ')"
-
-        if [ -z "$GO_SHA256" ]; then
-            print_error "Failed to find SHA256 for $GO_TARBALL"
-            exit 1
-        fi
-
         TMP_DIR="$(mktemp -d /tmp/go-install.XXXXXX)"
         print_info "Downloading $GO_TARBALL..."
-        if curl -fL "https://go.dev/dl/$GO_TARBALL" -o "$TMP_DIR/$GO_TARBALL"; then
+        if curl -fL "$GO_DOWNLOAD_BASE_URL/$GO_TARBALL" -o "$TMP_DIR/$GO_TARBALL"; then
             print_info "Verifying $GO_TARBALL..."
             if (cd "$TMP_DIR" && printf '%s  %s\n' "$GO_SHA256" "$GO_TARBALL" | sha256sum -c -); then
                 print_info "Installing Go to /usr/local/go..."
@@ -916,7 +1423,12 @@ if [[ "$INSTALL_GO" =~ ^[Yy]$ ]]; then
                     export PATH="$PATH:$GOPATH/bin"
                     print_info "✓ Go installed"
                     GO_VERSION_OUTPUT="$(go version 2>/dev/null)"
-                    [ -n "$GO_VERSION_OUTPUT" ] && print_info "$GO_VERSION_OUTPUT"
+                    if [ -z "$GO_VERSION_OUTPUT" ]; then
+                        print_error "Go archive extracted, but Go is not runnable"
+                        rm -rf "$TMP_DIR"
+                        exit 1
+                    fi
+                    print_info "$GO_VERSION_OUTPUT"
                     GO_PATHS_READY=true
                 else
                     print_error "Failed to extract Go archive"
@@ -944,18 +1456,23 @@ if [ "$GO_PATHS_READY" = true ]; then
     BASHRC_PATH="$CONFIG_HOME/.bashrc"
     if [ ! -f "$BASHRC_PATH" ]; then
         if ! touch "$BASHRC_PATH" 2>/dev/null; then
-            sudo touch "$BASHRC_PATH"
-            sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"
+            if ! sudo touch "$BASHRC_PATH" || ! sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"; then
+                print_error "Failed to create $BASHRC_PATH"
+                exit 1
+            fi
         fi
     fi
 
     if ! sed -i '/# Go paths (added by 01_install_dependencies.sh)/,/^# End Go paths/d' "$BASHRC_PATH" 2>/dev/null; then
-        sudo sed -i '/# Go paths (added by 01_install_dependencies.sh)/,/^# End Go paths/d' "$BASHRC_PATH"
-        sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"
+        if ! sudo sed -i '/# Go paths (added by 01_install_dependencies.sh)/,/^# End Go paths/d' "$BASHRC_PATH" ||
+            ! sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"; then
+            print_error "Failed to update $BASHRC_PATH"
+            exit 1
+        fi
     fi
 
     if [ -w "$BASHRC_PATH" ]; then
-        cat <<'EOF' >> "$BASHRC_PATH"
+        if ! cat >> "$BASHRC_PATH" <<'EOF'
 # Go paths (added by 01_install_dependencies.sh)
 case ":$PATH:" in
     *":/usr/local/go/bin:"*) ;;
@@ -968,8 +1485,12 @@ case ":$PATH:" in
 esac
 # End Go paths
 EOF
+        then
+            print_error "Failed to append Go paths to $BASHRC_PATH"
+            exit 1
+        fi
     else
-        cat <<'EOF' | sudo tee -a "$BASHRC_PATH" > /dev/null
+        if ! sudo tee -a "$BASHRC_PATH" > /dev/null <<'EOF'
 # Go paths (added by 01_install_dependencies.sh)
 case ":$PATH:" in
     *":/usr/local/go/bin:"*) ;;
@@ -982,7 +1503,14 @@ case ":$PATH:" in
 esac
 # End Go paths
 EOF
-        sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"
+        then
+            print_error "Failed to append Go paths to $BASHRC_PATH"
+            exit 1
+        fi
+        if ! sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"; then
+            print_error "Failed to set ownership on $BASHRC_PATH"
+            exit 1
+        fi
     fi
 
     print_info "✓ Go paths updated in $BASHRC_PATH"
@@ -1007,13 +1535,17 @@ elif command -v rustup &> /dev/null; then
     if [[ "$UPDATE_RUSTUP" =~ ^[Yy]$ ]]; then
         print_info "Updating Rust toolchains..."
         if rustup update; then
-            RUSTC_VERSION=$(rustc --version 2>/dev/null)
-            CARGO_VERSION=$(cargo --version 2>/dev/null)
-            RUSTUP_VERSION=$(rustup --version 2>/dev/null | head -1)
+            RUSTC_VERSION="$(rustc --version 2>/dev/null || true)"
+            CARGO_VERSION="$(cargo --version 2>/dev/null || true)"
+            RUSTUP_VERSION="$(rustup --version 2>/dev/null | head -1)"
 
-            [ -n "$RUSTC_VERSION" ] && print_info "$RUSTC_VERSION"
-            [ -n "$CARGO_VERSION" ] && print_info "$CARGO_VERSION"
-            [ -n "$RUSTUP_VERSION" ] && print_info "$RUSTUP_VERSION"
+            if [ -z "$RUSTC_VERSION" ] || [ -z "$CARGO_VERSION" ] || [ -z "$RUSTUP_VERSION" ]; then
+                print_error "Rustup update completed, but Rust tools are not runnable in this shell"
+                exit 1
+            fi
+            print_info "$RUSTC_VERSION"
+            print_info "$CARGO_VERSION"
+            print_info "$RUSTUP_VERSION"
         else
             print_error "Failed to update Rust toolchains"
             exit 1
@@ -1041,24 +1573,24 @@ else
             RUSTUP_INSTALL_CMD=(sh)
         fi
 
-        if curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | "${RUSTUP_INSTALL_CMD[@]}"; then
+        if (set -o pipefail; curl --proto '=https' --tlsv1.2 -sSf "$RUSTUP_INSTALL_URL" | "${RUSTUP_INSTALL_CMD[@]}"); then
             if [ -f "$HOME/.cargo/env" ]; then
                 . "$HOME/.cargo/env"
             fi
 
             print_info "✓ Rustup installed"
 
-            RUSTC_VERSION=$(rustc --version 2>/dev/null)
-            CARGO_VERSION=$(cargo --version 2>/dev/null)
-            RUSTUP_VERSION=$(rustup --version 2>/dev/null | head -1)
+            RUSTC_VERSION="$(rustc --version 2>/dev/null || true)"
+            CARGO_VERSION="$(cargo --version 2>/dev/null || true)"
+            RUSTUP_VERSION="$(rustup --version 2>/dev/null | head -1)"
 
-            [ -n "$RUSTC_VERSION" ] && print_info "$RUSTC_VERSION"
-            [ -n "$CARGO_VERSION" ] && print_info "$CARGO_VERSION"
-            [ -n "$RUSTUP_VERSION" ] && print_info "$RUSTUP_VERSION"
-
-            if [ -z "$RUSTC_VERSION" ] || [ -z "$CARGO_VERSION" ]; then
-                print_info "Restart your shell or run: source ~/.cargo/env"
+            if [ -z "$RUSTC_VERSION" ] || [ -z "$CARGO_VERSION" ] || [ -z "$RUSTUP_VERSION" ]; then
+                print_error "Rustup installer completed, but Rust tools are not runnable in this shell"
+                exit 1
             fi
+            print_info "$RUSTC_VERSION"
+            print_info "$CARGO_VERSION"
+            print_info "$RUSTUP_VERSION"
         else
             print_error "Failed to install Rustup"
             exit 1
@@ -1093,21 +1625,23 @@ if [[ "$INSTALL_ZIG" =~ ^[Yy]$ ]]; then
         exit 1
     fi
 
-    ZIG_INDEX_URL="https://ziglang.org/download/index.json"
     print_info "Resolving latest stable Zig release..."
     if ! ZIG_RELEASE_JSON="$(curl --proto '=https' --tlsv1.2 -fsSL "$ZIG_INDEX_URL")"; then
         print_error "Failed to retrieve the Zig release index"
         exit 1
     fi
 
-    ZIG_VERSION="$(
-        printf '%s\n' "$ZIG_RELEASE_JSON" \
-            | sed -nE '/^  "[0-9]+(\.[0-9]+)+": \{$/ { s/^  "([^"]+)".*/\1/; p; }' \
-            | sort -V \
-            | sed -n '$p'
-    )"
-    if [ -z "$ZIG_VERSION" ]; then
-        print_error "Failed to resolve the latest stable Zig version"
+    ZIG_UNAME_ARCH="$(uname -m)"
+    case "$ZIG_UNAME_ARCH" in
+        x86_64|amd64) ZIG_ARCH="x86_64" ;;
+        aarch64|arm64) ZIG_ARCH="aarch64" ;;
+        *)
+            print_error "Unsupported Zig architecture: $ZIG_UNAME_ARCH"
+            exit 1
+            ;;
+    esac
+    if ! resolve_zig_release_metadata "$ZIG_RELEASE_JSON" "$ZIG_ARCH"; then
+        print_error "Failed to resolve the ${ZIG_ARCH}-linux Zig archive metadata"
         exit 1
     fi
     print_info "Latest stable Zig release: $ZIG_VERSION"
@@ -1136,49 +1670,6 @@ if [[ "$INSTALL_ZIG" =~ ^[Yy]$ ]]; then
                 print_error "Failed to install $ZIG_XZ_PACKAGE"
                 exit 1
             fi
-        fi
-
-        ZIG_UNAME_ARCH="$(uname -m)"
-        case "$ZIG_UNAME_ARCH" in
-            x86_64|amd64) ZIG_ARCH="x86_64" ;;
-            aarch64|arm64) ZIG_ARCH="aarch64" ;;
-            *)
-                print_error "Unsupported Zig architecture: $ZIG_UNAME_ARCH"
-                exit 1
-                ;;
-        esac
-
-        ZIG_ASSET_METADATA="$(
-            printf '%s\n' "$ZIG_RELEASE_JSON" | awk \
-                -v version="$ZIG_VERSION" \
-                -v platform="${ZIG_ARCH}-linux" '
-                $0 == "  \"" version "\": {" {
-                    in_version = 1
-                    next
-                }
-                in_version && $0 == "    \"" platform "\": {" {
-                    in_platform = 1
-                    next
-                }
-                in_platform && /"tarball":/ {
-                    tarball = $0
-                    sub(/^.*"tarball": "/, "", tarball)
-                    sub(/".*$/, "", tarball)
-                    next
-                }
-                in_platform && /"shasum":/ {
-                    shasum = $0
-                    sub(/^.*"shasum": "/, "", shasum)
-                    sub(/".*$/, "", shasum)
-                    print tarball, shasum
-                    exit
-                }
-            '
-        )"
-        read -r ZIG_DOWNLOAD_URL ZIG_SHA256 <<< "$ZIG_ASSET_METADATA"
-        if [ -z "$ZIG_DOWNLOAD_URL" ] || [ -z "$ZIG_SHA256" ]; then
-            print_error "Failed to resolve the ${ZIG_ARCH}-linux Zig archive metadata"
-            exit 1
         fi
 
         ZIG_TARBALL="${ZIG_DOWNLOAD_URL##*/}"
@@ -1263,9 +1754,11 @@ fi
 
 if [[ "$INSTALL_NVIM_LATEST" =~ ^[Yy]$ ]]; then
     if ! command -v tar &> /dev/null; then
-        print_warning "tar not found - skipping Neovim install"
+        print_error "tar not found - install basic Linux essentials before installing Neovim"
+        exit 1
     elif ! command -v curl &> /dev/null && ! command -v wget &> /dev/null; then
-        print_warning "curl or wget not found - skipping Neovim install"
+        print_error "curl or wget not found - install basic Linux essentials before installing Neovim"
+        exit 1
     else
         if [ "$NVIM_ALREADY_AVAILABLE" = true ]; then
             print_info "Updating latest Neovim..."
@@ -1280,49 +1773,57 @@ if [[ "$INSTALL_NVIM_LATEST" =~ ^[Yy]$ ]]; then
         esac
 
         if [ ${#NVIM_ASSETS[@]} -eq 0 ]; then
-            print_warning "Unsupported architecture for Neovim installer: $NVIM_ARCH"
-        else
-            TMP_DIR="$(mktemp -d /tmp/nvim-install.XXXXXX)"
-            NVIM_TARBALL=""
-            for asset in "${NVIM_ASSETS[@]}"; do
-                URL="https://github.com/neovim/neovim/releases/latest/download/$asset"
-                if command -v curl &> /dev/null; then
-                    if curl -fL "$URL" -o "$TMP_DIR/$asset"; then
-                        NVIM_TARBALL="$TMP_DIR/$asset"
-                        break
-                    fi
-                else
-                    if wget -O "$TMP_DIR/$asset" "$URL"; then
-                        NVIM_TARBALL="$TMP_DIR/$asset"
-                        break
-                    fi
-                fi
-            done
-
-            if [ -z "$NVIM_TARBALL" ]; then
-                print_warning "Failed to download Neovim release from GitHub"
-            else
-                NVIM_TOP_DIR="$(tar -tf "$NVIM_TARBALL" | head -n1 | cut -d/ -f1)"
-                if [ -z "$NVIM_TOP_DIR" ]; then
-                    print_warning "Failed to read Neovim archive contents"
-                else
-                    sudo mkdir -p /opt
-                    if sudo tar -C /opt -xzf "$NVIM_TARBALL"; then
-                        if sudo ln -sfn "/opt/$NVIM_TOP_DIR/bin/nvim" /usr/local/bin/nvim; then
-                            print_info "✓ Latest Neovim installed (symlinked to /usr/local/bin/nvim)"
-                            NVIM_AVAILABLE=true
-                        else
-                            print_warning "Failed to link Neovim binary"
-                        fi
-                    else
-                        print_warning "Failed to extract Neovim archive"
-                    fi
-                fi
-            fi
-            rm -rf "$TMP_DIR"
+            print_error "Unsupported architecture for Neovim installer: $NVIM_ARCH"
+            exit 1
         fi
+
+        TMP_DIR="$(mktemp -d /tmp/nvim-install.XXXXXX)"
+        NVIM_TARBALL=""
+        for asset in "${NVIM_ASSETS[@]}"; do
+            URL="$NEOVIM_RELEASE_DOWNLOAD_URL/$asset"
+            if command -v curl &> /dev/null; then
+                if curl -fL "$URL" -o "$TMP_DIR/$asset"; then
+                    NVIM_TARBALL="$TMP_DIR/$asset"
+                    break
+                fi
+            elif wget -O "$TMP_DIR/$asset" "$URL"; then
+                NVIM_TARBALL="$TMP_DIR/$asset"
+                break
+            fi
+        done
+
+        if [ -z "$NVIM_TARBALL" ]; then
+            print_error "Failed to download a Neovim release archive from GitHub"
+            rm -rf "$TMP_DIR"
+            exit 1
+        fi
+        NVIM_TOP_DIR="$(tar -tf "$NVIM_TARBALL" | head -n1 | cut -d/ -f1)"
+        if [ -z "$NVIM_TOP_DIR" ]; then
+            print_error "Failed to read Neovim archive contents"
+            rm -rf "$TMP_DIR"
+            exit 1
+        fi
+        sudo mkdir -p /opt
+        if ! sudo tar -C /opt -xzf "$NVIM_TARBALL"; then
+            print_error "Failed to extract Neovim archive"
+            rm -rf "$TMP_DIR"
+            exit 1
+        fi
+        if ! sudo ln -sfn "/opt/$NVIM_TOP_DIR/bin/nvim" /usr/local/bin/nvim; then
+            print_error "Failed to link Neovim binary"
+            rm -rf "$TMP_DIR"
+            exit 1
+        fi
+        print_info "✓ Latest Neovim installed (symlinked to /usr/local/bin/nvim)"
+        NVIM_AVAILABLE=true
+        rm -rf "$TMP_DIR"
     fi
 fi
+if [[ "$INSTALL_NVIM_LATEST" =~ ^[Yy]$ ]] && ! nvim --version >/dev/null 2>&1; then
+    print_error "Neovim installation completed, but nvim is not runnable"
+    exit 1
+fi
+
 
 # Check if Neovim is available (installed previously or just now)
 if command -v nvim &> /dev/null; then
@@ -1342,36 +1843,55 @@ if section_selected "$SELECT_NEOVIM" && [ "$NVIM_AVAILABLE" = true ]; then
 
         if [ ! -f "$BASHRC_PATH" ]; then
             if ! touch "$BASHRC_PATH" 2>/dev/null; then
-                sudo touch "$BASHRC_PATH"
-                sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"
+                if ! sudo touch "$BASHRC_PATH" || ! sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"; then
+                    print_error "Failed to create $BASHRC_PATH"
+                    exit 1
+                fi
             fi
         fi
 
         # Remove previous block and any existing vi/vim alias lines
         if ! sed -i '/# Neovim aliases (added by 01_install_dependencies.sh)/,/^# End Neovim aliases/d' "$BASHRC_PATH" 2>/dev/null; then
-            sudo sed -i '/# Neovim aliases (added by 01_install_dependencies.sh)/,/^# End Neovim aliases/d' "$BASHRC_PATH"
-            sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"
+            if ! sudo sed -i '/# Neovim aliases (added by 01_install_dependencies.sh)/,/^# End Neovim aliases/d' "$BASHRC_PATH" ||
+                ! sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"; then
+                print_error "Failed to update $BASHRC_PATH"
+                exit 1
+            fi
         fi
         if ! sed -i '/^alias vi=/d; /^alias vim=/d' "$BASHRC_PATH" 2>/dev/null; then
-            sudo sed -i '/^alias vi=/d; /^alias vim=/d' "$BASHRC_PATH"
-            sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"
+            if ! sudo sed -i '/^alias vi=/d; /^alias vim=/d' "$BASHRC_PATH" ||
+                ! sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"; then
+                print_error "Failed to update $BASHRC_PATH"
+                exit 1
+            fi
         fi
 
         if [ -w "$BASHRC_PATH" ]; then
-            cat <<'EOF' >> "$BASHRC_PATH"
+            if ! cat >> "$BASHRC_PATH" <<'EOF'
 # Neovim aliases (added by 01_install_dependencies.sh)
 alias vi='nvim'
 alias vim='nvim'
 # End Neovim aliases
 EOF
+            then
+                print_error "Failed to append Neovim aliases to $BASHRC_PATH"
+                exit 1
+            fi
         else
-            cat <<'EOF' | sudo tee -a "$BASHRC_PATH" > /dev/null
+            if ! sudo tee -a "$BASHRC_PATH" > /dev/null <<'EOF'
 # Neovim aliases (added by 01_install_dependencies.sh)
 alias vi='nvim'
 alias vim='nvim'
 # End Neovim aliases
 EOF
-            sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"
+            then
+                print_error "Failed to append Neovim aliases to $BASHRC_PATH"
+                exit 1
+            fi
+            if ! sudo chown "$CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP" "$BASHRC_PATH"; then
+                print_error "Failed to set ownership on $BASHRC_PATH"
+                exit 1
+            fi
         fi
 
         print_info "✓ Aliases for vi and vim added to $BASHRC_PATH"
@@ -1411,10 +1931,12 @@ if section_selected "$SELECT_TMUX"; then
             if cp "$TMUX_CONFIG_SOURCE" "$TMUX_CONFIG_TARGET"; then
                 print_info "✓ tmux config copied to $TMUX_CONFIG_TARGET"
             else
-                print_warning "Failed to copy tmux config"
+                print_error "Failed to copy tmux config"
+                exit 1
             fi
         else
-            print_warning "tmux config not found at $TMUX_CONFIG_SOURCE"
+            print_error "tmux config not found at $TMUX_CONFIG_SOURCE"
+            exit 1
         fi
     else
         print_info "Skipped tmux installation/configuration"
@@ -1422,5 +1944,5 @@ if section_selected "$SELECT_TMUX"; then
 fi
 
 echo ""
-print_info "✅ Initialization complete!"
+print_info "✓ Initialization complete!"
 print_info "If you installed nvm or Neovim, restart your shell or run: source ~/.bashrc"

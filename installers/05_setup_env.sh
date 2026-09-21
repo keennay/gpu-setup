@@ -1299,7 +1299,7 @@ for dir in "${DIRS[@]}"; do
 done
 
 echo ""
-print_info "✅ ML environment setup complete!"
+print_info "✓ ML environment setup complete!"
 echo ""
 
 # ACTIVATE IF BEING SOURCED

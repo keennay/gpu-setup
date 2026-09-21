@@ -17,6 +17,11 @@ INSTALLERS=(
     "$CLI_INSTALLER"
 )
 
+if [ ! -r "$SCRIPT_DIR/installers/preflight.sh" ]; then
+    printf 'Error: required preflight helper is not readable.\n' >&2
+    exit 1
+fi
+
 for installer in "${INSTALLERS[@]}"; do
     if [ ! -r "$installer" ]; then
         printf 'Error: required installer not readable: %s\n' "$installer" >&2
@@ -1221,59 +1226,96 @@ select_install_defaults() {
 }
 
 refresh_runtime_paths() {
+    local pnpm_home="${PNPM_HOME:-${XDG_DATA_HOME:-$HOME/.local/share}/pnpm}"
     local candidate
-    local path_entry
-    local path_contains_candidate
-    local -a candidates=()
-    local -a path_entries=()
 
-    if [ -n "${PNPM_HOME:-}" ]; then
-        candidates+=("$PNPM_HOME")
-    fi
-    if [ -n "${HOME:-}" ] && [ "${PNPM_HOME:-}" != "$HOME/.local/share/pnpm" ]; then
-        candidates+=("$HOME/.local/share/pnpm")
-    fi
-
-    for candidate in "${candidates[@]}"; do
-        if [ ! -d "$candidate" ] || [ ! -x "$candidate/pnpm" ]; then
+    for candidate in "$pnpm_home/bin" "$pnpm_home"; do
+        if [ ! -x "$candidate/pnpm" ]; then
             continue
         fi
 
-        PNPM_HOME="$candidate"
-        export PNPM_HOME
-        path_contains_candidate=0
-        IFS=':' read -r -a path_entries <<<"${PATH:-}"
-        for path_entry in "${path_entries[@]}"; do
-            if [ "$path_entry" = "$candidate" ]; then
-                path_contains_candidate=1
-                break
-            fi
-        done
-        if (( ! path_contains_candidate )); then
-            PATH="$candidate${PATH:+:$PATH}"
-            export PATH
-        fi
+        export PNPM_HOME="$pnpm_home"
+        case "${PATH:-}" in
+            "$candidate"|"$candidate":*) ;;
+            *) export PATH="$candidate${PATH:+:$PATH}" ;;
+        esac
         return
     done
 }
 
-run_command() {
-    local step_label="$1"
-    local script_path="$2"
-    local script_name="${2##*/}"
-    local status
+finish_setup() {
+    local status="$1"
+    local index
 
-    shift 2
-    printf '%s' "$step_label"
+    trap - EXIT
+    printf '\nSetup outcome\n'
+    printf '%-30s %-18s %s\n' "Stage" "Preflight" "Installation"
+    for ((index = 0; index < ${#SETUP_STAGE_LABELS[@]}; index++)); do
+        if [ "${SETUP_PREFLIGHT_STATUS[index]}" = RUNNING ]; then
+            SETUP_PREFLIGHT_STATUS[index]="INTERRUPTED"
+        fi
+        if [ "${SETUP_INSTALL_STATUS[index]}" = RUNNING ]; then
+            SETUP_INSTALL_STATUS[index]="INTERRUPTED"
+        fi
+        printf '%-30s %-18s %s\n' "${SETUP_STAGE_LABELS[index]}" \
+            "${SETUP_PREFLIGHT_STATUS[index]}" "${SETUP_INSTALL_STATUS[index]}"
+    done
+    if (( status == 0 )); then
+        printf '\nInstallation complete.\n'
+        printf 'A system reboot is recommended before using the installed environment.\n'
+    else
+        printf '\nSetup stopped with status %d. Completed changes have not been rolled back.\n' "$status" >&2
+    fi
+    if [ -n "${SETUP_PREFLIGHT_STATE_DIR:-}" ]; then
+        rm -rf -- "$SETUP_PREFLIGHT_STATE_DIR"
+    fi
+    return "$status"
+}
+
+run_command() {
+    local stage_index="$1"
+    local phase="$2"
+    local script_path="$3"
+    local script_name="${3##*/}"
+    local status
+    local SETUP_PREFLIGHT_DEFERRED_FILE=""
+
+    shift 3
+    if [ "$phase" = preflight ]; then
+        SETUP_PREFLIGHT_STATUS[stage_index]=RUNNING
+        export SETUP_PREFLIGHT_DEFERRED_FILE="$SETUP_PREFLIGHT_STATE_DIR/$stage_index"
+        if ! : > "$SETUP_PREFLIGHT_DEFERRED_FILE"; then
+            SETUP_PREFLIGHT_STATUS[stage_index]="FAILED (1)"
+            printf 'Error: cannot record preflight state.\n' >&2
+            return 1
+        fi
+        printf 'Preflight '
+    else
+        SETUP_INSTALL_STATUS[stage_index]=RUNNING
+    fi
+    printf '[%d/4]' "$((stage_index + 1))"
     printf ' %q' /bin/bash "$script_path" "$@"
     printf '\n'
     if /bin/bash "$script_path" "$@"; then
+        if [ "$phase" = preflight ]; then
+            SETUP_PREFLIGHT_STATUS[stage_index]=CHECKED
+            if [ -s "$SETUP_PREFLIGHT_DEFERRED_FILE" ]; then
+                SETUP_PREFLIGHT_STATUS[stage_index]=DEFERRED
+            fi
+        else
+            SETUP_INSTALL_STATUS[stage_index]=COMPLETED
+        fi
         return 0
     else
         status=$?
     fi
 
-    printf 'Error: %s failed with status %d.\n' "$script_name" "$status" >&2
+    if [ "$phase" = preflight ]; then
+        SETUP_PREFLIGHT_STATUS[stage_index]="FAILED ($status)"
+    else
+        SETUP_INSTALL_STATUS[stage_index]="FAILED ($status)"
+    fi
+    printf 'Error: %s %s failed with status %d.\n' "$script_name" "$phase" "$status" >&2
     return "$status"
 }
 
@@ -1281,6 +1323,10 @@ perform_installation() {
     local edit_status
     local index
     local cli_selected_count=0
+    local preflight_failed=0
+    local planned_node="${DEPENDENCY_SELECTED[1]}"
+    local planned_pnpm="${DEPENDENCY_SELECTED[2]}"
+    local recheck_dependencies=0
     local -a dependency_args=(-y)
     local -a cuda_args=(-y)
     local -a python_args=(-y)
@@ -1367,27 +1413,96 @@ perform_installation() {
     fi
 
     leave_tui
-    run_command "[1/4]" "$DEPENDENCY_INSTALLER" "${dependency_args[@]}" || return $?
-    if [ "$cuda_choice" = "none" ]; then
-        printf '[2/4] Skipping CUDA installation (none selected)\n'
-    else
-        run_command "[2/4]" "$CUDA_INSTALLER" "${cuda_args[@]}" || return $?
+    SETUP_STAGE_LABELS=("Core/development dependencies" "CUDA" "Python / Astral UV" "Coding CLIs")
+    SETUP_PREFLIGHT_STATUS=("NOT RUN" "NOT RUN" "NOT RUN" "NOT RUN")
+    SETUP_INSTALL_STATUS=("NOT RUN" "NOT RUN" "NOT RUN" "NOT RUN")
+    SETUP_PREFLIGHT_STATE_DIR=""
+    if [ "$cuda_choice" = none ]; then
+        SETUP_PREFLIGHT_STATUS[1]=SKIPPED
+        SETUP_INSTALL_STATUS[1]=SKIPPED
     fi
-    if [ "$python_choice" = "none" ] && (( ! ASTRAL_UV_SELECTED )); then
-        printf '[3/4] Skipping Python and Astral UV (none selected)\n'
-    else
-        run_command "[3/4]" "$PYTHON_INSTALLER" "${python_args[@]}" || return $?
+    if [ "$python_choice" = none ] && (( ! ASTRAL_UV_SELECTED )); then
+        SETUP_PREFLIGHT_STATUS[2]=SKIPPED
+        SETUP_INSTALL_STATUS[2]=SKIPPED
     fi
-
-    refresh_runtime_paths
     if (( cli_selected_count == 0 )); then
-        printf '[4/4] Skipping coding CLIs (none selected)\n'
-    else
-        run_command "[4/4]" "$CLI_INSTALLER" "${cli_args[@]}" || return $?
+        SETUP_PREFLIGHT_STATUS[3]=SKIPPED
+        SETUP_INSTALL_STATUS[3]=SKIPPED
+    fi
+    trap 'finish_setup "$?"' EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    trap 'exit 129' HUP
+    if ! SETUP_PREFLIGHT_STATE_DIR=$(mktemp -d "${TMPDIR:-/tmp}/setup-preflight.XXXXXX"); then
+        printf 'Error: cannot create temporary preflight state directory.\n' >&2
+        return 1
     fi
 
-    printf 'Installation complete.\n'
-    printf 'A system reboot is recommended before using the installed environment.\n'
+    printf 'Checking all selected components before installation.\n'
+    if (( EUID != 0 )) && command -v sudo >/dev/null 2>&1; then
+        if ! sudo -v; then
+            printf 'Error: could not obtain sudo access for system installation.\n' >&2
+            preflight_failed=1
+        fi
+    fi
+    refresh_runtime_paths
+    SETUP_PLANNED_CORE=1 SETUP_PLANNED_NODE="$planned_node" SETUP_PLANNED_PNPM="$planned_pnpm" \
+        run_command 0 preflight "$DEPENDENCY_INSTALLER" --preflight "${dependency_args[@]}" || preflight_failed=1
+    if [ "$cuda_choice" != none ]; then
+        SETUP_PLANNED_CORE=1 \
+            run_command 1 preflight "$CUDA_INSTALLER" --preflight "${cuda_args[@]}" || preflight_failed=1
+    fi
+    if [ "${SETUP_INSTALL_STATUS[2]}" != SKIPPED ]; then
+        SETUP_PLANNED_CORE=1 \
+            run_command 2 preflight "$PYTHON_INSTALLER" --preflight "${python_args[@]}" || preflight_failed=1
+    fi
+    if (( cli_selected_count > 0 )); then
+        SETUP_PLANNED_CORE=1 SETUP_PLANNED_NODE="$planned_node" SETUP_PLANNED_PNPM="$planned_pnpm" \
+            run_command 3 preflight "$CLI_INSTALLER" --preflight "${cli_args[@]}" || preflight_failed=1
+    fi
+    if (( preflight_failed )); then
+        printf '\nPreflight found blockers. No installation stages were started.\n' >&2
+        return 1
+    fi
+
+    if [ "${SETUP_PREFLIGHT_STATUS[0]}" = DEFERRED ]; then
+        recheck_dependencies=1
+    fi
+    SETUP_RECHECK_PREFLIGHT="$recheck_dependencies" \
+        run_command 0 installation "$DEPENDENCY_INSTALLER" "${dependency_args[@]}" || return $?
+    refresh_runtime_paths
+    if [ "${SETUP_PREFLIGHT_STATUS[0]}" = DEFERRED ]; then
+        SETUP_PREFLIGHT_STATUS[0]=CONFIRMED
+    fi
+    if [ "${SETUP_PREFLIGHT_STATUS[1]}" = DEFERRED ]; then
+        run_command 1 preflight "$CUDA_INSTALLER" --preflight "${cuda_args[@]}" || preflight_failed=1
+    fi
+    if [ "${SETUP_PREFLIGHT_STATUS[2]}" = DEFERRED ]; then
+        run_command 2 preflight "$PYTHON_INSTALLER" --preflight "${python_args[@]}" || preflight_failed=1
+    fi
+    if [ "${SETUP_PREFLIGHT_STATUS[3]}" = DEFERRED ]; then
+        run_command 3 preflight "$CLI_INSTALLER" --preflight "${cli_args[@]}" || preflight_failed=1
+    fi
+    for index in 1 2 3; do
+        if [ "${SETUP_PREFLIGHT_STATUS[index]}" = DEFERRED ]; then
+            printf 'Error: %s still has unresolved preflight checks after core installation.\n' "${SETUP_STAGE_LABELS[index]}" >&2
+            SETUP_PREFLIGHT_STATUS[index]="FAILED (1)"
+            preflight_failed=1
+        fi
+    done
+    if (( preflight_failed )); then
+        return 1
+    fi
+    if [ "$cuda_choice" != none ]; then
+        run_command 1 installation "$CUDA_INSTALLER" "${cuda_args[@]}" || return $?
+    fi
+    if [ "${SETUP_INSTALL_STATUS[2]}" != SKIPPED ]; then
+        run_command 2 installation "$PYTHON_INSTALLER" "${python_args[@]}" || return $?
+    fi
+    if (( cli_selected_count > 0 )); then
+        run_command 3 installation "$CLI_INSTALLER" "${cli_args[@]}" || return $?
+    fi
+
     return 0
 }
 
@@ -1564,6 +1679,9 @@ run_tui() {
                 if focus_mouse_control; then
                     activate_focused "mouse"
                     activation_status=$?
+                    if (( ! TUI_ACTIVE )); then
+                        return "$activation_status"
+                    fi
                     if (( activation_status == 2 )); then
                         terminal_input_closed
                         return 1
@@ -1571,9 +1689,6 @@ run_tui() {
                     if (( activation_status == 3 )); then
                         cancel_installation
                         return 0
-                    fi
-                    if (( ! TUI_ACTIVE )); then
-                        return "$activation_status"
                     fi
                 fi
                 ;;
@@ -1589,6 +1704,9 @@ run_tui() {
             space|enter)
                 activate_focused "$KEY"
                 activation_status=$?
+                if (( ! TUI_ACTIVE )); then
+                    return "$activation_status"
+                fi
                 if (( activation_status == 2 )); then
                     terminal_input_closed
                     return 1
@@ -1596,9 +1714,6 @@ run_tui() {
                 if (( activation_status == 3 )); then
                     cancel_installation
                     return 0
-                fi
-                if (( ! TUI_ACTIVE )); then
-                    return "$activation_status"
                 fi
                 ;;
             escape)

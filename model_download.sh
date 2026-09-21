@@ -829,7 +829,7 @@ def check_repo_completeness(repo_id, repo_type, cache_dir, remote_info=None):
         is_complete = len(missing_files) == 0 and len(corrupted_files) == 0
 
         if is_complete:
-            print(f"\n✅ {repo_label} is fully downloaded and verified!")
+            print(f"\n✓ {repo_label} is fully downloaded and verified!")
             return True, expected_files, local_size, str(local_path)
         else:
             print(f"\n⚠️  {repo_label} is incomplete or has corrupted files")
@@ -1117,7 +1117,7 @@ try:
     )
 
     if final_check[0]:
-        print("\n✅ Download completed and verified successfully!")
+        print("\n✓ Download completed and verified successfully!")
 
         verified_revision = final_remote_info.sha
         if not verified_revision:
@@ -1247,7 +1247,7 @@ EOF
     
     echo ""
     echo "=========================================="
-    echo "✅ Setup Complete!"
+    echo "✓ Setup Complete!"
     echo "=========================================="
     echo "Repository: $DOWNLOAD_REPO_ID"
     echo "Type: $DOWNLOAD_REPO_TYPE"
