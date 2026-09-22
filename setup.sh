@@ -135,9 +135,9 @@ install_defaults_selected() {
         [ "$cuda_choice" = "default" ] &&
         [ "$python_choice" = "default" ]
 }
-CUDA_DEFAULT_VERSION="13.0"
+CUDA_DEFAULT_VERSION="13.2"
 PYTHON_DEFAULT_VERSION="3.11.16"
-CUDA_GUIDANCE_LINE_ONE="Select 13.0 or type a custom CUDA version"
+CUDA_GUIDANCE_LINE_ONE="Select 13.2 or type a custom CUDA version"
 CUDA_GUIDANCE_LINE_TWO="Up to 10 CUDA versions can be installed, comma separated, with the"
 CUDA_GUIDANCE_LINE_THREE="first in the list as the default CUDA option"
 PYTHON_GUIDANCE="Select 3.11.16 or type a custom Python version"

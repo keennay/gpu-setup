@@ -1031,9 +1031,9 @@ for arg in "$@"; do
             echo "Multiple CUDA versions require exactly one -d marker."
             echo "A single CUDA version may omit -d to leave the current default unchanged."
             echo "Examples:"
-            echo "  $0 -y 13.0 -d"
-            echo "  $0 -y 13.0 -d 12.0 13.3"
-            echo "  $0 13.0 -d 12.0"
+            echo "  $0 -y 13.2 -d"
+            echo "  $0 -y 13.2 -d 12.0 13.3"
+            echo "  $0 13.2 -d 12.0"
             exit 0
             ;;
         -*)
@@ -1193,7 +1193,7 @@ if command -v nvidia-smi &> /dev/null; then
     fi
 else
     print_warning "  ⚠ No NVIDIA driver detected (nvidia-smi not found)"
-    print_info "  Will default to CUDA 12.9 for modern NVIDIA GPU compatibility"
+    print_info "  Will default to CUDA 13.2 for modern NVIDIA GPU compatibility"
 fi
 
 # Check for CUDA toolkit (nvcc)
@@ -1988,7 +1988,7 @@ configure_cuda_environment() {
         print_info "Skipped adding CUDA environment variables"
     fi
 }
-TARGET_CUDA_VERSION_DEFAULT="12.9"
+TARGET_CUDA_VERSION_DEFAULT="13.2"
 CURRENT_CUDA_DISPLAY="None"
 if command -v nvcc &> /dev/null; then
     CURRENT_CUDA_DISPLAY="$CUDA_VERSION"

@@ -85,6 +85,17 @@ detect_gpu_configuration() {
             ;;
     esac
 
+    if [[ "$GPU_MEM_UTIL_VALUE" =~ ^0+([.]0+)?$ ]]; then
+        printf '%s\n' \
+            "An inference cookbook recipe for this model on your specific GPU architecture does not yet exist." \
+            "" \
+            "To create one, add the skills provided by this repo to your coding CLI of choice & follow the guide:" \
+            "" \
+            "$SCRIPTS_DIR/skills/llm-vlm-cookbook-recipe-creation-and-update" \
+            "$SCRIPTS_DIR/skills/llm-vlm-cookbook-recipe-source" >&2
+        return 1
+    fi
+
     if [ -z "$TENSOR_PARALLEL_SIZE_VALUE" ] || [ -z "$GPU_MEM_UTIL_VALUE" ] || [ -z "$CONTEXT_LEN_VALUE" ]; then
         echo "Error: tensor-parallel size, GPU memory utilization, and context length must be configured for $CUDA_SM_VERSION." >&2
         return 1
