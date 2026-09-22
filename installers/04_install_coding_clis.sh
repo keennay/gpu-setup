@@ -24,7 +24,8 @@ CONFIG_ROOT="$CONFIG_HOME/.config"
 # preflight path uses these same values as the installation path.
 NAC_INSTALL_URL="https://raw.githubusercontent.com/arcee-ai/nac/main/scripts/install.sh"
 CLAUDE_INSTALL_URL="https://claude.ai/install.sh"
-DEEPSEEK_REPO_URL="https://github.com/deepseek-ai/deepseek-harness.git"
+DEEPSEEK_PACKAGE="@deepseek-ai/dsh"
+DEEPSEEK_PACKAGE_METADATA_URL="https://registry.npmjs.org/@deepseek-ai%2fdsh/latest"
 GROK_INSTALL_URL="https://x.ai/cli/install.sh"
 KIMI_INSTALL_URL="https://code.kimi.com/kimi-code/install.sh"
 MUSE_INSTALL_URL="https://dev.meta.ai/install.sh"
@@ -39,7 +40,6 @@ GEMINI_PACKAGE="@google/gemini-cli"
 GEMINI_PACKAGE_METADATA_URL="https://registry.npmjs.org/@google%2fgemini-cli/latest"
 PI_PACKAGE="@earendil-works/pi-coding-agent"
 PI_PACKAGE_METADATA_URL="https://registry.npmjs.org/@earendil-works%2fpi-coding-agent/latest"
-DEEPSEEK_HARNESS_DIR="$HOME/deepseek-harness"
 
 ensure_config_ownership() {
     local config_root="$1"
@@ -287,10 +287,9 @@ normalise_planned_flag() {
 }
 
 run_preflight() {
-    local planned_core planned_node planned_pnpm curl_checked=false curl_unusable=false
+    local planned_core planned_node curl_checked=false curl_unusable=false
     planned_core="$(normalise_planned_flag "${SETUP_PLANNED_CORE:-0}")"
     planned_node="$(normalise_planned_flag "${SETUP_PLANNED_NODE:-0}")"
-    planned_pnpm="$(normalise_planned_flag "${SETUP_PLANNED_PNPM:-0}")"
 
     if [ ! -r "$SCRIPT_DIR/preflight.sh" ]; then
         print_error "Shared preflight helper not found: $SCRIPT_DIR/preflight.sh"
@@ -320,10 +319,9 @@ run_preflight() {
         fi
     fi
 
-    local node_present=false npm_present=false pnpm_present=false
+    local node_present=false npm_present=false
     if command -v node >/dev/null 2>&1; then node_present=true; fi
     if command -v npm >/dev/null 2>&1; then npm_present=true; fi
-    if command -v pnpm >/dev/null 2>&1; then pnpm_present=true; fi
     if section_selected "$SELECT_DEEPSEEK" ||
        section_selected "$SELECT_GEMINI" ||
        section_selected "$SELECT_PI" ||
@@ -344,7 +342,8 @@ run_preflight() {
         fi
     fi
 
-    if section_selected "$SELECT_GEMINI" ||
+    if section_selected "$SELECT_DEEPSEEK" ||
+       section_selected "$SELECT_GEMINI" ||
        section_selected "$SELECT_PI" ||
        section_selected "$SELECT_PRIME"; then
         preflight_command npm "$planned_node"
@@ -360,51 +359,6 @@ run_preflight() {
             fi
         elif [ "$planned_node" = 1 ]; then
             preflight_defer "npm will be provided by the planned Node.js stage"
-        fi
-    fi
-    if section_selected "$SELECT_DEEPSEEK"; then
-        preflight_info "Checking DeepSeek Harness"
-        preflight_command pnpm "$planned_pnpm"
-        if [ "$pnpm_present" = true ]; then
-            if ! pnpm --version >/dev/null 2>&1; then
-                if [ "$planned_pnpm" = 1 ]; then
-                    preflight_defer "Existing pnpm is not usable; planned pnpm will replace it"
-                else
-                    preflight_error "pnpm is present but cannot execute"
-                fi
-            fi
-        elif [ "$planned_pnpm" = 1 ]; then
-            preflight_defer "pnpm will be provided by the planned dependency stage"
-        fi
-        preflight_command git "$planned_core"
-        if command -v git >/dev/null 2>&1 && ! git --version >/dev/null 2>&1; then
-            if [ "$planned_core" = 1 ]; then
-                preflight_defer "Existing git is not usable; planned core dependencies will replace it"
-            else
-                preflight_error "git is present but cannot execute"
-            fi
-        fi
-        preflight_url "DeepSeek Harness repository" "$DEEPSEEK_REPO_URL"
-
-        if [ -e "$DEEPSEEK_HARNESS_DIR" ]; then
-            if [ ! -d "$DEEPSEEK_HARNESS_DIR/.git" ]; then
-                preflight_error "DeepSeek Harness path exists but is not a Git checkout: $DEEPSEEK_HARNESS_DIR"
-            elif command -v git >/dev/null 2>&1; then
-                if ! git -C "$DEEPSEEK_HARNESS_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-                    if [ "$planned_core" = 1 ]; then
-                        preflight_defer "DeepSeek Harness checkout validation deferred until planned git is available"
-                    else
-                        preflight_error "DeepSeek Harness checkout is invalid: $DEEPSEEK_HARNESS_DIR"
-                    fi
-                fi
-            elif [ "$planned_core" = 1 ]; then
-                preflight_defer "DeepSeek Harness checkout validation requires planned git"
-            fi
-            if [ ! -w "$DEEPSEEK_HARNESS_DIR" ]; then
-                preflight_error "DeepSeek Harness checkout is not writable: $DEEPSEEK_HARNESS_DIR"
-            fi
-        else
-            preflight_writable "$DEEPSEEK_HARNESS_DIR"
         fi
     fi
     if curl_cli_selected; then
@@ -599,6 +553,10 @@ NODE
         esac
     }
 
+    if section_selected "$SELECT_DEEPSEEK"; then
+        preflight_info "Checking DeepSeek Harness"
+        preflight_npm_package "DeepSeek Harness" "$DEEPSEEK_PACKAGE" "$DEEPSEEK_PACKAGE_METADATA_URL"
+    fi
     if section_selected "$SELECT_GEMINI"; then
         preflight_info "Checking Gemini CLI"
         preflight_npm_package "Gemini CLI" "$GEMINI_PACKAGE" "$GEMINI_PACKAGE_METADATA_URL"
@@ -665,11 +623,9 @@ fi
 
 NODE_AVAILABLE=false
 NPM_AVAILABLE=false
-PNPM_AVAILABLE=false
 CURL_AVAILABLE=false
 if command_usable node; then NODE_AVAILABLE=true; fi
 if command_usable npm; then NPM_AVAILABLE=true; fi
-if command_usable pnpm; then PNPM_AVAILABLE=true; fi
 if command_usable curl; then CURL_AVAILABLE=true; fi
 
 require_curl_cli() {
@@ -687,25 +643,6 @@ require_node_npm_cli() {
     if [ "$NODE_AVAILABLE" != true ] || [ "$NPM_AVAILABLE" != true ]; then
         set_cli_status "$cli_key" "BLOCKED" "usable Node.js and npm are required"
         print_error "$label blocked: usable Node.js and npm were not found"
-        return 1
-    fi
-    return 0
-}
-
-require_deepseek_cli() {
-    if [ "$NODE_AVAILABLE" != true ]; then
-        set_cli_status deepseek "BLOCKED" "usable Node.js is required"
-        print_error "DeepSeek Harness blocked: usable Node.js was not found"
-        return 1
-    fi
-    if [ "$PNPM_AVAILABLE" != true ]; then
-        set_cli_status deepseek "BLOCKED" "usable pnpm is required"
-        print_error "DeepSeek Harness blocked: usable pnpm was not found"
-        return 1
-    fi
-    if ! command_usable git; then
-        set_cli_status deepseek "BLOCKED" "usable git is required"
-        print_error "DeepSeek Harness blocked: usable git was not found"
         return 1
     fi
     return 0
@@ -800,46 +737,16 @@ if section_selected "$SELECT_CLAUDE"; then
 fi
 
 if section_selected "$SELECT_DEEPSEEK"; then
-    if require_deepseek_cli; then
+    if require_node_npm_cli deepseek "DeepSeek Harness"; then
         prompt_yes_no INSTALL_DEEPSEEK "  Install DeepSeek Harness? (y/n): "
         if [[ "$INSTALL_DEEPSEEK" =~ ^[Yy]$ ]]; then
-            DEEPSEEK_READY=true
-
-            if [ -e "$DEEPSEEK_HARNESS_DIR" ] && [ ! -d "$DEEPSEEK_HARNESS_DIR/.git" ]; then
-                print_error "Cannot clone DeepSeek Harness because $DEEPSEEK_HARNESS_DIR already exists and is not a Git checkout"
-                set_cli_status deepseek "BLOCKED" "existing path is not a Git checkout"
-                DEEPSEEK_READY=false
-            elif [ -d "$DEEPSEEK_HARNESS_DIR/.git" ]; then
-                if git -C "$DEEPSEEK_HARNESS_DIR" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
-                    print_info "Using existing DeepSeek Harness checkout at $DEEPSEEK_HARNESS_DIR"
-                else
-                    print_error "DeepSeek Harness checkout is invalid: $DEEPSEEK_HARNESS_DIR"
-                    set_cli_status deepseek "BLOCKED" "existing checkout is invalid"
-                    DEEPSEEK_READY=false
-                fi
+            print_info "Installing DeepSeek Harness..."
+            if npm install --global "${DEEPSEEK_PACKAGE}@latest"; then
+                print_info "DeepSeek Harness installed. Run it with: dsh web"
+                set_cli_status deepseek "INSTALLED"
             else
-                print_info "Cloning DeepSeek Harness into $DEEPSEEK_HARNESS_DIR..."
-                if ! git clone "$DEEPSEEK_REPO_URL" "$DEEPSEEK_HARNESS_DIR"; then
-                    print_error "Failed to clone DeepSeek Harness"
-                    set_cli_status deepseek "FAILED" "git clone failed"
-                    DEEPSEEK_READY=false
-                fi
-            fi
-
-            if [ "$DEEPSEEK_READY" = true ]; then
-                print_info "Installing and building DeepSeek Harness..."
-                if (
-                    cd "$DEEPSEEK_HARNESS_DIR" &&
-                    pnpm install &&
-                    pnpm run build
-                ); then
-                    print_info "DeepSeek Harness installed"
-                    print_info "Run it with: cd \"$DEEPSEEK_HARNESS_DIR\" && pnpm dsh web"
-                    set_cli_status deepseek "INSTALLED"
-                else
-                    print_error "Failed to install or build DeepSeek Harness"
-                    set_cli_status deepseek "FAILED" "pnpm install/build failed"
-                fi
+                print_error "Failed to install DeepSeek Harness"
+                set_cli_status deepseek "FAILED" "npm install failed"
             fi
         else
             print_info "Skipped DeepSeek Harness installation"
