@@ -85,7 +85,7 @@ The below are each package / service provided across the installers.
 Inference cookbook recipes are provided as bash scripts, validated against 1x, 2x, 4x, and 8x NVIDIA H200s, with future support for sm100, sm103, sm120, & sm121 architecture NVIDIA GPUs.
 
 The currently supported companies are:
-- Allen Institute for AI, Arcee AI, Cohere, Datalab, DeepSeek, Dots Studio, Google, IBM Granite, Inclusion Ai, Inco AI, Inferact, Intel, Liquid AI, Meta, Microsoft, MiniMax, Mistral AI, Moonshot AI, Nanbeige, Nex-AGI, NVIDIA, OpenAI, Prime Intellect, Poolside, Qwen, RadixArk, Red Hat AI, StepFun, Tencent, Thinking Machines Lab, Xiaomi, Z Lab, Z.ai, Zyphra
+- Allen Institute for AI, Arcee AI, Cohere, Datalab, DeepSeek, Dots Studio, Google, IBM Granite, Inclusion Ai, Inco AI, Inferact, Intel, Liquid AI, Meta, Microsoft, MiniMax, Mistral AI, Moonshot AI, Nanbeige, Nex-AGI, NVIDIA, OpenAI, Paradigma, Prime Intellect, Poolside, Qwen, RadixArk, Red Hat AI, StepFun, Tencent, Thinking Machines Lab, Xiaomi, Yandex, Z Lab, Z.ai, Zyphra
 
 All scripts follow a singular format, allowing easy replicability for newer models & hardware architecture. Specific flags are also defined by CUDA architecture target, allowing the same script to run on multiple hardware, with a singular architecture per launch.
 
@@ -117,6 +117,7 @@ Local Inference Lab's contact info and their LLM Inference Bench repo can be fou
 - https://github.com/local-inference-lab/llm-inference-bench
 
 Below is an example decode throughput data for DeepSeek-V4-Flash-0731 running on 2x NVIDIA H200 NVL GPUs:
+<br>
 <img width="600" height="442" alt="llm-inference-bench-example" src="https://github.com/user-attachments/assets/fa72801b-bbad-415e-9d06-c44bd5393d86" />
 
 ***
