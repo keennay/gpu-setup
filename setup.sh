@@ -136,11 +136,11 @@ install_defaults_selected() {
         [ "$python_choice" = "default" ]
 }
 CUDA_DEFAULT_VERSION="13.2"
-PYTHON_DEFAULT_VERSION="3.11.16"
+PYTHON_DEFAULT_VERSION="3.12.14"
 CUDA_GUIDANCE_LINE_ONE="Select 13.2 or type a custom CUDA version"
 CUDA_GUIDANCE_LINE_TWO="Up to 10 CUDA versions can be installed, comma separated, with the"
 CUDA_GUIDANCE_LINE_THREE="first in the list as the default CUDA option"
-PYTHON_GUIDANCE="Select 3.11.16 or type a custom Python version"
+PYTHON_GUIDANCE="Select $PYTHON_DEFAULT_VERSION or type a custom Python version"
 CONTROLS_TEXT="Click/Arrows/Tab move  Space select  Enter activate  i install  q cancel"
 cuda_choice="default"
 python_choice="default"
@@ -825,7 +825,7 @@ validate_python_version() {
     local python_pattern='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
 
     if [[ ! "$buffer" =~ $python_pattern ]]; then
-        status_message="Python must be major.minor.patch, for example 3.11.16."
+        status_message="Python must be major.minor.patch, for example $PYTHON_DEFAULT_VERSION."
         return 1
     fi
 

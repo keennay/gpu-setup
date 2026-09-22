@@ -256,6 +256,8 @@ Record both the PR URL and exact tested head commit in the installer function an
 - Install packages into that temporary environment with exact, recorded package-manager commands derived from repository installer conventions.
 - Reinstall a different official release, commit, main, or PR into the temporary candidate environment while evaluating engine compatibility.
 - Let the package manager populate the environment normally.
+- Use unmodified plugins from official engine or model-publisher sources, recording the exact source and installation. Configure them through existing recipe fields without adding script lines or changing the shared template.
+- Store required official plugin artifacts under `recipes/<repo>/plugin/`, where `<repo>` is the lowercase publisher/organization directory, not the inference provider. Stage the same layout under `/tmp` during validation and promote the plugin artifacts only with a validated recipe. Reference or install them through existing recipe fields and the reproducible environment installer; do not add script lines or change the shared template.
 
 ### Forbidden
 
@@ -269,7 +271,7 @@ $HOME/env_*/vllm
 
 NEVER monkey-patch imports, mutate installed Python modules, use `sed`/`perl` on site-packages, copy model code into the environment, or keep an editable local engine checkout there.
 
-NEVER create or modify a repository helper, patch file, reasoning parser plugin, tool parser plugin, or compatibility shim to make the model work. Reuse `tools/recipes/inference_recipe.sh` unchanged. If native support is unavailable in an official release/main/commit/PR, fail the attempt.
+NEVER create or modify a repository helper, patch file, unofficial reasoning parser plugin, unofficial tool parser plugin, or compatibility shim to make the model work. Reuse `tools/recipes/inference_recipe.sh` unchanged. If neither native support in an official release/main/commit/PR nor a compatible official plugin is available, fail the attempt.
 
 ### Additional Python packages
 
@@ -305,15 +307,15 @@ Prefer the same publisher/model family, then the closest architecture. Preserve 
 
 ### Parser configuration contract
 
-In full recipe creation or broad update mode, the recipe MUST configure every natively available model capability advertised by the exact model card/checkpoint:
+In full recipe creation or broad update mode, the recipe MUST configure every model capability advertised by the exact model card/checkpoint that is available through native engine support or official plugins:
 
-- If reasoning/thinking is supported and the chosen engine source provides a compatible native parser, set `REASONING_PARSER` to the source-verified parser flag.
-- If structured tool calling is supported and the chosen engine source provides a compatible native parser, set `TOOL_CALL_PARSER` to the source-verified parser flag.
+- If reasoning/thinking is supported and the chosen engine source or an official plugin provides a compatible parser, set `REASONING_PARSER` to the source-verified parser flag.
+- If structured tool calling is supported and the chosen engine source or an official plugin provides a compatible parser, set `TOOL_CALL_PARSER` to the source-verified parser flag.
 - For vLLM tool calling, also set `ENABLE_AUTO_TOOL_CHOICE="--enable-auto-tool-choice"` when required by the authoritative command.
 - If both reasoning and tool calling are available, the script MUST enable and later validate both. Enabling only one is incomplete.
 - If a capability is not advertised for the exact checkpoint, leave its parser field empty rather than copying a parser from the template.
 
-Parser availability must come from the exact engine release/main/commit/PR and authoritative model guidance. Do not create a parser plugin or helper. If the model requires reasoning or structured tools but no allowed engine source provides the required native parser, mark that engine/model recipe failed.
+Parser availability must come from the exact engine release/main/commit/PR or an official plugin and authoritative model guidance. Do not create an unofficial parser plugin or helper. If the model requires reasoning or structured tools but neither an allowed engine source nor an official plugin provides the required parser, mark that engine/model recipe failed.
 
 ### 3. Create the temporary environment (full recipe creation or broad update mode)
 
@@ -340,7 +342,7 @@ The temporary script MUST invoke the existing helper at:
 tools/recipes/inference_recipe.sh
 ```
 
-Do not create a helper copy, helper symlink, plugin, patch, or shim under `/tmp`. A temporary script may use an absolute source path during validation; restore the standard repository-relative source line when promoted and rerun the final script.
+Do not create a helper copy, helper symlink, unofficial plugin, patch, or shim under `/tmp`. A temporary script may use an absolute source path during validation; restore the standard repository-relative source line when promoted and rerun the final script.
 
 ### Engine-stable launch logs
 
@@ -446,7 +448,7 @@ Do not claim a model/engine combination works unless this complete suite passes 
 Mark the effort failed when any of these remain true after exhausting authoritative engine release/main/commit/PR candidates and the available GPU ladder:
 
 - insufficient per-GPU VRAM to run maximum context while preserving at least 16,384 MiB free on every selected GPU;
-- no upstream engine source supports the model without a patch/plugin/helper;
+- no upstream engine source supports the model without a patch/helper, aside from official plugins. If official plugins are required, implement without adding any additional lines to the script while maintaining a consistent script template across all existing scripts;
 - required modality, reasoning, or tool behavior does not work;
 - startup requires a forbidden context/batch/CUDA workaround;
 - a required dependency cannot be captured reproducibly in the environment installer.

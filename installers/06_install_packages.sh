@@ -109,6 +109,7 @@ ENV_TYPES=(
   "nvidia-vllm-pr-55222"
   "openai-sglang-pr-38626"
   "openai-vllm-pr-53207"
+  "paradigma-inc-vllm-v0260"
   "poolside-laguna-xs-vllm"
   "poolside-sglang"
   "poolside-sglang-pr-22513"
@@ -132,6 +133,8 @@ ENV_TYPES=(
   "stepfun-sglang"
   "stepfun-transformers"
   "stepfun-vllm"
+  "xiaomimimo-sglang-v0520"
+  "xiaomimimo-vllm-v0300"
   "z-lab-sglang"
   "z-lab-sglang-pr-35209"
   "z-lab-vllm"
@@ -234,6 +237,7 @@ declare -A ENV_DESCRIPTIONS=(
   ["nvidia-vllm-pr-55222"]="NVIDIA GLM 5.3 Flash (vLLM) PR 55222"
   ["openai-sglang-pr-38626"]="OpenAI Whisper (SGLang) PR 38626"
   ["openai-vllm-pr-53207"]="OpenAI Whisper (vLLM) PR 53207"
+  ["paradigma-inc-vllm-v0260"]="Paradigma Limite (vLLM 0.26.0, official plugin)"
   ["poolside-laguna-xs-vllm"]="Poolside Laguna XS (vLLM)"
   ["poolside-sglang"]="Poolside (SGLang)"
   ["poolside-sglang-pr-22513"]="Poolside (SGLang) PR 22513"
@@ -257,6 +261,8 @@ declare -A ENV_DESCRIPTIONS=(
   ["stepfun-sglang"]="StepFun (SGLang)"
   ["stepfun-transformers"]="StepFun (Transformers)"
   ["stepfun-vllm"]="StepFun (vLLM)"
+  ["xiaomimimo-sglang-v0520"]="XiaomiMiMo Distill (SGLang 0.5.20)"
+  ["xiaomimimo-vllm-v0300"]="XiaomiMiMo Distill (vLLM 0.30.0)"
   ["z-lab-sglang"]="z-lab (SGLang)"
   ["z-lab-sglang-pr-35209"]="z-lab (SGLang) PR 35209"
   ["z-lab-vllm"]="z-lab (vLLM)"
@@ -536,109 +542,118 @@ resolve_env_type() {
         87|openai_vllm_pr_53207|openai-vllm-pr-53207)
             echo "openai-vllm-pr-53207"
             ;;
-        88|poolside_laguna_xs_vllm|poolside-laguna-xs-vllm)
+        88|paradigma_inc_vllm_v0260|paradigma-inc-vllm-v0260)
+            echo "paradigma-inc-vllm-v0260"
+            ;;
+        89|poolside_laguna_xs_vllm|poolside-laguna-xs-vllm)
             echo "poolside-laguna-xs-vllm"
             ;;
-        89|poolside_sglang|poolside-sglang)
+        90|poolside_sglang|poolside-sglang)
             echo "poolside-sglang"
             ;;
-        90|poolside_sglang_pr_22513|poolside-sglang-pr-22513)
+        91|poolside_sglang_pr_22513|poolside-sglang-pr-22513)
             echo "poolside-sglang-pr-22513"
             ;;
-        91|poolside_transformers|poolside-transformers)
+        92|poolside_transformers|poolside-transformers)
             echo "poolside-transformers"
             ;;
-        92|poolside_vllm|poolside-vllm)
+        93|poolside_vllm|poolside-vllm)
             echo "poolside-vllm"
             ;;
-        93|primeintellect_sglang|primeintellect-sglang)
+        94|primeintellect_sglang|primeintellect-sglang)
             echo "primeintellect-sglang"
             ;;
-        94|primeintellect_vllm|primeintellect-vllm)
+        95|primeintellect_vllm|primeintellect-vllm)
             echo "primeintellect-vllm"
             ;;
-        95|qwen_flash_next_sglang|qwen-flash-next-sglang)
+        96|qwen_flash_next_sglang|qwen-flash-next-sglang)
             echo "qwen-flash-next-sglang"
             ;;
-        96|qwen_flash_next_vllm|qwen-flash-next-vllm)
+        97|qwen_flash_next_vllm|qwen-flash-next-vllm)
             echo "qwen-flash-next-vllm"
             ;;
-        97|qwen_flash_next_vllm_pr_54129|qwen-flash-next-vllm-pr-54129)
+        98|qwen_flash_next_vllm_pr_54129|qwen-flash-next-vllm-pr-54129)
             echo "qwen-flash-next-vllm-pr-54129"
             ;;
-        98|qwen_ktransformers|qwen-ktransformers)
+        99|qwen_ktransformers|qwen-ktransformers)
             echo "qwen-ktransformers"
             ;;
-        99|qwen_sglang|qwen-sglang)
+        100|qwen_sglang|qwen-sglang)
             echo "qwen-sglang"
             ;;
-        100|qwen_sglang_pr_22121|qwen-sglang-pr-22121)
+        101|qwen_sglang_pr_22121|qwen-sglang-pr-22121)
             echo "qwen-sglang-pr-22121"
             ;;
-        101|qwen_transformers|qwen-transformers)
+        102|qwen_transformers|qwen-transformers)
             echo "qwen-transformers"
             ;;
-        102|qwen_vllm|qwen-vllm)
+        103|qwen_vllm|qwen-vllm)
             echo "qwen-vllm"
             ;;
-        103|radixark_qwen_sglang|radixark-qwen-sglang)
+        104|radixark_qwen_sglang|radixark-qwen-sglang)
             echo "radixark-qwen-sglang"
             ;;
-        104|radixark_sglang|radixark-sglang)
+        105|radixark_sglang|radixark-sglang)
             echo "radixark-sglang"
             ;;
-        105|redhat_sglang_pr_35809|redhat-sglang-pr-35809)
+        106|redhat_sglang_pr_35809|redhat-sglang-pr-35809)
             echo "redhat-sglang-pr-35809"
             ;;
-        106|redhatai_sglang|redhatai-sglang)
+        107|redhatai_sglang|redhatai-sglang)
             echo "redhatai-sglang"
             ;;
-        107|redhatai_vllm|redhatai-vllm)
+        108|redhatai_vllm|redhatai-vllm)
             echo "redhatai-vllm"
             ;;
-        108|stepfun_sglang|stepfun-sglang)
+        109|stepfun_sglang|stepfun-sglang)
             echo "stepfun-sglang"
             ;;
-        109|stepfun_transformers|stepfun-transformers)
+        110|stepfun_transformers|stepfun-transformers)
             echo "stepfun-transformers"
             ;;
-        110|stepfun_vllm|stepfun-vllm)
+        111|stepfun_vllm|stepfun-vllm)
             echo "stepfun-vllm"
             ;;
-        111|z_lab_sglang|z-lab-sglang)
+        112|xiaomimimo_sglang_v0520|xiaomimimo-sglang-v0520)
+            echo "xiaomimimo-sglang-v0520"
+            ;;
+        113|xiaomimimo_vllm_v0300|xiaomimimo-vllm-v0300)
+            echo "xiaomimimo-vllm-v0300"
+            ;;
+        114|z_lab_sglang|z-lab-sglang)
             echo "z-lab-sglang"
             ;;
-        112|z_lab_sglang_pr_35209|z-lab-sglang-pr-35209)
+        115|z_lab_sglang_pr_35209|z-lab-sglang-pr-35209)
             echo "z-lab-sglang-pr-35209"
             ;;
-        113|z_lab_vllm|z-lab-vllm)
+        116|z_lab_vllm|z-lab-vllm)
             echo "z-lab-vllm"
             ;;
-        114|zyphra_legacy_sglang|zyphra-legacy-sglang)
+        117|zyphra_legacy_sglang|zyphra-legacy-sglang)
             echo "zyphra-legacy-sglang"
             ;;
-        115|zyphra_legacy_transformers|zyphra-legacy-transformers)
+        118|zyphra_legacy_transformers|zyphra-legacy-transformers)
             echo "zyphra-legacy-transformers"
             ;;
-        116|zyphra_legacy_vllm|zyphra-legacy-vllm)
+        119|zyphra_legacy_vllm|zyphra-legacy-vllm)
             echo "zyphra-legacy-vllm"
             ;;
-        117|zyphra_sglang|zyphra-sglang)
+        120|zyphra_sglang|zyphra-sglang)
             echo "zyphra-sglang"
             ;;
-        118|zyphra_sglang_pr_32517|zyphra-sglang-pr-32517)
+        121|zyphra_sglang_pr_32517|zyphra-sglang-pr-32517)
             echo "zyphra-sglang-pr-32517"
             ;;
-        119|zyphra_transformers|zyphra-transformers)
+        122|zyphra_transformers|zyphra-transformers)
             echo "zyphra-transformers"
             ;;
-        120|zyphra_vllm|zyphra-vllm)
+        123|zyphra_vllm|zyphra-vllm)
             echo "zyphra-vllm"
             ;;
-        121|custom|custom_uv|custom-uv|env_custom_uv)
+        124|custom|custom_uv|custom-uv|env_custom_uv)
             echo "custom_uv"
             ;;
-        122|custom_pip|custom-pip|env_custom_pip)
+        125|custom_pip|custom-pip|env_custom_pip)
             echo "custom_pip"
             ;;
         *)
@@ -1964,6 +1979,15 @@ install_openai_vllm_pr_53207() {
     run_uv_install --no-deps "nvidia-cudnn-cu13==9.26.0.51" || return 1
 }
 
+install_paradigma_inc_vllm_v0260() {
+    ensure_active_environment_matches "paradigma-inc-vllm-v0260" || return 1
+    # Official plugin: https://github.com/paradigma-inc/limite-violetto/tree/cd68d27f100ebb7c84f05603d5af0e8f934b28b5
+    print_info "Installing the official Limite plugin with vLLM 0.26.0..."
+    run_uv_install "vllm==0.26.0" "torch==2.11.0" "transformers==5.6.2" \
+        "$(dirname -- "${BASH_SOURCE[0]}")/../recipes/paradigma-inc/plugin/limite_vllm-0.1.0-py3-none-any.whl" \
+        --torch-backend=cu130 || return 1
+}
+
 install_poolside_laguna_xs_vllm() {
     print_info "Installing vLLM 0.26.0 for Poolside Laguna XS..."
     run_uv_install "vllm==0.26.0" || return 1
@@ -2087,6 +2111,18 @@ install_stepfun_vllm() {
     run_uv_install "transformers>=5,<6" || return 1
 }
 
+
+install_xiaomimimo_sglang_v0520() {
+    ensure_active_environment_matches "xiaomimimo-sglang-v0520" || return 1
+    print_info "Installing official SGLang 0.5.20 for XiaomiMiMo Distill..."
+    run_uv_install "sglang[all]==0.5.20" "mistral-common==1.11.7" --prerelease=allow || return 1
+}
+
+install_xiaomimimo_vllm_v0300() {
+    ensure_active_environment_matches "xiaomimimo-vllm-v0300" || return 1
+    print_info "Installing official vLLM 0.30.0 for XiaomiMiMo Distill..."
+    run_uv_install "vllm==0.30.0" --torch-backend=cu130 || return 1
+}
 
 install_zlab_sglang() {
     print_info "Installing the pinned SGLang main commit for z-lab DFlash recipes..."
@@ -2522,6 +2558,9 @@ perform_environment_action() {
         openai-vllm-pr-53207)
             install_openai_vllm_pr_53207 || return 1
             ;;
+        paradigma-inc-vllm-v0260)
+            install_paradigma_inc_vllm_v0260 || return 1
+            ;;
         poolside-laguna-xs-vllm)
             install_poolside_laguna_xs_vllm || return 1
             ;;
@@ -2587,6 +2626,12 @@ perform_environment_action() {
             ;;
         stepfun-vllm)
             install_stepfun_vllm || return 1
+            ;;
+        xiaomimimo-sglang-v0520)
+            install_xiaomimimo_sglang_v0520 || return 1
+            ;;
+        xiaomimimo-vllm-v0300)
+            install_xiaomimimo_vllm_v0300 || return 1
             ;;
         z-lab-sglang)
             install_zlab_sglang || return 1

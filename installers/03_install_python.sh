@@ -23,6 +23,7 @@ is_valid_python_version_arg() {
     [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
 }
 
+PYTHON_DEFAULT_VERSION="3.12.14"
 PREFLIGHT=false
 AUTO_YES=false
 INSTALL_UV_SELECTED=false
@@ -50,7 +51,7 @@ for arg in "$@"; do
             echo "  --preflight       Check prerequisites without installing or changing Python"
             echo "  --uv              Include uv in automatic installation/checks"
             echo "  --uv-only         Install/check uv without installing or configuring Python/pyenv"
-            echo "  python-version    Automatically select custom Python version (e.g. 3.11.16)"
+            echo "  python-version    Select custom Python version (default: $PYTHON_DEFAULT_VERSION)"
             exit 0
             ;;
         *)
@@ -62,7 +63,7 @@ for arg in "$@"; do
                 PYTHON_VERSION_ARG="$arg"
             else
                 print_error "Invalid argument: $arg"
-                print_error "Python version must be numeric, such as 3.11.16."
+                print_error "Python version must be numeric, such as $PYTHON_DEFAULT_VERSION."
                 exit 1
             fi
             ;;
@@ -451,28 +452,6 @@ ensure_builder_definition() {
     return 0
 }
 
-fetch_latest_python_version() {
-    local latest=""
-
-    if command -v pyenv >/dev/null 2>&1; then
-        latest=$(pyenv install --list 2>/dev/null | \
-            sed 's/^[[:space:]]*//' | \
-            grep -E '^3\.[0-9]+\.[0-9]+$' | \
-            sort -V | tail -n 1)
-    fi
-
-    if [ -z "$latest" ] && command -v curl >/dev/null 2>&1; then
-        latest=$(curl -fsSL --connect-timeout 10 --max-time 30 https://www.python.org/downloads/ 2>/dev/null | \
-            grep -m1 -oP 'Latest Python 3 Release - Python \K[0-9]+\.[0-9]+\.[0-9]+')
-    fi
-
-    if is_valid_python_version_arg "$latest"; then
-        printf '%s\n' "$latest"
-        return 0
-    fi
-    return 1
-}
-
 ensure_pyenv() {
     local install_status=0
     local bashrc="$HOME/.bashrc"
@@ -803,20 +782,13 @@ preflight_python() {
 }
 
 run_preflight() {
-    local target="$1"
-    local current_binary=""
+    local target="${1:-$PYTHON_DEFAULT_VERSION}"
     local status=0
 
     preflight_init "Python"
     if [ "$UV_ONLY" = true ]; then
         preflight_uv
     else
-        if [ -z "$target" ]; then
-            current_binary=$(command -v python3 2>/dev/null || true)
-            if [ -n "$current_binary" ]; then
-                target=$(python_version_for_binary "$current_binary")
-            fi
-        fi
         preflight_python "$target" || status=1
         if [ "$INSTALL_UV_SELECTED" = true ]; then
             preflight_uv || status=1
@@ -883,7 +855,7 @@ else
 fi
 
 # A supplied version is already exact.  Check local interpreters before any
-# latest-release lookup, pyenv metadata lookup, or network access.
+# pyenv metadata lookup or network access.
 if [ -n "$PYTHON_VERSION_ARG" ]; then
     TARGET_PYTHON_VERSION="$PYTHON_VERSION_ARG"
     if [ "$CURRENT_PYTHON_HEALTHY" = true ] && [ "$CURRENT_PYTHON_VERSION" = "$TARGET_PYTHON_VERSION" ]; then
@@ -894,16 +866,16 @@ if [ -n "$PYTHON_VERSION_ARG" ]; then
         print_info "Python version argument provided; selecting custom Python $TARGET_PYTHON_VERSION."
     fi
 elif [ "$AUTO_YES" = true ]; then
-    PYTHON_ACTION="install_latest"
-    print_info "Automatic mode enabled (-y): installing the latest Python version via pyenv."
+    PYTHON_ACTION="install_default"
+    print_info "Automatic mode enabled (-y): installing default Python $PYTHON_DEFAULT_VERSION via pyenv."
 elif [ -z "$PYTHON_PATH" ]; then
-    PYTHON_ACTION="install_latest"
-    print_warning "No existing python3 installation detected; a new version will be installed."
+    PYTHON_ACTION="install_default"
+    print_warning "No existing python3 installation detected; Python $PYTHON_DEFAULT_VERSION will be installed."
 else
     while true; do
         echo "Choose Python setup option:"
         echo "  1) Keep current version ($CURRENT_PYTHON_VERSION)"
-        echo "  2) Install latest version via pyenv"
+        echo "  2) Install default Python $PYTHON_DEFAULT_VERSION via pyenv"
         echo "  3) Install custom version via pyenv"
         read -r -p "Enter choice (1/2/3): " PYTHON_CHOICE
 
@@ -920,7 +892,7 @@ else
             TARGET_PYTHON_VERSION="$CURRENT_PYTHON_VERSION"
             break
         elif [ "$PYTHON_CHOICE" = "2" ]; then
-            PYTHON_ACTION="install_latest"
+            PYTHON_ACTION="install_default"
             break
         else
             PYTHON_ACTION="install_custom"
@@ -929,13 +901,15 @@ else
     done
 fi
 
-if [ "$PYTHON_ACTION" = "install_custom" ] && [ -z "$TARGET_PYTHON_VERSION" ]; then
+if [ "$PYTHON_ACTION" = "install_default" ]; then
+    TARGET_PYTHON_VERSION="$PYTHON_DEFAULT_VERSION"
+elif [ "$PYTHON_ACTION" = "install_custom" ] && [ -z "$TARGET_PYTHON_VERSION" ]; then
     while true; do
-        read -r -p "Enter desired Python version (e.g. 3.11.16): " TARGET_PYTHON_VERSION
+        read -r -p "Enter desired Python version (e.g. $PYTHON_DEFAULT_VERSION): " TARGET_PYTHON_VERSION
         if is_valid_python_version_arg "$TARGET_PYTHON_VERSION"; then
             break
         fi
-        print_error "Invalid version format. Please use numeric values like 3.11.16"
+        print_error "Invalid version format. Please use numeric values like $PYTHON_DEFAULT_VERSION"
     done
 fi
 
@@ -947,14 +921,6 @@ else
         exit 1
     fi
     PYENV_EXPECTED=true
-
-    if [ "$PYTHON_ACTION" = "install_latest" ]; then
-        if ! TARGET_PYTHON_VERSION=$(fetch_latest_python_version); then
-            print_error "Unable to determine the latest Python release from pyenv or python.org; refusing an arbitrary fallback."
-            exit 1
-        fi
-        print_info "Latest Python release detected: $TARGET_PYTHON_VERSION"
-    fi
 
     if [ -z "$TARGET_PYTHON_VERSION" ] || ! is_valid_python_version_arg "$TARGET_PYTHON_VERSION"; then
         print_error "No valid target Python version specified"
