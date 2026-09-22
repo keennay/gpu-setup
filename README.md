@@ -73,7 +73,7 @@ The below are each package / service provided across the installers.
 - CUDA 13.0 is selected by default. For a custom install you can type either any CUDA version number, or up to 10 version numbers with the 1st number in the list set as the default system-wide CUDA version
 
 #### Pyenv, Pyenv managed Python, & Astral UV (optional):
-- Python 3.11.16 is selected by default. For a custom install you can type any other version of Python in full major.mino.macro format (3.**.**). Pyenv is first installed following the desired Python version. Astral UV is provided as an installation option if selected.
+- Python 3.11.16 is selected by default. For a custom install you can type any other version of Python in full major.mino.macro format. Pyenv is first installed following the desired Python version. Astral UV is provided as an installation option if selected.
 
 #### Coding CLIs (optional):
 - Arcee nac, Claude Code, DeepSeek Harness, Gemini CLI, Grok Build, Kimi Code, Meta Muse Code, MiMo Code, MiniMax Code, OMP, OpenAI Codex, OpenCode, Pi, Prime Intellect Agent, Qwen Code

@@ -37,7 +37,7 @@ Workflow:
    - Copy the exact script that failed to `/tmp` using the **same basename before editing it**, then make only the mechanical helper source-path adjustment.
    - Follow the full temporary-first creation workflow on that copied script to establish a working setup before beginning the GPU sweep: perform the required authoritative source lookup, use the failed script as the same-engine template, create or repair only the candidate environment through the reproducible installer contract, run static checks, resolve source-verified upstream engine/configuration/dependency failures, launch at the maximum configured context, and verify final API readiness plus a coherent baseline response.
    - Do not begin the GPU sweep until this copied `/tmp` candidate is a working setup. Keep all candidate repairs and provisional installer/catalog changes out of the original recipe, and remove them if the attempt fails.
-5. After either branch establishes a working baseline, run the full one → two → four → eight GPU ladder and six-decimal memory-utilization sweep defined below. During the normal sweep-only path, the only recipe fields that may change are:
+5. After either branch establishes a working baseline, run the full one → two → four → eight GPU ladder and two-decimal memory-utilization sweep defined below. During the normal sweep-only path, the only recipe fields that may change are:
 
   ```text
   DEFAULT_TENSOR_PARALLEL_SIZE
@@ -49,7 +49,7 @@ Workflow:
 7. A non-VRAM software/configuration failure in the normal sweep-only path is not permission to repair or redesign the recipe. The initial-run failure branch is the explicit exception: repair only through the allowed upstream engine, reproducible installer, and source-verified configuration process described in step 4.
 8. Do not redo cookbook, model-card, `config.json`, parser, backend, context, or engine-version research after a successful initial in-place run. If that run fails and step 4 is entered, perform the full authoritative research required by the temporary-first creation workflow before changing candidate configuration.
 9. Preserve the existing `CONTEXT_LEN_VALUE` exactly on the normal sweep-only path. In the fallback creation workflow, use the full context-length policy and keep the candidate at the highest officially supported checkpoint context before sweeping.
-10. After selecting the smallest passing GPU count and maximum six-decimal utilization value, rerun the `/tmp` copy at those exact values, wait for final API readiness, verify the 16,384 MiB per-selected-GPU reserve, and send one coherent non-gibberish baseline prompt. Do not rerun reasoning, tool-call, modality, speculative, model-card, or parser-specific suites unless the user requests them.
+10. After selecting the smallest passing GPU count and maximum two-decimal utilization value, rerun the `/tmp` copy at those exact values, wait for final API readiness, verify the 16,384 MiB per-selected-GPU reserve, and send one coherent non-gibberish baseline prompt. Do not rerun reasoning, tool-call, modality, speculative, model-card, or parser-specific suites unless the user requests them.
 11. Only after that final temporary run passes, update the supplied original file **in place**. On the normal sweep-only path, change only `DEFAULT_TENSOR_PARALLEL_SIZE` and `GPU_MEM_UTIL_VALUE`; on the fallback creation path, also apply only the source-verified candidate changes required to establish the working setup. If a value is unchanged, do not rewrite it needlessly.
 12. Run the updated original once to final API readiness, recheck the reserve and coherent baseline response, then run Bash syntax and ShellCheck.
 13. For a normal sweep-only update, do not add a new recipe, environment, installer, or entries in `installers/05_setup_env.sh`, `installers/06_install_packages.sh`, or `launch_env.sh`. If the initial-run failure branch requires full creation-workflow candidate wiring, treat it as provisional, remove it on failure, and promote it only under the full promotion rules after success.
@@ -67,7 +67,7 @@ A successful task produces or updates a repository-format recipe that:
 2. configures the model's maximum officially supported checkpoint context without inventing a recipe-level RoPE-scaling override;
 3. starts on real available GPUs without reducing protected runtime limits;
 4. selects the smallest available GPU count that can satisfy maximum context and the mandatory free-memory reserve;
-5. records the maximum passing six-decimal `GPU_MEM_UTIL_VALUE`;
+5. records the maximum passing two-decimal `GPU_MEM_UTIL_VALUE`;
 6. exercises the model's actual API behavior, including its modality and model-card-advertised parsers/features, as required by the selected mode;
 7. follows the selected mode's workflow, including the initial in-place run and failed-baseline recovery for existing-recipe updates;
 8. is copied into its respective repository directory `recipes/<repo>` or updated there in place only after the required behavioral validation succeeds; and
@@ -371,10 +371,10 @@ Use this exact GPU-count ladder:
 3. four GPUs, only if at least four physical GPUs exist;
 4. eight GPUs, only if at least eight physical GPUs exist.
 
-For each GPU count, sweep `GPU_MEM_UTIL_VALUE` and find the **maximum passing value to six decimal places**. The final recipe value must have the form:
+For each GPU count, sweep `GPU_MEM_UTIL_VALUE` and find the **maximum passing value to two decimal places**. The final recipe value must have exactly two decimal places, in the form:
 
 ```text
-0.******
+0.xx
 ```
 
 The selected value MUST leave at least **16 GiB = 16,384 MiB** free on **every selected GPU** after the engine has fully loaded the model, completed internal warmup/graph capture, exposed the API, and reached its true ready state. Aggregate free memory is not sufficient; the least-free selected GPU controls the result.
@@ -383,18 +383,18 @@ For each GPU count:
 
 1. Confirm all selected GPUs are clean and record `memory.total` and `memory.free` with `nvidia-smi`.
 2. Keep the model at its maximum officially supported checkpoint context and keep every protected request, batch, cache, precision, CUDA-graph, and checkpoint-embedded RoPE setting unchanged.
-3. Compute a theoretical six-decimal upper cap from each selected GPU's total memory:
+3. Compute a theoretical two-decimal upper cap from each selected GPU's total memory:
 
    ```text
-   floor_to_6_decimals((total_mib - 16384) / total_mib)
+   floor_to_2_decimals((total_mib - 16384) / total_mib)
    ```
 
-   Use the smallest cap across selected GPUs and never test above `0.999999`.
+   Use the smallest cap across selected GPUs and never test above `0.99`.
 4. Write each candidate only into the temporary recipe's `GPU_MEM_UTIL_VALUE`. Launch from a clean process/GPU state.
 5. A candidate passes the memory sweep only if the server reaches its final ready state and `nvidia-smi` reports at least 16,384 MiB free on every selected GPU after memory settles.
 6. A startup crash, OOM, inability to allocate KV cache for maximum context, or reserve below 16,384 MiB is a failed candidate. Classify non-VRAM software/configuration errors separately; fix those through an allowed upstream engine source and retry the same GPU count.
-7. Establish a passing/failing bracket and use bounded search to `0.000001` resolution. Runtime behavior is authoritative; do not assume engine memory utilization is perfectly linear.
-8. Prove maximality: after finding a passing six-decimal value, test the next value `+0.000001` when it does not exceed the theoretical cap. If the next value also passes, continue the search. If the theoretical cap itself passes, it is the maximum without an additional failing probe.
+7. Establish a passing/failing bracket and use bounded search in `0.01` increments, keeping every candidate at exactly two decimal places. Runtime behavior is authoritative; do not assume engine memory utilization is perfectly linear.
+8. Prove maximality: after finding a passing two-decimal value, test the next value `+0.01` when it does not exceed the theoretical cap. If the next value also passes, continue the search. If the theoretical cap itself passes, it is the maximum without an additional failing probe.
 9. Restart once more at the selected value, wait for final API readiness, resample every selected GPU, and retain the measured free MiB as evidence.
 10. Stop cleanly and confirm GPU memory is released before any next candidate or GPU-count attempt.
 
@@ -416,7 +416,7 @@ If no available ladder count through eight GPUs passes, record every attempted c
 
 For full recipe creation or broad update mode, a process launch is not success. The GPU-count/utilization sweep is the initial runtime validation. Do not run a separate recipe first with a guessed or template-derived `GPU_MEM_UTIL_VALUE`. Existing-recipe update mode first runs the supplied script in place with its current configuration; if that baseline fails, it then reconstructs that exact failed script under `/tmp` and completes the temporary-first working-setup validation before starting the sweep.
 
-Only after the sweep selects the smallest passing GPU count and final six-decimal utilization value, run the complete behavioral suite at those exact final settings:
+Only after the sweep selects the smallest passing GPU count and final two-decimal utilization value, run the complete behavioral suite at those exact final settings:
 
 1. Confirm logs show the exact model, maximum context length, tensor-parallel size, final `GPU_MEM_UTIL_VALUE`, dtype/quantization, parser/backend choices, and requested engine source.
 2. Wait until the server has completed model loading, warmup/graph capture, and reached its true API-ready state.
@@ -439,7 +439,7 @@ Only after the sweep selects the smallest passing GPU count and final six-decima
 10. Verify the same launch output is present in both the helper's timestamped `recipes/logs/` file and the engine-specific stable mirror (`/tmp/vllm.log` or `/tmp/sglang.log`).
 11. Stop with Ctrl+C and confirm clean process/GPU teardown.
 
-Do not claim a model/engine combination works unless this complete suite passes on the selected GPU count, final six-decimal utilization value, and maximum officially supported checkpoint context.
+Do not claim a model/engine combination works unless this complete suite passes on the selected GPU count, final two-decimal utilization value, and maximum officially supported checkpoint context.
 
 ## Failure contract
 
@@ -463,7 +463,7 @@ On failure:
 
 Only after a full recipe creation or broad update candidate passes the complete behavioral contract:
 
-Before copying, set `DEFAULT_TENSOR_PARALLEL_SIZE` to the smallest ladder count that passed and set `GPU_MEM_UTIL_VALUE` to the proven maximum six-decimal value. Rerun the temporary recipe once with both final values and the full behavioral contract.
+Before copying, set `DEFAULT_TENSOR_PARALLEL_SIZE` to the smallest ladder count that passed and set `GPU_MEM_UTIL_VALUE` to the proven maximum two-decimal value. Rerun the temporary recipe once with both final values and the full behavioral contract.
 
 1. copy the validated script into its respective repository directory `recipes/<repo>` (where `<repo>` is the lowercased publisher parsed from the script name); reuse or create only that lowercase directory, preserve the script's basename, and use the standard relative helper lines (`RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"` and `source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"`);
 2. ensure executable mode;
@@ -491,11 +491,11 @@ Report, with evidence:
 - engine release/main/commit/PR and exact commit;
 - extra packages added to the installer;
 - hardware and GPU counts attempted in order;
-- the utilization sweep candidates and six-decimal search bounds;
+- the utilization sweep candidates and two-decimal search bounds;
 - the final `GPU_MEM_UTIL_VALUE`;
 - for existing-recipe update mode, the result of the mandatory initial in-place run, whether the fallback `/tmp` working-setup path was entered, and any environment auto-creation/install performed;
 - total and free MiB for every selected GPU at final API readiness;
-- evidence that the next `+0.000001` candidate failed, or that the theoretical reserve cap passed;
+- evidence that the next `+0.01` candidate failed, or that the theoretical reserve cap passed;
 - successful API/modalities/features exercised;
 - peak or relevant memory observations when available;
 - final recipe and environment names;
