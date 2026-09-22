@@ -117,7 +117,7 @@ Local Inference Lab's contact info and their LLM Inference Bench repo can be fou
 - https://github.com/local-inference-lab/llm-inference-bench
 
 Below is an example decode throughput data for DeepSeek-V4-Flash-0731 running on 2x NVIDIA H200 NVL GPUs:
-<br>
+<br><br>
 <img width="600" height="442" alt="llm-inference-bench-example" src="https://github.com/user-attachments/assets/fa72801b-bbad-415e-9d06-c44bd5393d86" />
 
 ***
