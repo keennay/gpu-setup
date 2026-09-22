@@ -470,8 +470,8 @@ def import_pyarrow_parquet():
         import pyarrow.parquet as pq
     except ModuleNotFoundError:
         print("ERROR: `pyarrow` is required to read SWE-ZERO Parquet shards.")
-        print("Install it in this environment, for example:")
-        print("  uv pip install --python /home/user/env_custom_uv/bin/python pyarrow")
+        print("Install it in the custom uv environment:")
+        print('  uv pip install --python "$HOME/env_custom_uv/bin/python" pyarrow')
         sys.exit(1)
     return pq
 

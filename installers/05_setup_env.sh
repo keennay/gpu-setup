@@ -5,6 +5,8 @@
 # Usage: source ./installers/05_setup_env.sh [--auto] [--refresh-activation] [ENV_NAME|1-120]
 # --refresh-activation updates only generated architecture settings in an existing environment.
 
+WORKSPACE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/../.." && pwd -P)"
+
 # Source bashrc to ensure environment is properly loaded
 if [ -f "$HOME/.bashrc" ]; then
     source "$HOME/.bashrc"
@@ -934,7 +936,7 @@ if [ "$REFRESH_ACTIVATION" = true ]; then
 fi
 
 # Ask for HuggingFace model storage location
-DEFAULT_HF_PATH="/workspace/models/huggingface"
+DEFAULT_HF_PATH="$WORKSPACE_DIR/models/huggingface"
 if [ "$AUTO_MODE" = false ]; then
     echo ""
     print_info "Where would you like to store HuggingFace models?"
@@ -953,6 +955,9 @@ else
     HF_PATH="$DEFAULT_HF_PATH"
     print_info "Using default HuggingFace path: $HF_PATH"
 fi
+
+export HF_HOME="$HF_PATH"
+export HF_HUB_CACHE="$HF_PATH/hub"
 
 if ! select_cuda_for_env; then
     if [ "$BEING_SOURCED" = false ]; then
@@ -974,8 +979,8 @@ if ! command -v python &> /dev/null; then
     fi
 fi
 
-PYTHON_BIN=$(command -v python)
-PYTHON_VERSION=$($PYTHON_BIN --version 2>&1)
+PYTHON_BIN=$(python -c 'import sys; print(sys._base_executable)')
+PYTHON_VERSION=$("$PYTHON_BIN" --version 2>&1)
 print_info "Using Python from: $PYTHON_BIN ($PYTHON_VERSION)"
 
 if ! uses_pip_venv && ! command -v uv &> /dev/null; then
@@ -1057,12 +1062,8 @@ if [ ! -d "$ENV_PATH" ]; then
         fi
     else
         print_info "Creating uv virtual environment at $ENV_PATH using $PYTHON_BIN..."
-        UV_VENV_ARGS=()
-        if [[ "${RECREATE:-n}" =~ ^([Yy]|[Yy][Ee][Ss])$ ]]; then
-            UV_VENV_ARGS+=(--clear)
-        fi
         VENV_CREATED=false
-        if uv venv "${UV_VENV_ARGS[@]}" "$ENV_PATH" --python "$PYTHON_BIN"; then
+        if uv venv --no-cache "$ENV_PATH" --python "$PYTHON_BIN"; then
             VENV_CREATED=true
         fi
     fi
@@ -1259,20 +1260,6 @@ EOF
 
 chmod +x "$ENV_PATH/activate_ml"
 
-# Add environment variables to .bashrc if not present
-print_info "Updating ~/.bashrc with environment variables..."
-
-if ! grep -q "HF_HOME=" ~/.bashrc; then
-    cat >> ~/.bashrc << EOF
-
-# ML Environment Variables
-export HF_HOME="$HF_PATH"
-export HF_HUB_CACHE="$HF_PATH/hub"
-EOF
-    print_info "Added HF_HOME to ~/.bashrc"
-fi
-
-
 # Create directory structure
 print_info "Creating directory structure..."
 # Get parent directories from HF_PATH
@@ -1284,8 +1271,6 @@ DIRS=(
     "$HF_PARENT"
     "$HF_PATH"
     "$HF_PATH/hub"
-    "/workspace/scripts"
-    "/workspace/logs"
 )
 
 for dir in "${DIRS[@]}"; do

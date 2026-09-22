@@ -7,8 +7,10 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
+WORKSPACE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+
 # Default values
-DEFAULT_HF_PATH="/workspace/models/huggingface"
+DEFAULT_HF_PATH="$WORKSPACE_DIR/models/huggingface"
 DEFAULT_MODEL="PrimeIntellect/INTELLECT-2"
 DEFAULT_REPO_TYPE="auto"
 DEFAULT_HF_DOWNLOAD_MAX_WORKERS=32
@@ -158,7 +160,7 @@ while [[ $# -gt 0 ]]; do
             echo "  $0 -m 'PrimeIntellect/INTELLECT-2'"
             echo "  $0 -m 'AlienKevin/SWE-ZERO-12M-trajectories'"
             echo "  $0 -m 'Qwen/Qwen3-30B-A3B-Instruct-2507' -q GGUF"
-            echo "  $0 -m 'deepseek-ai/DeepSeek-V3' -p /mnt/storage/models"
+            echo "  $0 -m 'deepseek-ai/DeepSeek-V3' -p ../models/huggingface"
             echo "  $0 -y 'google/gemma-4-31B-it'"
             echo "  $0 'deepseek-ai/DeepSeek-V4-Flash-Vision-Exp' --update-and-prune"
             exit 0

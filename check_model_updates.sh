@@ -4,12 +4,13 @@
 
 set -uo pipefail
 
-DEFAULT_HF_HUB_CACHE="/workspace/models/huggingface/hub"
+SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+WORKSPACE_DIR="$(cd -- "$SCRIPT_DIR/.." && pwd -P)"
+DEFAULT_HF_HUB_CACHE="$WORKSPACE_DIR/models/huggingface/hub"
 DEFAULT_WORKERS=16
 DEFAULT_TIMEOUT=20
 CHECK_INTERVAL_SECONDS=3600
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 STATE_DIR="$SCRIPT_DIR/tmp"
 STATE_FILE="$STATE_DIR/check_model_updates.env"
 LOCK_FILE="$STATE_DIR/check_model_updates.lock"

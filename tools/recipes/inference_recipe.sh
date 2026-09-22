@@ -502,7 +502,7 @@ run_inference_recipe() {
     PYTHON_ENV="${PYTHON_ENV:-}"
     INFERENCE_PROVIDER_NORMALIZED="${INFERENCE_PROVIDER,,}"
     HELPER_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-    SCRIPTS_DIR="/workspace/scripts"
+    SCRIPTS_DIR="$(cd -- "$HELPER_DIR/../.." && pwd -P)"
     SETUP_ENV_SCRIPT="$SCRIPTS_DIR/installers/05_setup_env.sh"
     PACKAGE_INSTALLER_SCRIPT="$SCRIPTS_DIR/installers/06_install_packages.sh"
     INFERENCE_COMMAND=""
@@ -557,11 +557,11 @@ run_inference_recipe() {
     fi
 
     if [ -n "$CALLING_REPO" ] && [ "$CALLING_REPO" != "recipes" ]; then
-        LOG_DIR="$HELPER_DIR/logs/${CALLING_REPO,,}"
+        LOG_DIR="$SCRIPTS_DIR/recipes/logs/${CALLING_REPO,,}"
     elif [ -n "$RECIPE_DIR" ] && [ -d "$RECIPE_DIR" ]; then
         LOG_DIR="$RECIPE_DIR/logs"
     else
-        LOG_DIR="$HELPER_DIR/logs"
+        LOG_DIR="$SCRIPTS_DIR/recipes/logs"
     fi
     LOG_TIMESTAMP="$(date -u +%Y%m%dT%H%M%SZ)"
     LAUNCH_LOG="$LOG_DIR/${LOG_TIMESTAMP}_${LOG_SUFFIX}.log"

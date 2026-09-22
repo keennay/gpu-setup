@@ -4,6 +4,8 @@
 # Purpose: Activate ML environment with all optimizations
 # Usage: source launch_env.sh [--auto] [ENV_NAME|1-120]
 
+WORKSPACE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)"
+
 # Source bashrc to ensure environment is properly loaded
 if [ -f "$HOME/.bashrc" ]; then
     source "$HOME/.bashrc"
@@ -743,7 +745,7 @@ elif [ -f "$ENV_PATH/bin/activate" ]; then
     if [ -n "$HF_HOME" ]; then
         HF_PATH="$HF_HOME"
     else
-        HF_PATH="/workspace/models/huggingface"
+        HF_PATH="$WORKSPACE_DIR/models/huggingface"
     fi
     
     # Set ML environment variables
