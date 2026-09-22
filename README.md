@@ -18,7 +18,7 @@
 
 This repo provides a quick & simple way to stage an Ubuntu / RHEL NVIDIA node for ML workloads, including serving inference cookbook recipes for Large Language Models & Visual-Language Models, while providing the tools to build new inference cookbook recipes. Setup and stage a bare-metal server, virtual machine, or rental cloud provider node (Verda, Massed Compute, Prime Intellect, etc). AMD and additional hardware vendor support is in the works.
 
-An [installation guide](#installation-guide) is provided with steps to clone this repo and run `setup.sh` to display the above terminal interface. All options are selected by default with the ability to choose or omit packages / services, single or multiple CUDA versions, Python, Astral UV, & coding CLIs.
+An [installation guide](#installation-guide) is provided with steps to clone this repo and run `setup.sh` to display the above terminal interface. All options excluding the Coding CLIs are selected by default with the ability to choose or omit packages / services, single or multiple CUDA versions, Python, Astral UV, & coding CLIs.
 
 You can also select the minimal installation of [basic Linux essentials](#basic-linux-essentials-required) and [core build dependencies](#core-build-dependencies-for-ml-and-python-packages-required). This option completely bypasses the installation of additional packages / services, CUDA, Python, Astral UV, & coding CLIs. 
 
