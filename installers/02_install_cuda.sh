@@ -80,6 +80,7 @@ cleanup_cuda_cache() {
 trap cleanup_cuda_cache EXIT
 CUDA_PACKAGE_DOWNLOADS=()
 CONFIGURED_UBUNTU_CUDA_REPOS=()
+UBUNTU_DRIVER_APT_OPTIONS=()
 INSTALLED_CUDA_VERSIONS=()
 INSTALLED_CUDA_VERSIONS_DISPLAY="None"
 CUDA_DEFAULT_CANDIDATE_VERSIONS=()
@@ -231,12 +232,22 @@ setup_ubuntu_cuda_repo() {
     return 0
 }
 
+configure_ubuntu_driver_apt() {
+    UBUNTU_DRIVER_APT_OPTIONS=()
+    # Keep the driver and its dependencies on NVIDIA's release even when the
+    # host gives that repository a low priority. Do not change persistent pins.
+    if apt-cache --target-release 'o=NVIDIA,l=NVIDIA CUDA' policy >/dev/null 2>&1; then
+        UBUNTU_DRIVER_APT_OPTIONS=(--target-release 'o=NVIDIA,l=NVIDIA CUDA')
+    fi
+}
+
 ubuntu_package_candidate_version() {
     local package_name="$1"
+    shift
     local candidate repository
     local candidates=()
 
-    candidate=$(apt-cache policy "$package_name" 2>/dev/null | awk '/Candidate:/ {print $2; exit}')
+    candidate=$(apt-cache "$@" policy "$package_name" 2>/dev/null | awk '/Candidate:/ {print $2; exit}')
     if [ -n "$candidate" ] && [ "$candidate" != "(none)" ]; then
         candidates+=("$candidate")
     fi
@@ -265,7 +276,7 @@ resolve_ubuntu_driver_package() {
     local latest_driver_package
     for latest_driver_package in "nvidia-open" "nvidia-driver-open" "cuda-drivers" "nvidia-driver"; do
         local latest_driver_candidate
-        latest_driver_candidate=$(ubuntu_package_candidate_version "$latest_driver_package")
+        latest_driver_candidate=$(ubuntu_package_candidate_version "$latest_driver_package" "${UBUNTU_DRIVER_APT_OPTIONS[@]}")
         if [ -n "$latest_driver_candidate" ] && [ "$latest_driver_candidate" != "(none)" ]; then
             echo "$latest_driver_package"
             return 0
@@ -277,7 +288,7 @@ resolve_ubuntu_driver_package() {
     local driver_branch=""
     if [ -n "$cuda_stream" ]; then
         local runtime_package="cuda-runtime-$(echo "$cuda_stream" | sed 's/\./-/g')"
-        driver_branch=$(apt-cache depends "$runtime_package" 2>/dev/null | awk '
+        driver_branch=$(apt-cache "${UBUNTU_DRIVER_APT_OPTIONS[@]}" depends "$runtime_package" 2>/dev/null | awk '
             $1 == "Depends:" {
                 if ($2 == "libnvidia-compute") {
                     print "generic"
@@ -296,7 +307,7 @@ resolve_ubuntu_driver_package() {
         local versioned_driver_package
         for versioned_driver_package in "nvidia-driver-${driver_branch}-open" "cuda-drivers-${driver_branch}" "nvidia-driver-${driver_branch}"; do
             local versioned_driver_candidate
-            versioned_driver_candidate=$(ubuntu_package_candidate_version "$versioned_driver_package")
+            versioned_driver_candidate=$(ubuntu_package_candidate_version "$versioned_driver_package" "${UBUNTU_DRIVER_APT_OPTIONS[@]}")
             if [ -n "$versioned_driver_candidate" ] && [ "$versioned_driver_candidate" != "(none)" ]; then
                 echo "$versioned_driver_package"
                 return 0
@@ -430,6 +441,11 @@ rhel_package_candidate_version() {
 install_resolved_driver_package() {
     local driver_package="$1"
 
+    if [ "$OS_TYPE" = "ubuntu" ]; then
+        $PKG_INSTALL_CMD "${UBUNTU_DRIVER_APT_OPTIONS[@]}" "$driver_package"
+        return $?
+    fi
+
     if [ "$OS_TYPE" = "rhel" ] && [ ! -f "$driver_package" ] && [ "$driver_package" = "nvidia-open" ] && command -v dnf &> /dev/null; then
         ${SUDO_PREFIX}dnf install -y --best "$driver_package"
         return $?
@@ -537,6 +553,7 @@ install_nvidia_driver_for_gpu_support() {
 
     case "$OS_TYPE" in
         ubuntu)
+            configure_ubuntu_driver_apt
             driver_package=$(resolve_ubuntu_driver_package "$cuda_stream")
             ;;
         rhel)
@@ -571,7 +588,7 @@ install_nvidia_driver_for_gpu_support() {
             fi
 
             if command -v apt-cache &> /dev/null; then
-                driver_package_candidate_version=$(ubuntu_package_candidate_version "$driver_package")
+                driver_package_candidate_version=$(ubuntu_package_candidate_version "$driver_package" "${UBUNTU_DRIVER_APT_OPTIONS[@]}")
             fi
 
             if [ -z "$driver_package_installed_version" ]; then
@@ -1574,9 +1591,10 @@ cuda_preflight_check_driver() {
     fi
 
     if [ "$OS_TYPE" = ubuntu ]; then
+        configure_ubuntu_driver_apt
         driver_package=$(resolve_ubuntu_driver_package "$cuda_stream")
         if [ -n "$driver_package" ]; then
-            candidate_version=$(ubuntu_package_candidate_version "$driver_package")
+            candidate_version=$(ubuntu_package_candidate_version "$driver_package" "${UBUNTU_DRIVER_APT_OPTIONS[@]}")
             installed_version=$(dpkg-query -W -f='${Status} ${Version}\n' "$driver_package" 2>/dev/null | awk '
                 $1 == "install" && $2 == "ok" && $3 == "installed" { print $4; exit }
             ')
