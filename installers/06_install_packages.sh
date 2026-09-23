@@ -133,6 +133,7 @@ ENV_TYPES=(
   "stepfun-sglang"
   "stepfun-transformers"
   "stepfun-vllm"
+  "xiaomimimo-flash-vllm-1ea7c63"
   "xiaomimimo-sglang-v0520"
   "xiaomimimo-vllm-v0300"
   "z-lab-sglang"
@@ -261,6 +262,7 @@ declare -A ENV_DESCRIPTIONS=(
   ["stepfun-sglang"]="StepFun (SGLang)"
   ["stepfun-transformers"]="StepFun (Transformers)"
   ["stepfun-vllm"]="StepFun (vLLM)"
+  ["xiaomimimo-flash-vllm-1ea7c63"]="XiaomiMiMo Flash (vLLM 1ea7c63, audio)"
   ["xiaomimimo-sglang-v0520"]="XiaomiMiMo Distill (SGLang 0.5.20)"
   ["xiaomimimo-vllm-v0300"]="XiaomiMiMo Distill (vLLM 0.30.0)"
   ["z-lab-sglang"]="z-lab (SGLang)"
@@ -614,46 +616,49 @@ resolve_env_type() {
         111|stepfun_vllm|stepfun-vllm)
             echo "stepfun-vllm"
             ;;
-        112|xiaomimimo_sglang_v0520|xiaomimimo-sglang-v0520)
+        112|xiaomimimo_flash_vllm_1ea7c63|xiaomimimo-flash-vllm-1ea7c63)
+            echo "xiaomimimo-flash-vllm-1ea7c63"
+            ;;
+        113|xiaomimimo_sglang_v0520|xiaomimimo-sglang-v0520)
             echo "xiaomimimo-sglang-v0520"
             ;;
-        113|xiaomimimo_vllm_v0300|xiaomimimo-vllm-v0300)
+        114|xiaomimimo_vllm_v0300|xiaomimimo-vllm-v0300)
             echo "xiaomimimo-vllm-v0300"
             ;;
-        114|z_lab_sglang|z-lab-sglang)
+        115|z_lab_sglang|z-lab-sglang)
             echo "z-lab-sglang"
             ;;
-        115|z_lab_sglang_pr_35209|z-lab-sglang-pr-35209)
+        116|z_lab_sglang_pr_35209|z-lab-sglang-pr-35209)
             echo "z-lab-sglang-pr-35209"
             ;;
-        116|z_lab_vllm|z-lab-vllm)
+        117|z_lab_vllm|z-lab-vllm)
             echo "z-lab-vllm"
             ;;
-        117|zyphra_legacy_sglang|zyphra-legacy-sglang)
+        118|zyphra_legacy_sglang|zyphra-legacy-sglang)
             echo "zyphra-legacy-sglang"
             ;;
-        118|zyphra_legacy_transformers|zyphra-legacy-transformers)
+        119|zyphra_legacy_transformers|zyphra-legacy-transformers)
             echo "zyphra-legacy-transformers"
             ;;
-        119|zyphra_legacy_vllm|zyphra-legacy-vllm)
+        120|zyphra_legacy_vllm|zyphra-legacy-vllm)
             echo "zyphra-legacy-vllm"
             ;;
-        120|zyphra_sglang|zyphra-sglang)
+        121|zyphra_sglang|zyphra-sglang)
             echo "zyphra-sglang"
             ;;
-        121|zyphra_sglang_pr_32517|zyphra-sglang-pr-32517)
+        122|zyphra_sglang_pr_32517|zyphra-sglang-pr-32517)
             echo "zyphra-sglang-pr-32517"
             ;;
-        122|zyphra_transformers|zyphra-transformers)
+        123|zyphra_transformers|zyphra-transformers)
             echo "zyphra-transformers"
             ;;
-        123|zyphra_vllm|zyphra-vllm)
+        124|zyphra_vllm|zyphra-vllm)
             echo "zyphra-vllm"
             ;;
-        124|custom|custom_uv|custom-uv|env_custom_uv)
+        125|custom|custom_uv|custom-uv|env_custom_uv)
             echo "custom_uv"
             ;;
-        125|custom_pip|custom-pip|env_custom_pip)
+        126|custom_pip|custom-pip|env_custom_pip)
             echo "custom_pip"
             ;;
         *)
@@ -2112,6 +2117,15 @@ install_stepfun_vllm() {
 }
 
 
+install_xiaomimimo_flash_vllm_1ea7c63() {
+    ensure_active_environment_matches "xiaomimimo-flash-vllm-1ea7c63" || return 1
+    # Official MiMo V2.6 support: https://github.com/vllm-project/vllm/pull/57784
+    local source_commit="1ea7c63f4af7bb4fd6f025c8db44434ab274cb51"
+    local wheel_url="https://wheels.vllm.ai/${source_commit}/vllm-0.29.1rc1.dev533%2Bg1ea7c63f4-cp38-abi3-manylinux_2_28_x86_64.whl"
+    print_info "Installing the official Flash vLLM wheel with audio support..."
+    run_uv_install -U --prerelease=allow "vllm[audio] @ ${wheel_url}" --torch-backend=cu130 || return 1
+}
+
 install_xiaomimimo_sglang_v0520() {
     ensure_active_environment_matches "xiaomimimo-sglang-v0520" || return 1
     print_info "Installing official SGLang 0.5.20 for XiaomiMiMo Distill..."
@@ -2626,6 +2640,9 @@ perform_environment_action() {
             ;;
         stepfun-vllm)
             install_stepfun_vllm || return 1
+            ;;
+        xiaomimimo-flash-vllm-1ea7c63)
+            install_xiaomimimo_flash_vllm_1ea7c63 || return 1
             ;;
         xiaomimimo-sglang-v0520)
             install_xiaomimimo_sglang_v0520 || return 1
