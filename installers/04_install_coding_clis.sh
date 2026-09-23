@@ -1,6 +1,6 @@
 #!/bin/bash
 # Script: 04_install_coding_clis.sh
-# Purpose: Install coding CLIs and their config files
+# Purpose: Install coding CLIs
 
 set -o pipefail
 
@@ -16,9 +16,7 @@ print_warning() { echo -e "${YELLOW}[WARNING]${NC} $1"; }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_OWNER_USER="${SUDO_USER:-$USER}"
-CONFIG_OWNER_GROUP="$(id -gn "$CONFIG_OWNER_USER" 2>/dev/null || echo "$CONFIG_OWNER_USER")"
 CONFIG_HOME="$(eval echo "~$CONFIG_OWNER_USER")"
-CONFIG_ROOT="$CONFIG_HOME/.config"
 
 # Keep every upstream source and package specification in one place.  The
 # preflight path uses these same values as the installation path.
@@ -40,52 +38,6 @@ GEMINI_PACKAGE="@google/gemini-cli"
 GEMINI_PACKAGE_METADATA_URL="https://registry.npmjs.org/@google%2fgemini-cli/latest"
 PI_PACKAGE="@earendil-works/pi-coding-agent"
 PI_PACKAGE_METADATA_URL="https://registry.npmjs.org/@earendil-works%2fpi-coding-agent/latest"
-
-ensure_config_ownership() {
-    local config_root="$1"
-
-    if [ -z "$config_root" ]; then
-        print_warning "Config root not set; skipping config setup"
-        return 1
-    fi
-
-    if [ ! -d "$config_root" ]; then
-        if ! mkdir -p "$config_root"; then
-            print_warning "Failed to create $config_root without sudo; skipping config setup"
-            return 1
-        fi
-    fi
-
-    local owner group
-    owner=$(stat -c '%U' "$config_root" 2>/dev/null)
-    group=$(stat -c '%G' "$config_root" 2>/dev/null)
-
-    if [ "$owner" != "$CONFIG_OWNER_USER" ] || [ "$group" != "$CONFIG_OWNER_GROUP" ]; then
-        print_warning "$config_root is owned by $owner:$group; skipping config setup to avoid sudo"
-        return 1
-    fi
-
-    if [ ! -w "$config_root" ]; then
-        print_warning "$config_root is not writable; skipping config setup"
-        return 1
-    fi
-
-    return 0
-}
-
-warn_on_ownership_mismatch() {
-    local target="$1"
-
-    if [ -e "$target" ]; then
-        local owner group
-        owner=$(stat -c '%U' "$target" 2>/dev/null)
-        group=$(stat -c '%G' "$target" 2>/dev/null)
-
-        if [ "$owner" != "$CONFIG_OWNER_USER" ] || [ "$group" != "$CONFIG_OWNER_GROUP" ]; then
-            print_warning "$target is owned by $owner:$group; leaving ownership unchanged to avoid sudo"
-        fi
-    fi
-}
 
 prompt_yes_no() {
     local result_var="$1"
@@ -566,36 +518,6 @@ NODE
         preflight_npm_package "Pi" "$PI_PACKAGE" "$PI_PACKAGE_METADATA_URL"
     fi
 
-    if section_selected "$SELECT_OPENCODE"; then
-        local opencode_config_source="$SCRIPT_DIR/../configs/opencode.json"
-        local opencode_config_dir="$CONFIG_ROOT/opencode"
-        if [ ! -r "$opencode_config_source" ]; then
-            preflight_error "OpenCode config source is missing or unreadable: $opencode_config_source"
-        fi
-        if [ -e "$CONFIG_ROOT" ]; then
-            if [ ! -d "$CONFIG_ROOT" ]; then
-                preflight_error "OpenCode config root is not a directory: $CONFIG_ROOT"
-            else
-                local config_owner config_group
-                config_owner=$(stat -c '%U' "$CONFIG_ROOT" 2>/dev/null)
-                config_group=$(stat -c '%G' "$CONFIG_ROOT" 2>/dev/null)
-                if [ "$config_owner" != "$CONFIG_OWNER_USER" ] || [ "$config_group" != "$CONFIG_OWNER_GROUP" ]; then
-                    preflight_error "OpenCode config root is owned by $config_owner:$config_group, expected $CONFIG_OWNER_USER:$CONFIG_OWNER_GROUP"
-                fi
-                if [ ! -w "$CONFIG_ROOT" ]; then
-                    preflight_error "OpenCode config root is not writable: $CONFIG_ROOT"
-                fi
-            fi
-        else
-            preflight_writable "$CONFIG_ROOT"
-        fi
-        if [ -e "$opencode_config_dir" ] && [ ! -d "$opencode_config_dir" ]; then
-            preflight_error "OpenCode config path is not a directory: $opencode_config_dir"
-        elif [ -d "$opencode_config_dir" ] && [ ! -w "$opencode_config_dir" ]; then
-            preflight_error "OpenCode config directory is not writable: $opencode_config_dir"
-        fi
-    fi
-
     return 0
 }
 
@@ -923,43 +845,13 @@ if section_selected "$SELECT_OPENCODE"; then
     if require_curl_cli opencode "OpenCode"; then
         prompt_yes_no INSTALL_OPENCODE "  Install OpenCode? (y/n): "
         if [[ "$INSTALL_OPENCODE" =~ ^[Yy]$ ]]; then
-            OPENCODE_SETUP_OK=true
             print_info "Installing OpenCode..."
             if curl -fsSL "$OPENCODE_INSTALL_URL" | bash; then
                 print_info "OpenCode installed"
-
-                OPENCODE_CONFIG_SOURCE="$SCRIPT_DIR/../configs/opencode.json"
-                if [ -f "$OPENCODE_CONFIG_SOURCE" ]; then
-                    print_info "Setting up OpenCode config..."
-                    if ensure_config_ownership "$CONFIG_ROOT"; then
-                        OPENCODE_CONFIG_DIR="$CONFIG_ROOT/opencode"
-                        OPENCODE_CONFIG_TARGET="$OPENCODE_CONFIG_DIR/opencode.json"
-                        if ! mkdir -p "$OPENCODE_CONFIG_DIR"; then
-                            print_error "Failed to create OpenCode config directory"
-                            OPENCODE_SETUP_OK=false
-                        elif cp "$OPENCODE_CONFIG_SOURCE" "$OPENCODE_CONFIG_TARGET"; then
-                            warn_on_ownership_mismatch "$OPENCODE_CONFIG_DIR"
-                            print_info "OpenCode config copied to $OPENCODE_CONFIG_TARGET"
-                        else
-                            print_error "Failed to copy OpenCode config"
-                            OPENCODE_SETUP_OK=false
-                        fi
-                    else
-                        print_error "Skipping OpenCode config setup due to ownership issues"
-                        OPENCODE_SETUP_OK=false
-                    fi
-                else
-                    print_error "OpenCode config not found at $OPENCODE_CONFIG_SOURCE"
-                    OPENCODE_SETUP_OK=false
-                fi
-            else
-                print_error "Failed to install OpenCode"
-                OPENCODE_SETUP_OK=false
-            fi
-            if [ "$OPENCODE_SETUP_OK" = true ]; then
                 set_cli_status opencode "INSTALLED"
             else
-                set_cli_status opencode "FAILED" "installation or config setup failed"
+                print_error "Failed to install OpenCode"
+                set_cli_status opencode "FAILED" "upstream installer failed"
             fi
         else
             print_info "Skipped OpenCode installation"

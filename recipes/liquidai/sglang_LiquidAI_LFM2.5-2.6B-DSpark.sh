@@ -15,14 +15,14 @@ HOST="0.0.0.0"
 DEFAULT_PORT=8000
 API_KEY="--api-key YOUR_API_KEY"
 
-ENABLE_CACHE_FLAG=0
+ENABLE_CACHE_FLAG=1
 ENABLE_SPECULATIVE=1
 ENABLE_REASONING_PARSER=0
 SPECULATIVE="--speculative-algorithm DSPARK --speculative-draft-model-path LiquidAI/LFM2.5-2.6B-DSpark --speculative-draft-attention-backend flashinfer"
 QUANTIZATION=""
-NO_PREFIX_CACHE=""
+NO_PREFIX_CACHE="--disable-radix-cache"
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS="--disable-radix-cache"
+EXTRA_ARGS=""
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"

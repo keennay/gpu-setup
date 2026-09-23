@@ -44,7 +44,7 @@ The `/workspace` is the default repo directory used in this guide, yet you're at
 ```
 mkdir -p /workspace
 cd /workspace
-git clone https://github.com/keennay/gpu-setup.git
+git clone https://github.com/yoniq-org/compute.git
 cd gpu-setup
 ./setup.sh
 ```
@@ -53,7 +53,7 @@ cd gpu-setup
 sudo mkdir -p /workspace
 sudo chown -R ubuntu:ubuntu /workspace
 cd /workspace
-git clone https://github.com/keennay/gpu-setup.git
+git clone https://github.com/yoniq-org/compute.git
 cd gpu-setup
 ./setup.sh
 ```
