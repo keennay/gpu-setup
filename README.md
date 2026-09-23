@@ -45,7 +45,7 @@ The `/workspace` is the default repo directory used in this guide, yet you're at
 mkdir -p /workspace
 cd /workspace
 git clone https://github.com/yoniq-org/compute.git
-cd gpu-setup
+cd compute
 ./setup.sh
 ```
 #### Clone the Repo onto a GPU Instance with an Ubuntu (non-Root) user:
@@ -54,7 +54,7 @@ sudo mkdir -p /workspace
 sudo chown -R ubuntu:ubuntu /workspace
 cd /workspace
 git clone https://github.com/yoniq-org/compute.git
-cd gpu-setup
+cd compute
 ./setup.sh
 ```
 
