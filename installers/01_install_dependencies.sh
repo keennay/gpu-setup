@@ -76,6 +76,7 @@ SELECT_GO=false
 SELECT_RUST=false
 SELECT_ZIG=false
 SELECT_NEOVIM=false
+SELECTION_MADE=false
 
 NVM_INSTALL_URL="https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.5/install.sh"
 PNPM_INSTALL_URL="https://get.pnpm.io/install.sh"
@@ -109,7 +110,8 @@ print_usage() {
     echo "  --tmux           Enable tmux installation and configuration"
     echo "  -h, --help       Show this help message"
     echo ""
-    echo "Without section flags, optional sections are skipped. Use --all to enable them."
+    echo "Without section flags, prompt for every optional section."
+    echo "With -y/--auto and no section flags, run only the basic/core steps."
 }
 
 
@@ -117,16 +119,16 @@ for arg in "$@"; do
     case "$arg" in
         -y|--auto) AUTO_YES=true ;;
         --preflight) PREFLIGHT=true ;;
-        --all) SELECT_ALL=true ;;
-        --docker) SELECT_DOCKER=true ;;
-        --node) SELECT_NODE=true ;;
-        --pnpm) SELECT_PNPM=true ;;
-        --bun) SELECT_BUN=true ;;
-        --go) SELECT_GO=true ;;
-        --rust) SELECT_RUST=true ;;
-        --zig) SELECT_ZIG=true ;;
-        --neovim) SELECT_NEOVIM=true ;;
-        --tmux) SELECT_TMUX=true ;;
+        --all) SELECT_ALL=true; SELECTION_MADE=true ;;
+        --docker) SELECT_DOCKER=true; SELECTION_MADE=true ;;
+        --node) SELECT_NODE=true; SELECTION_MADE=true ;;
+        --pnpm) SELECT_PNPM=true; SELECTION_MADE=true ;;
+        --bun) SELECT_BUN=true; SELECTION_MADE=true ;;
+        --go) SELECT_GO=true; SELECTION_MADE=true ;;
+        --rust) SELECT_RUST=true; SELECTION_MADE=true ;;
+        --zig) SELECT_ZIG=true; SELECTION_MADE=true ;;
+        --neovim) SELECT_NEOVIM=true; SELECTION_MADE=true ;;
+        --tmux) SELECT_TMUX=true; SELECTION_MADE=true ;;
         -h|--help)
             print_usage
             exit 0
@@ -138,6 +140,12 @@ for arg in "$@"; do
             ;;
     esac
 done
+
+# Standalone runs offer every optional section; explicit flags narrow the prompts.
+# Keep -y without section flags core-only for setup.sh's minimal installation.
+if [ "$AUTO_YES" = false ] && [ "$SELECTION_MADE" = false ]; then
+    SELECT_ALL=true
+fi
 
 section_selected() {
     local selected="$1"
