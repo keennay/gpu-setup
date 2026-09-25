@@ -22,7 +22,7 @@ SPECULATIVE=""
 QUANTIZATION=""
 NO_PREFIX_CACHE="--no-enable-prefix-caching"
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS="--tokenizer-mode deepseek_v41 --mm-encoder-tp-mode data --engram-config {\"cpu_offload\":false} --enable-chunked-prefill --model-loader-extra-config {\"enable_multithread_load\":true,\"num_threads\":128}"
+EXTRA_ARGS="--tokenizer-mode deepseek_v41 --mm-encoder-tp-mode data --engram-config {\"cpu_offload\":true} --enable-chunked-prefill --model-loader-extra-config {\"enable_multithread_load\":true,\"num_threads\":128}"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
@@ -33,7 +33,7 @@ BACKEND_FP4_GEMM_SM90=""
 BACKEND_MOE_RUNNER_SM90="--moe-backend marlin"
 CONTEXT_LEN_VALUE_SM90=1048576
 GPU_MEM_UTIL_VALUE_SM90=0.88
-TENSOR_PARALLEL_SIZE_SM90=8
+TENSOR_PARALLEL_SIZE_SM90=4
 
 BACKEND_ATTENTION_SM100=""
 BACKEND_FP8_GEMM_SM100=""
