@@ -327,7 +327,9 @@ Classify the run explicitly:
 
 If estimated full-limit prefill fails, report that failure rather than quietly omitting the endpoint. Keep genuine partial output for diagnosis; do not invent an empty success JSON, rewrite error measurements into successful ones, or delete a user's benchmark checkout/environment after a failed run.
 
-Only after the run is classified **SUCCESS (completed sweep)** and both endpoint gates pass, create the resolved `recipes/<repo-match>/llm-inference-bench/` directory if needed and copy the single final JSON from `/tmp` **only** to that directory, preserving its filename. Verify that the published copy is byte-for-byte identical to the completed source before reporting publication or replacement of an existing result.
+If the user requires a minimum free-memory reserve per selected GPU, make it an additional publication gate: obtain per-GPU readings after a representative maximum-context/high-concurrency diagnostic before the full sweep, and recheck after the completed sweep alongside available peak-memory telemetry. Startup-only free memory is not evidence of compliance. Preserve a reserve-violating run as diagnostic output only; do not publish it as the compliant result. Recipe retuning requires a separately authorized recipe workflow, not this benchmark skill alone.
+
+Only after the run is classified **SUCCESS (completed sweep)**, both endpoint gates pass, and any requested per-GPU reserve gate passes, create the resolved `recipes/<repo-match>/llm-inference-bench/` directory if needed and copy the single final JSON from `/tmp` **only** to that directory, preserving its filename. Verify that the published copy is byte-for-byte identical to the completed source before reporting publication or replacement of an existing result.
 
 NEVER create or update a central `recipes/llm-inference-bench/` copy, fan out to multiple directories, or publish beside an unrelated external launcher. All checkout paths here are relative conventions to resolve from the actual recipe location, not fixed installation paths.
 

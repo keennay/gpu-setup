@@ -528,6 +528,8 @@ For each GPU count, set only `TENSOR_PARALLEL_SIZE_<ARCH>` in the target block a
 
 The selected value MUST leave at least **16 GiB = 16,384 MiB** free on **every selected GPU** after the engine has fully loaded the model, completed internal warmup/graph capture, exposed the API, and reached its true ready state. Aggregate free memory is not sufficient; the least-free selected GPU controls the result.
 
+When a benchmark is also requested, API-ready memory is only a preliminary check. Before the full sweep, exercise the longest requested prefill and the highest planned decode concurrency at a runnable context on the candidate recipe, then remeasure free MiB on every selected GPU after lazy allocations settle. Reject and retune a candidate that misses the reserve under this load; test the next `+0.01` candidate under the same load when proving maximality. After the full sweep, recheck per-GPU free memory and available peak-memory telemetry before accepting its result. A startup-only reserve check never establishes benchmark-load compliance; the diagnostic does not replace any required full-sweep endpoints or concurrency levels.
+
 For each GPU count:
 
 1. Confirm all selected target GPUs are clean and record their IDs, vendor/model, architecture identifiers, and total/free device memory in MiB. On NVIDIA, use `nvidia-smi` (`compute_cap`, `memory.total`, `memory.free`); for another supported vendor, use its authoritative equivalent and normalize units to MiB. Do not substitute host RAM, aggregate memory, or estimates for per-device readings. Select the exact devices externally; verify the helper resolves the intended architecture block.
@@ -540,7 +542,7 @@ For each GPU count:
 
    Use the smallest cap across selected GPUs and never test above `0.99`.
 4. Write each utilization candidate only into the temporary recipe's `GPU_MEM_UTIL_VALUE_<ARCH>` for the target block. Leave `TENSOR_PARALLEL_SIZE_<ARCH>` at this ladder count. Launch from a clean process/GPU state.
-5. A candidate passes the memory sweep only if the server reaches its final ready state and the supported vendor telemetry reports at least 16,384 MiB free on every selected GPU after memory settles.
+5. A candidate passes the memory sweep only if the server reaches its final ready state and the supported vendor telemetry reports at least 16,384 MiB free on every selected GPU after memory settles and, when a benchmark is requested, after the representative load described above.
 6. A startup crash, OOM, inability to allocate KV cache for maximum context, or reserve below 16,384 MiB is a failed candidate. Classify non-VRAM software/configuration errors separately. In full mode, fix them through an allowed engine source and retry the same GPU count; in sweep-only mode, obey its narrower repair rules. On SM120/SM121 vLLM backend failures, follow the b12x recovery policy. Restart measurements if the engine, backend, or dependencies change.
 7. Establish a passing/failing bracket and use bounded search in `0.01` increments, keeping every candidate at exactly two decimal places. Runtime behavior is authoritative; do not assume engine memory utilization is perfectly linear.
 8. Prove maximality: after finding a passing two-decimal value, test the next value `+0.01` when it does not exceed the theoretical cap. If the next value also passes, continue the search. If the theoretical cap itself passes, it is the maximum without an additional failing probe.
