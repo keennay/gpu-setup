@@ -1054,6 +1054,7 @@ install_nvidia_glm53_sglang_26fd7fd() {
     print_info "Installing the validated SGLang commit for NVIDIA GLM-5.3 NVFP4..."
     run_uv_install -U --reinstall --prerelease=allow \
         "sglang[all] @ git+https://github.com/sgl-project/sglang.git@26fd7fdaa2732abbad6d63b21cf0944aa88e977e#subdirectory=python" \
+        "transformers==5.12.1" \
         "compressed-tensors==0.19.1a20260923" || return 1
 }
 

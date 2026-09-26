@@ -22,7 +22,7 @@ SPECULATIVE=""
 QUANTIZATION="--quantization modelopt_fp4"
 NO_PREFIX_CACHE="--disable-radix-cache"
 REASONING_PARSER_PLUGIN=""
-EXTRA_ARGS="--kv-cache-dtype fp8_e4m3 --dsa-prefill-backend flashmla_kv --dsa-decode-backend flashmla_kv --disable-shared-experts-fusion"
+EXTRA_ARGS="--kv-cache-dtype fp8_e4m3 --disable-shared-experts-fusion"
 
 RECIPE_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 source "$RECIPE_DIR/../../tools/recipes/inference_recipe.sh"
@@ -51,13 +51,13 @@ CONTEXT_LEN_VALUE_SM103=""
 GPU_MEM_UTIL_VALUE_SM103=""
 TENSOR_PARALLEL_SIZE_SM103=""
 
-BACKEND_ATTENTION_SM120=""
+BACKEND_ATTENTION_SM120="--attention-backend dsa"
 BACKEND_FP8_GEMM_SM120=""
-BACKEND_FP4_GEMM_SM120=""
-BACKEND_MOE_RUNNER_SM120=""
-CONTEXT_LEN_VALUE_SM120=
-GPU_MEM_UTIL_VALUE_SM120=""
-TENSOR_PARALLEL_SIZE_SM120=
+BACKEND_FP4_GEMM_SM120="--fp4-gemm-backend flashinfer_cutlass"
+BACKEND_MOE_RUNNER_SM120="--moe-runner-backend flashinfer_cutlass"
+CONTEXT_LEN_VALUE_SM120=262144
+GPU_MEM_UTIL_VALUE_SM120="0.76"
+TENSOR_PARALLEL_SIZE_SM120=8
 
 BACKEND_ATTENTION_SM121=""
 BACKEND_FP8_GEMM_SM121=""
